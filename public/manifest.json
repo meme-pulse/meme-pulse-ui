@@ -1,0 +1,17 @@
+{
+  "short_name": "MemePulse",
+  "name": "MemePulse",
+  "description": "The First Liquidity Book DEX on Monad",
+  "iconPath": "pixel_pulse_white.png",
+  "icons": [
+    {
+      "src": "pixel_pulse_white.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
