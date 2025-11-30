@@ -146,3 +146,128 @@ body {
     }
   }
 }
+
+/* ============================== */
+/* RainbowKit Windows 95 Theme    */
+/* ============================== */
+
+/* Modal content background */
+[data-rk] [role='dialog'] > div {
+  background: #dbdae0 !important;
+}
+
+/* Title bar styling - gray header */
+[data-rk] [role='dialog'] > div > div:has(button[aria-label='Close']) {
+  background: #dbdae0 !important;
+}
+
+/* Style title text within the header */
+[data-rk] [role='dialog'] > div > div:has(button[aria-label='Close']) > div:first-child,
+[data-rk] [role='dialog'] > div > div:has(button[aria-label='Close']) span,
+[data-rk] [role='dialog'] > div > div:has(button[aria-label='Close']) h1 {
+  color: #121213 !important;
+}
+
+/* Title text */
+[data-rk] [role='dialog'] h1,
+[data-rk] [role='dialog'] [class*='ModalHeader'] span {
+  color: #121213 !important;
+}
+
+/* Close button */
+[data-rk] [role='dialog'] button[aria-label='Close'] {
+  background: #dbdae0 !important;
+  border-color: #ffffff !important;
+}
+
+[data-rk] [role='dialog'] button[aria-label='Close'] svg {
+  color: #121213 !important;
+}
+
+/* Content area */
+[data-rk] [role='dialog'] [class*='Content'],
+[data-rk] [role='dialog'] > div > div:nth-child(2) {
+  background: #ffffff !important;
+}
+
+/* Wallet option buttons */
+[data-rk] button[data-testid^='rk-wallet-option'],
+[data-rk] [role='dialog'] button[type='button']:not([aria-label]) {
+  background: #dbdae0 !important;
+  border-color: #ffffff !important;
+  color: #121213 !important;
+  margin-bottom: 4px !important;
+}
+
+[data-rk] button[data-testid^='rk-wallet-option']:last-child,
+[data-rk] [role='dialog'] button[type='button']:not([aria-label]):last-child {
+  margin-bottom: 0 !important;
+}
+
+[data-rk] button[data-testid^='rk-wallet-option']:hover,
+[data-rk] [role='dialog'] button[type='button']:not([aria-label]):hover {
+  background: #c0c0c0 !important;
+}
+
+/* Wallet option text */
+[data-rk] button[data-testid^='rk-wallet-option'] span {
+  color: #121213 !important;
+}
+
+/* Group headers */
+[data-rk] [role='dialog'] [class*='GroupLabel'],
+[data-rk] [role='dialog'] span[class*='Label'] {
+  color: #3d3d43 !important;
+}
+
+/* Back button */
+[data-rk] [role='dialog'] button[aria-label='Back'] {
+  background: #dbdae0 !important;
+  border-color: #ffffff !important;
+}
+
+/* QR code container */
+[data-rk] [class*='QRCode'] {
+  background: #ffffff !important;
+}
+
+/* Action buttons */
+[data-rk] [role='dialog'] button:not([aria-label='Close']):not([aria-label='Back']):not([data-testid^='rk-wallet-option']) {
+  background: #dbdae0 !important;
+  border-color: #ffffff !important;
+  color: #121213 !important;
+}
+
+/* Links */
+[data-rk] [role='dialog'] a {
+  color: #121213 !important;
+}
+
+[data-rk] [role='dialog'] a:hover {
+  color: #3d3d43 !important;
+}
+
+/* Profile modal specific */
+[data-rk] [class*='ProfileDetail'] {
+  background: #ffffff !important;
+}
+
+/* Address display */
+[data-rk] [class*='Address'] {
+  color: #121213 !important;
+}
+
+/* Scrollbar styling for the modal */
+[data-rk] [role='dialog'] ::-webkit-scrollbar {
+  width: 16px !important;
+  display: block !important;
+}
+
+[data-rk] [role='dialog'] ::-webkit-scrollbar-track {
+  background: #dbdae0 !important;
+}
+
+[data-rk] [role='dialog'] ::-webkit-scrollbar-thumb {
+  background: #dbdae0 !important;
+  border-color: #ffffff !important;
+}
