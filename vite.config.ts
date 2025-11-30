@@ -15,7 +15,19 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // server: {
-  // cors: true,
-  // },
+  server: {
+    proxy: {
+      // API 요청을 Bun 서버로 프록시
+      '/api/dlmm-suggest': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+      },
+      // GraphQL은 외부 서버로 프록시
+      '/api/graphql': {
+        target: 'http://3.34.129.83:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/graphql/, '/v1/graphql'),
+      },
+    },
+  },
 });

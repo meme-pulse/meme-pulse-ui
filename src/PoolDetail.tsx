@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { PlusIcon, SearchIcon } from 'lucide-react';
 import { AddPositionCard } from './components/pool-detail/add-position-card';
+import { RemovePositionCard } from './components/pool-detail/remove-position-card';
 
 import { PoolDetailHeader } from './components/pool-detail/pool-detail-header';
 import { PoolAnalytics } from './components/pool-detail/pool-analytics';
@@ -285,13 +286,13 @@ export default function PoolDetail() {
                 <TabsContent value="positions" className="mt-0">
                   {hasPositions ? (
                     <div
-                      className="text-center py-8 bg-figma-gray-table"
+                      className="p-4 bg-figma-gray-table"
                       style={{
                         boxShadow:
                           'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
                       }}
                     >
-                      <p className="font-roboto text-figma-text-gray">Your liquidity positions will be displayed here</p>
+                      <RemovePositionCard poolData={poolData} yBaseCurrency={yBaseCurrency} setYBaseCurrency={setYBaseCurrency} />
                     </div>
                   ) : (
                     <div
