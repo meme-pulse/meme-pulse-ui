@@ -19,6 +19,8 @@ import TvlCard from './components/pool/tvl-card';
 import { GroupPoolRow } from './components/pool/group-pool-row';
 import { AiModeSwitch } from './components/pool/ai-mode-switch';
 import { useAiMode } from './hooks/use-ai-mode';
+import { TypingAnimation } from './components/magicui/typing-animation';
+import { motion, AnimatePresence } from 'motion/react';
 
 export interface PoolRowProps {
   pairAddress: string;
@@ -365,16 +367,33 @@ export default function Component() {
 
         {/* Header Section */}
         <div className="mb-8">
-          <h1
-            className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
-            style={{ fontFamily: '"Press Start 2P", cursive' }}
-          >
-            MEMEPULSE AI STAKING
-          </h1>
-          <p className="font-roboto text-zinc-400 text-[16px] leading-normal max-w-[854px] mt-[38px]">
-            Let AI design your liquidity. MemePulse analyzes volatility, volume and pool depth to build optimized DLMM strategies so you can
-            LP like a pro with one click.
-          </p>
+          <div className="min-h-[42px] flex items-start">
+            <TypingAnimation
+              as="h1"
+              className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
+              style={{ fontFamily: '"Press Start 2P", cursive' }}
+              duration={50}
+              key={aiMode ? 'ai-mode-title' : 'normal-mode-title'}
+            >
+              {aiMode ? 'MEMEPULSE AI DLMM' : 'MEMEPULSE DLMM'}
+            </TypingAnimation>
+          </div>
+          <div className="min-h-[48px] mt-[38px]">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={aiMode ? 'ai-desc' : 'normal-desc'}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="font-roboto text-zinc-400 text-[16px] leading-normal max-w-[854px]"
+              >
+                {aiMode
+                  ? 'AI analyzes market conditions, volatility, and pool dynamics to recommend optimized DLMM presets. Get AI-powered liquidity strategies tailored to current market conditions.'
+                  : 'Explore and manage DLMM pools. Select pools to add liquidity and earn fees from trading activity.'}
+              </motion.p>
+            </AnimatePresence>
+          </div>
         </div>
         {/* Analytics Container */}
         <CardWithHeader title="MemePulse Analytics" className="mb-8">
@@ -395,12 +414,34 @@ export default function Component() {
         <CardWithHeader title="Pools" contentClassName="p-3">
           {/* Title and Description */}
           <div className="mb-[28px]">
-            <h2 className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px] mb-2">
-              AI DLMM Pools
-            </h2>
-            <p className="font-roboto text-figma-text-gray text-[14px] leading-normal">
-              Choose your desired Validator and delegate M to earn rewards.
-            </p>
+            <AnimatePresence mode="wait">
+              <motion.h2
+                key={aiMode ? 'ai-title' : 'normal-title'}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px] mb-2"
+              >
+                {aiMode ? 'AI DLMM Pools' : 'DLMM Pools'}
+              </motion.h2>
+            </AnimatePresence>
+            <div className="min-h-[40px]">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={aiMode ? 'ai-pools-desc' : 'normal-pools-desc'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="font-roboto text-figma-text-gray text-[14px] leading-normal"
+                >
+                  {aiMode
+                    ? 'AI analyzes market conditions and recommends optimized DLMM presets. Select an AI-recommended pool to deploy liquidity with optimal strategies.'
+                    : 'Choose pools to add liquidity and earn trading fees. Click on a pool to view details and manage your positions.'}
+                </motion.p>
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Table Container */}

@@ -1,7 +1,7 @@
 export function Footer() {
   return (
     <footer className="bg-black w-full">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-row justify-between items-center sm:flex-nowrap flex-wrap gap-4">
           {/* Logo and Brand */}
           <div className="flex flex-row items-center gap-3">
