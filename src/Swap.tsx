@@ -308,9 +308,13 @@ export default function SwapComponent() {
         />
       </div>
 
-      <main className="relative z-10 max-w-screen-2xl mx-auto px-2 sm:px-6 py-8">
-        <div className="mx-auto" style={{ maxWidth: '600px' }}>
-          <CardWithHeader title="Swap" className="mt-10">
+      <main className="relative z-10 max-w-screen-2xl mx-auto px-2 sm:px-6 min-h-screen flex items-center justify-center">
+        <div className="mx-auto relative w-full" style={{ maxWidth: '600px' }}>
+          {/* Ant Animation - Top Right */}
+          <div className="absolute top-0 right-0 z-20 opacity-60 pointer-events-none">
+            <img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-24 h-24 object-contain" />
+          </div>
+          <CardWithHeader title="Swap">
             <div className="p-4">
               {/* From Section */}
               <div className="bg-figma-gray-table p-4 mb-2" style={{ boxShadow: retroInsetShadow }}>

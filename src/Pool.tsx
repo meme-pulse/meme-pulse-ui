@@ -370,25 +370,21 @@ export default function Component() {
         {/* Header Section */}
         <div className="mb-8">
           <div className="min-h-[42px] flex items-start justify-between">
-            <TypingAnimation
-              as="h1"
-              className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
-              style={{ fontFamily: '"Press Start 2P", cursive' }}
-              duration={50}
-              key={aiMode ? 'ai-mode-title' : 'normal-mode-title'}
-            >
-              {aiMode ? 'MEMEPULSE AI DLMM' : 'MEMEPULSE DLMM'}
-            </TypingAnimation>
-            <button
-              onClick={() => navigate('/pool/v22/create')}
-              className="px-4 py-2 bg-figma-purple text-white font-roboto text-[13px] flex items-center gap-2 hover:bg-figma-purple/90 transition-all"
-              style={{
-                boxShadow: 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              Create Pool
-            </button>
+            <div className="flex items-center gap-4">
+              <TypingAnimation
+                as="h1"
+                className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
+                style={{ fontFamily: '"Press Start 2P", cursive' }}
+                duration={50}
+                key={aiMode ? 'ai-mode-title' : 'normal-mode-title'}
+              >
+                {aiMode ? 'MEMEPULSE AI DLMM' : 'MEMEPULSE DLMM'}
+              </TypingAnimation>
+              {/* Ant Animation - Title Right */}
+              <div className="flex-shrink-0 opacity-80">
+                <img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-16 h-16 object-contain" />
+              </div>
+            </div>
           </div>
           <div className="min-h-[48px] mt-[38px]">
             <AnimatePresence mode="wait">
@@ -426,18 +422,30 @@ export default function Component() {
         <CardWithHeader title="Pools" contentClassName="p-3">
           {/* Title and Description */}
           <div className="mb-[28px]">
-            <AnimatePresence mode="wait">
-              <motion.h2
-                key={aiMode ? 'ai-title' : 'normal-title'}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px] mb-2"
+            <div className="flex items-start justify-between mb-2">
+              <AnimatePresence mode="wait">
+                <motion.h2
+                  key={aiMode ? 'ai-title' : 'normal-title'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px]"
+                >
+                  {aiMode ? 'AI DLMM Pools' : 'DLMM Pools'}
+                </motion.h2>
+              </AnimatePresence>
+              <button
+                onClick={() => navigate('/pool/v22/create')}
+                className="px-4 py-2 bg-figma-purple text-white font-roboto text-[13px] flex items-center gap-2 hover:bg-figma-purple/90 transition-all"
+                style={{
+                  boxShadow: 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+                }}
               >
-                {aiMode ? 'AI DLMM Pools' : 'DLMM Pools'}
-              </motion.h2>
-            </AnimatePresence>
+                <Plus className="w-4 h-4" />
+                Create Pool
+              </button>
+            </div>
             <div className="min-h-[40px]">
               <AnimatePresence mode="wait">
                 <motion.p
