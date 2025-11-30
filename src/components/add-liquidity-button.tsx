@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { retroToast } from '@/components/ui/retro-toast';
 import { useAccount, useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
 import { Button } from './ui/button';
 import { Info, Loader2 } from 'lucide-react';
@@ -80,7 +80,7 @@ function AddLiquidityButton({
     //     functionName: 'addLiquidity',
     //     args: [addLiquidityInput],
     //   });
-    //   toast.success(`Add Liquidity transaction sent`, {
+    //   retroToast.success(`Add Liquidity transaction sent`, {
     //     description: `Please wait for the transaction to be confirmed`,
     //     action: {
     //       label: 'View on Explorer',
@@ -93,7 +93,7 @@ function AddLiquidityButton({
     //   // writeApprove doesn't return transaction hash immediately, so we need to track it through data
     //   setStatus('waitingForAddLiquidityConfirmation');
     // } catch {
-    //   toast.error(`Failed to add liquidity`, {
+    //   retroToast.error(`Failed to add liquidity`, {
     //     description: `Please try again`,
     //   });
     //   console.log('error');
@@ -153,7 +153,7 @@ function AddLiquidityButton({
     if (index >= addLiquidityChunks.length) {
       // All transactions completed successfully
       onSuccess();
-      toast.success(`All Add Liquidity transactions confirmed`);
+      retroToast.success(`All Add Liquidity transactions confirmed`);
       setStatus('idle');
       return;
     }
@@ -185,7 +185,7 @@ function AddLiquidityButton({
         ...(contractParamsObj as any),
       });
 
-      toast.success(`Add Liquidity transaction ${index + 1} of ${addLiquidityChunks.length} sent`, {
+      retroToast.success(`Add Liquidity transaction ${index + 1} of ${addLiquidityChunks.length} sent`, {
         action: { label: 'View on Explorer', onClick: () => window.open(`https://hyperevmscan.io/tx/${hash}`, '_blank') },
       });
       setAddLiquidityTxHash(hash);
@@ -193,7 +193,7 @@ function AddLiquidityButton({
       setStatus('waitingForAddLiquidityConfirmation');
     } catch (e) {
       console.error(e);
-      toast.error(`Failed to add liquidity`, { description: `Transaction ${index + 1} failed. Please try again.` });
+      retroToast.error(`Failed to add liquidity`, { description: `Transaction ${index + 1} failed. Please try again.` });
       setStatus('error');
       onFail?.();
     }
@@ -209,14 +209,14 @@ function AddLiquidityButton({
     if (isAddLiquidityConfirmed) {
       sendNextTransaction(currentTxIndex);
       // onSuccess();
-      // toast.success(`Add Liquidity transaction confirmed`);
+      // retroToast.success(`Add Liquidity transaction confirmed`);
       // setStatus('idle');
     }
   }, [isAddLiquidityConfirmed]);
 
   useEffect(() => {
     if (isAddLiquidityConfirmationError) {
-      toast.error(`Failed to add liquidity`, {
+      retroToast.error(`Failed to add liquidity`, {
         description: `Please try again`,
       });
       setStatus('idle');

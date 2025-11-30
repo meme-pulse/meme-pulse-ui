@@ -1,12 +1,10 @@
-import type { Theme } from '@rainbow-me/rainbowkit';
-
 /**
  * Windows 95 style theme for RainbowKit
  * Matches the retro MemePulse aesthetic
  * Only modifies colors, fonts, and visual styling (radii, shadows)
  * Preserves original padding, margin, and width
  */
-export const win95Theme: Partial<Theme> = {
+export const win95Theme = {
   colors: {
     accentColor: '#808088', // Gray color
     accentColorForeground: '#121213',

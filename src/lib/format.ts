@@ -2,6 +2,45 @@
 // 1. en-US which is default, format 123,456.789, using comma to separate the thousands, and dot to separate the decimal
 // 5. fr-FR, format 123 456,789 -> using empty space to separate the thousands, and comma to separate the decimal
 // 6. de-DE, format 123.456,789 -> using dot to separate the thousands, and comma to separate the decimal
+
+/**
+ * Validates and sanitizes a locale string to ensure it's safe for use with Intl APIs
+ * Returns 'en-US' as fallback if the locale is invalid
+ */
+function validateLocale(locale: string | null | undefined): string {
+  const defaultLocale = 'en-US';
+
+  if (!locale || typeof locale !== 'string') {
+    return defaultLocale;
+  }
+
+  // Trim whitespace
+  const trimmedLocale = locale.trim();
+
+  if (!trimmedLocale) {
+    return defaultLocale;
+  }
+
+  // Basic validation: check if it's a valid BCP 47 language tag format
+  // Pattern: language[-script][-region][-variant]
+  // Examples: en, en-US, zh-Hans-CN, etc.
+  const localePattern = /^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2})?(-[a-z0-9]{5,8})?(-[a-z0-9]{1,8})*$/i;
+
+  if (!localePattern.test(trimmedLocale)) {
+    console.warn(`Invalid locale format: "${locale}". Falling back to "${defaultLocale}"`);
+    return defaultLocale;
+  }
+
+  // Try to create an Intl.NumberFormat to verify the locale is actually supported
+  try {
+    new Intl.NumberFormat(trimmedLocale);
+    return trimmedLocale;
+  } catch (error) {
+    console.warn(`Locale "${trimmedLocale}" is not supported. Falling back to "${defaultLocale}"`);
+    return defaultLocale;
+  }
+}
+
 export function formatNumber(
   number: number | string,
   maximumFractionDigits: number = 2,
@@ -14,13 +53,14 @@ export function formatNumber(
       return '0';
     }
 
-    const formatter = new Intl.NumberFormat(locale);
+    const validLocale = validateLocale(locale);
+    const formatter = new Intl.NumberFormat(validLocale);
     const formattedParts = formatter.formatToParts(12345.67);
     const decimalSeparator = formattedParts.find((p) => p.type === 'decimal')?.value || '.';
 
     const [integerPart, decimalPart] = String(num).split('.');
 
-    const formattedIntegerPart = Number(integerPart).toLocaleString(locale);
+    const formattedIntegerPart = Number(integerPart).toLocaleString(validLocale);
 
     let formattedDecimalPart = '';
     if (decimalPart) {
@@ -41,12 +81,13 @@ export function formatNumber(
 // number foramt en-US based.
 export function formatStringOnlyLocale(number: string, locale: string = 'en-US') {
   try {
-    const formatter = new Intl.NumberFormat(locale);
+    const validLocale = validateLocale(locale);
+    const formatter = new Intl.NumberFormat(validLocale);
     const [integerPart, decimalPart] = String(number).split('.');
     const formattedParts = formatter.formatToParts(12345.67);
     const decimalSeparator = formattedParts.find((p) => p.type === 'decimal')?.value || '.';
     // const groupSeparator = formattedParts.find((p) => p.type === 'group')?.value || ',';
-    const formattedIntegerPart = Number(integerPart).toLocaleString(locale);
+    const formattedIntegerPart = Number(integerPart).toLocaleString(validLocale);
     const formattedDecimalPart = decimalPart ? `${decimalSeparator}${decimalPart}` : '';
     return `${formattedIntegerPart}${formattedDecimalPart === decimalSeparator ? '' : formattedDecimalPart}`;
   } catch (error) {
@@ -88,7 +129,8 @@ export function formatUSDWithLocale(
   locale: string = 'en-US'
 ) {
   try {
-    const formattedNumber = number.toLocaleString(locale, {
+    const validLocale = validateLocale(locale);
+    const formattedNumber = number.toLocaleString(validLocale, {
       maximumFractionDigits,
       minimumFractionDigits,
     });
@@ -101,7 +143,8 @@ export function formatUSDWithLocale(
 }
 
 export const getNumberValue = (typedAmount: string, locale: string): number => {
-  const formatter = new Intl.NumberFormat(locale);
+  const validLocale = validateLocale(locale);
+  const formatter = new Intl.NumberFormat(validLocale);
   const parts = formatter.formatToParts(12345.67);
 
   const decimalSeparator = parts.find((p) => p.type === 'decimal')?.value || '.';
@@ -121,7 +164,8 @@ export const getNumberValue = (typedAmount: string, locale: string): number => {
 };
 
 export const getNumberStringValue = (typedAmount: string, locale: string): string => {
-  const formatter = new Intl.NumberFormat(locale);
+  const validLocale = validateLocale(locale);
+  const formatter = new Intl.NumberFormat(validLocale);
   const parts = formatter.formatToParts(12345.67);
 
   const decimalSeparator = parts.find((p) => p.type === 'decimal')?.value || '.';

@@ -1,7 +1,7 @@
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { LB_ROUTER_V22_ADDRESS } from '../lib/sdk';
 import { useCallback } from 'react';
-import { toast } from 'sonner';
+import { retroToast } from '@/components/ui/retro-toast';
 import { getAddress, parseAbi, zeroAddress, zeroHash } from 'viem';
 import { useAccount, useContractWrite } from 'wagmi';
 import { DEFAULT_CHAINID } from '@/constants';
@@ -79,7 +79,7 @@ export function useTradeExecute({
       if (data === zeroHash) {
         return;
       }
-      toast.success('Transaction Submitted', {
+      retroToast.success('Transaction Submitted', {
         description: data,
         action: {
           label: 'View on Explorer',

@@ -21,6 +21,7 @@ import { AiModeSwitch } from './components/pool/ai-mode-switch';
 import { useAiMode } from './hooks/use-ai-mode';
 import { TypingAnimation } from './components/magicui/typing-animation';
 import { motion, AnimatePresence } from 'motion/react';
+import { Plus } from 'lucide-react';
 
 export interface PoolRowProps {
   pairAddress: string;
@@ -211,6 +212,7 @@ export function PoolRow({
 }
 
 export default function Component() {
+  const navigate = useNavigate();
   const [aiMode] = useAiMode();
 
   const { data: groupedPools } = useGroupedPools();
@@ -367,7 +369,7 @@ export default function Component() {
 
         {/* Header Section */}
         <div className="mb-8">
-          <div className="min-h-[42px] flex items-start">
+          <div className="min-h-[42px] flex items-start justify-between">
             <TypingAnimation
               as="h1"
               className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
@@ -377,6 +379,16 @@ export default function Component() {
             >
               {aiMode ? 'MEMEPULSE AI DLMM' : 'MEMEPULSE DLMM'}
             </TypingAnimation>
+            <button
+              onClick={() => navigate('/pool/v22/create')}
+              className="px-4 py-2 bg-figma-purple text-white font-roboto text-[13px] flex items-center gap-2 hover:bg-figma-purple/90 transition-all"
+              style={{
+                boxShadow: 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Create Pool
+            </button>
           </div>
           <div className="min-h-[48px] mt-[38px]">
             <AnimatePresence mode="wait">

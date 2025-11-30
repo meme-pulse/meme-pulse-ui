@@ -4,7 +4,7 @@ import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Drawer, DrawerTrigger, DrawerContent, DrawerClose } from '@/components/ui/drawer';
 import { useAccount, useAccountEffect, useSwitchChain } from 'wagmi';
-import { toast } from 'sonner';
+import { retroToast } from '@/components/ui/retro-toast';
 import { DEFAULT_CHAINID } from '@/constants';
 
 export function Header() {
@@ -15,7 +15,8 @@ export function Header() {
   const { switchChain } = useSwitchChain();
 
   useEffect(() => {
-    if (account.chainId !== DEFAULT_CHAINID) {
+    // Only switch chain if wallet is connected
+    if (account.address && account.chainId && account.chainId !== DEFAULT_CHAINID) {
       switchChain(
         {
           chainId: DEFAULT_CHAINID,
@@ -34,12 +35,12 @@ export function Header() {
 
   useAccountEffect({
     onConnect(data) {
-      toast.success('Successfully Connected!', {
+      retroToast.success('Successfully Connected!', {
         description: data.address,
       });
     },
     onDisconnect() {
-      toast.warning('Disconnected!', {
+      retroToast.warning('Disconnected!', {
         description: 'Please connect your wallet to continue',
       });
     },
@@ -93,9 +94,7 @@ export function Header() {
                   </DrawerClose>
                   <nav className="flex flex-col space-y-4 mt-2">
                     <div
-                      className={`text-lg cursor-pointer ${
-                        pathname.pathname === '/swap' ? 'text-[#cfbaff]' : 'text-white'
-                      }`}
+                      className={`text-lg cursor-pointer ${pathname.pathname === '/swap' ? 'text-[#cfbaff]' : 'text-white'}`}
                       style={{ fontFamily: '"Press Start 2P", cursive' }}
                       onClick={() => {
                         navigate('/swap');
@@ -105,9 +104,7 @@ export function Header() {
                       Trade
                     </div>
                     <div
-                      className={`text-lg cursor-pointer ${
-                        pathname.pathname === '/pool' ? 'text-[#cfbaff]' : 'text-white'
-                      }`}
+                      className={`text-lg cursor-pointer ${pathname.pathname === '/pool' ? 'text-[#cfbaff]' : 'text-white'}`}
                       style={{ fontFamily: '"Press Start 2P", cursive' }}
                       onClick={() => {
                         navigate('/pool');
@@ -117,9 +114,7 @@ export function Header() {
                       Pool
                     </div>
                     <div
-                      className={`text-lg cursor-pointer ${
-                        pathname.pathname === '/portfolio' ? 'text-[#cfbaff]' : 'text-white'
-                      }`}
+                      className={`text-lg cursor-pointer ${pathname.pathname === '/portfolio' ? 'text-[#cfbaff]' : 'text-white'}`}
                       style={{ fontFamily: '"Press Start 2P", cursive' }}
                       onClick={() => {
                         navigate('/portfolio');
@@ -175,14 +170,16 @@ export function Header() {
                       <div
                         className="absolute top-[6px] left-0 right-0 h-[36px] bg-yellow-600"
                         style={{
-                          clipPath: 'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)',
+                          clipPath:
+                            'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)',
                         }}
                       />
                       {/* Main layer (bright yellow) */}
                       <div
                         className="absolute top-0 left-0 right-0 h-[38px] bg-yellow-400"
                         style={{
-                          clipPath: 'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)',
+                          clipPath:
+                            'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)',
                         }}
                       />
                     </div>
