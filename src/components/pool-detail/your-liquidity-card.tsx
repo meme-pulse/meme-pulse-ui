@@ -145,103 +145,100 @@ export function YourLiquidityCard({ poolData, yBaseCurrency, setYBaseCurrency, c
 
   return (
     <CardWithHeader title="Your Liquidity" contentClassName="p-4">
-        {/* Current Pool Price */}
-        <div className="flex items-center gap-2 text-sm mb-4">
-          <span className="font-roboto text-figma-text-gray text-[12px]">Current Pool Price:</span>
-          <div 
-            className="flex items-center gap-2 cursor-pointer hover:opacity-80" 
-            onClick={() => setYBaseCurrency(!yBaseCurrency)}
-          >
-            <span className="font-roboto text-[#facb25] text-[14px] font-medium">
-              {formatNumber(currentPrice, 4, 0, numberLocale)}{' '}
-              {yBaseCurrency ? poolData.tokenY.symbol + '/' + poolData.tokenX.symbol : poolData.tokenX.symbol + '/' + poolData.tokenY.symbol}
-            </span>
-            <ArrowLeftRightIcon className="w-4 h-4 text-[#facb25]" />
+      {/* Current Pool Price */}
+      <div className="flex items-center gap-2 text-sm mb-4">
+        <span className="font-roboto text-figma-text-gray text-[12px]">Current Pool Price:</span>
+        <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => setYBaseCurrency(!yBaseCurrency)}>
+          <span className="font-roboto text-[#facb25] text-[14px] font-medium">
+            {formatNumber(currentPrice, 4, 0, numberLocale)}{' '}
+            {yBaseCurrency ? poolData.tokenY.symbol + '/' + poolData.tokenX.symbol : poolData.tokenX.symbol + '/' + poolData.tokenY.symbol}
+          </span>
+          <ArrowLeftRightIcon className="w-4 h-4 text-[#facb25]" />
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        <div
+          className="p-4 bg-figma-gray-table"
+          style={{
+            boxShadow:
+              'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
+          }}
+        >
+          <div className="font-roboto text-figma-text-gray text-[12px] leading-[14px] mb-2">Total Liquidity</div>
+          <div className="font-roboto font-semibold text-[#030303] text-[18px]">{formatUSDWithLocale(totalTvlUsd, 4, 0, numberLocale)}</div>
+        </div>
+        <div
+          className="p-4 bg-figma-gray-table"
+          style={{
+            boxShadow:
+              'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
+          }}
+        >
+          <div className="font-roboto text-figma-text-gray text-[12px] leading-[14px] mb-2">Fees Earned</div>
+          <div className="font-roboto font-semibold text-[#895bf5] text-[18px]">
+            {formatUSDWithLocale(feesEarned.totalUsd, 4, 0, numberLocale)}
           </div>
         </div>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div 
-            className="p-4 bg-figma-gray-table"
-            style={{
-              boxShadow: 'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
-            }}
-          >
-            <div className="font-roboto text-figma-text-gray text-[12px] leading-[14px] mb-2">Total Liquidity</div>
-            <div className="font-roboto font-semibold text-[#030303] text-[18px]">
-              {formatUSDWithLocale(totalTvlUsd, 4, 0, numberLocale)}
-            </div>
-          </div>
-          <div 
-            className="p-4 bg-figma-gray-table"
-            style={{
-              boxShadow: 'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
-            }}
-          >
-            <div className="font-roboto text-figma-text-gray text-[12px] leading-[14px] mb-2">Fees Earned</div>
-            <div className="font-roboto font-semibold text-[#895bf5] text-[18px]">
-              {formatUSDWithLocale(feesEarned.totalUsd, 4, 0, numberLocale)}
-            </div>
-          </div>
-        </div>
+      {/* Divider */}
+      <div className="border-t border-[#c0c0c0] my-4"></div>
 
-        {/* Divider */}
-        <div className="border-t border-[#c0c0c0] my-4"></div>
-
-        {/* Balance Details Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="font-roboto text-figma-text-gray text-[12px] mb-3">Current Balance</div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <TokenTicker
-                  symbol={poolData.tokenX.symbol}
-                  logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
-                  className="w-5 h-5 rounded-full"
-                />
-                <span className="font-roboto font-medium text-[#030303] text-[14px]">
-                  {formatNumber(depositBalances[0].amount, 4, 0, numberLocale)} {poolData.tokenX.symbol}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TokenTicker
-                  symbol={poolData.tokenY.symbol}
-                  logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
-                  className="w-5 h-5 rounded-full"
-                />
-                <span className="font-roboto font-medium text-[#030303] text-[14px]">
-                  {formatNumber(depositBalances[1].amount, 4, 0, numberLocale)} {poolData.tokenY.symbol}
-                </span>
-              </div>
+      {/* Balance Details Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <div className="font-roboto text-figma-text-gray text-[12px] mb-3">Current Balance</div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <TokenTicker
+                symbol={poolData.tokenX.symbol}
+                logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
+                className="w-5 h-5 rounded-full"
+              />
+              <span className="font-roboto font-medium text-[#030303] text-[14px]">
+                {formatNumber(depositBalances[0].amount, 4, 0, numberLocale)} {poolData.tokenX.symbol}
+              </span>
             </div>
-          </div>
-          <div>
-            <div className="font-roboto text-figma-text-gray text-[12px] mb-3">Fees Earned</div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <TokenTicker
-                  symbol={poolData.tokenX.symbol}
-                  logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
-                  className="w-5 h-5 rounded-full"
-                />
-                <span className="font-roboto font-medium text-[#895bf5] text-[14px]">
-                  {formatNumber(feesEarned.tokenX.amount, 4, 0, numberLocale)} {poolData.tokenX.symbol}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TokenTicker
-                  symbol={poolData.tokenY.symbol}
-                  logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
-                  className="w-5 h-5 rounded-full"
-                />
-                <span className="font-roboto font-medium text-[#895bf5] text-[14px]">
-                  {formatNumber(feesEarned.tokenY.amount, 4, 0, numberLocale)} {poolData.tokenY.symbol}
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <TokenTicker
+                symbol={poolData.tokenY.symbol}
+                logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
+                className="w-5 h-5 rounded-full"
+              />
+              <span className="font-roboto font-medium text-[#030303] text-[14px]">
+                {formatNumber(depositBalances[1].amount, 4, 0, numberLocale)} {poolData.tokenY.symbol}
+              </span>
             </div>
           </div>
         </div>
+        <div>
+          <div className="font-roboto text-figma-text-gray text-[12px] mb-3">Fees Earned</div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <TokenTicker
+                symbol={poolData.tokenX.symbol}
+                logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
+                className="w-5 h-5 rounded-full"
+              />
+              <span className="font-roboto font-medium text-[#895bf5] text-[14px]">
+                {formatNumber(feesEarned.tokenX.amount, 4, 0, numberLocale)} {poolData.tokenX.symbol}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <TokenTicker
+                symbol={poolData.tokenY.symbol}
+                logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
+                className="w-5 h-5 rounded-full"
+              />
+              <span className="font-roboto font-medium text-[#895bf5] text-[14px]">
+                {formatNumber(feesEarned.tokenY.amount, 4, 0, numberLocale)} {poolData.tokenY.symbol}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </CardWithHeader>
   );
 }

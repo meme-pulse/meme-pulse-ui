@@ -112,7 +112,8 @@ export default function SwapComponent() {
     if (!amount || !tokenPrices || !token.address) return '';
     let usdPrice = tokenPrices.find((price) => price.tokenAddress.toLowerCase() === token.address.toLowerCase())?.priceUsd ?? 0;
     if (token.address === NATIVE_TOKEN_ADDRESS) {
-      usdPrice = tokenPrices.find((price) => price.tokenAddress.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase())?.priceUsd ?? 0;
+      usdPrice =
+        tokenPrices.find((price) => price.tokenAddress.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase())?.priceUsd ?? 0;
     }
     const usdValue = Number.parseFloat(amount) * usdPrice;
     return `~${formatUSDWithLocale(usdValue, 4, 0, numberLocale)}`;
