@@ -277,10 +277,29 @@ function LeaderboardTable({ timePeriod }: { timePeriod: TimePeriod }) {
                 </td>
                 <td className="h-[60px] pl-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold">
+                    {token.imageSrc ? (
+                      <img
+                        src={token.imageSrc}
+                        alt={token.tokenSymbol}
+                        className="w-6 h-6 rounded-full object-cover"
+                        onError={(e) => {
+                          // Fallback to gradient if image fails to load
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold ${
+                        token.imageSrc ? 'hidden' : ''
+                      }`}
+                    >
                       {token.tokenSymbol.charAt(0)}
                     </div>
-                    <span className="text-[16px] text-black">{token.tokenSymbol}</span>
+                    <div className="flex flex-col">
+                      <span className="text-[16px] text-black leading-tight">{token.tokenSymbol}</span>
+                      {token.tokenName && <span className="text-[11px] text-figma-text-gray leading-tight">{token.tokenName}</span>}
+                    </div>
                   </div>
                 </td>
                 <td className="h-[60px] pl-2 text-[16px] text-black">{formatNumber(token.posts[timePeriod], 0, 0, numberLocale)}</td>

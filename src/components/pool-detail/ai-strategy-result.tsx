@@ -15,6 +15,7 @@ import TokenTicker from '../token-ticker';
 import {
   LiquidityDistribution,
   WNATIVE,
+  NATIVE_SYMBOL,
   Token,
   TokenAmount,
   getUniformDistributionFromBinRange,
@@ -83,15 +84,17 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
 
   // Modify poolData based on isNativeIn to use native token address
   const poolData = useMemo(() => {
-    if (originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address && isNativeIn) {
+    const wnativeAddress = WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
+    const nativeSymbol = NATIVE_SYMBOL[DEFAULT_CHAINID];
+    if (originalPoolData.tokenX.address.toLowerCase() === wnativeAddress && isNativeIn) {
       return {
         ...originalPoolData,
-        tokenX: { ...originalPoolData.tokenX, symbol: 'M', address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
+        tokenX: { ...originalPoolData.tokenX, symbol: nativeSymbol, address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
       };
-    } else if (originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address && isNativeIn) {
+    } else if (originalPoolData.tokenY.address.toLowerCase() === wnativeAddress && isNativeIn) {
       return {
         ...originalPoolData,
-        tokenY: { ...originalPoolData.tokenY, symbol: 'M', address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
+        tokenY: { ...originalPoolData.tokenY, symbol: nativeSymbol, address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
       };
     } else {
       return originalPoolData;

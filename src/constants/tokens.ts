@@ -22,7 +22,7 @@ export const TOKEN_LIST: TokenListResponse = {
       name: 'Wrapped M',
       symbol: 'WM',
       tags: ['Top'],
-      logoURI: '/token_default.svg',
+      logoURI: '/token_m.svg',
     },
     {
       chainId: 43522,
@@ -31,7 +31,7 @@ export const TOKEN_LIST: TokenListResponse = {
       name: 'MGOLD',
       symbol: 'MGOLD',
       tags: ['Faucet'],
-      logoURI: '/token_default.svg',
+      logoURI: '/token_mgold.svg',
     },
     {
       chainId: 43522,
@@ -40,7 +40,7 @@ export const TOKEN_LIST: TokenListResponse = {
       name: 'PEPE',
       symbol: 'PEPE',
       tags: ['Faucet'],
-      logoURI: '/token_default.svg',
+      logoURI: '/token_pepe.svg',
     },
     {
       chainId: 43522,
@@ -49,7 +49,7 @@ export const TOKEN_LIST: TokenListResponse = {
       name: 'DMOON',
       symbol: 'DMOON',
       tags: ['Faucet'],
-      logoURI: '/token_default.svg',
+      logoURI: '/token_dmoon.svg',
     },
     {
       chainId: 43522,
@@ -58,7 +58,7 @@ export const TOKEN_LIST: TokenListResponse = {
       name: 'SSTAR',
       symbol: 'SSTAR',
       tags: ['Faucet'],
-      logoURI: '/token_default.svg',
+      logoURI: '/token_sstar.svg',
     },
     {
       chainId: 43522,
@@ -67,7 +67,7 @@ export const TOKEN_LIST: TokenListResponse = {
       name: 'WOJAK',
       symbol: 'WOJAK',
       tags: ['Faucet'],
-      logoURI: '/token_default.svg',
+      logoURI: '/token_wojak.svg',
     },
   ],
 };

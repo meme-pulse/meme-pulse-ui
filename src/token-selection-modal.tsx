@@ -339,7 +339,7 @@ export default function TokenSelectionModal({
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-figma-gray-table flex items-center justify-center">
-                            <img src="/token_default.svg" alt="M" className="w-[30px] h-[30px]" />
+                            <img src="/token_m.svg" alt="M" className="w-[30px] h-[30px]" />
                           </div>
                           <div>
                             <div className="font-roboto text-[#22222a] text-[14px] font-medium">M</div>

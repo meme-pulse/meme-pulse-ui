@@ -5,6 +5,8 @@ const LEADERBOARD_API_URL = 'https://viral-score-server-production.up.railway.ap
 interface LeaderboardToken {
   rank: number;
   tokenSymbol: string;
+  tokenName: string;
+  imageSrc: string;
   posts: {
     '1h': number;
     '1d': number;
@@ -26,6 +28,7 @@ interface LeaderboardToken {
 interface LeaderboardResponse {
   count: number;
   updatedAt: string;
+  imageCacheUpdatedAt: string;
   leaderboard: LeaderboardToken[];
 }
 

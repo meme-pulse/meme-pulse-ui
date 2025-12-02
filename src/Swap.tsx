@@ -139,15 +139,21 @@ export default function SwapComponent() {
   }, [isSwapConfirmed]);
 
   const fromTokenLogoURI = useMemo(() => {
-    if (fromToken.address === NATIVE_TOKEN_ADDRESS) {
-      return '/token_default.svg';
+    if (fromToken.address === NATIVE_TOKEN_ADDRESS || fromToken.symbol === 'M') {
+      return '/token_m.svg';
+    }
+    if (fromToken.symbol === 'WM') {
+      return '/token_m.svg';
     }
     return tokenList?.find((token) => token.address.toLowerCase() === fromToken.address.toLowerCase())?.logoURI;
   }, [fromToken, tokenList]);
 
   const toTokenLogoURI = useMemo(() => {
-    if (toToken?.address === NATIVE_TOKEN_ADDRESS) {
-      return '/token_default.svg';
+    if (toToken?.address === NATIVE_TOKEN_ADDRESS || toToken?.symbol === 'M') {
+      return '/token_m.svg';
+    }
+    if (toToken?.symbol === 'WM') {
+      return '/token_m.svg';
     }
     return tokenList?.find((token) => token.address.toLowerCase() === toToken?.address.toLowerCase())?.logoURI;
   }, [toToken, tokenList]);
