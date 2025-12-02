@@ -151,15 +151,16 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
   // Fetch token balances - always include both wrapped and native for tokens that could be WM
   const tokensToFetch = useMemo(() => {
     const tokens: `0x${string}`[] = [];
+    const wnativeAddress = WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
     if (originalPoolData?.tokenX.address) {
       tokens.push(originalPoolData.tokenX.address as `0x${string}`);
-      if (originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address) {
+      if (originalPoolData.tokenX.address.toLowerCase() === wnativeAddress) {
         tokens.push(zeroAddress);
       }
     }
     if (originalPoolData?.tokenY.address) {
       tokens.push(originalPoolData.tokenY.address as `0x${string}`);
-      if (originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address) {
+      if (originalPoolData.tokenY.address.toLowerCase() === wnativeAddress) {
         tokens.push(zeroAddress);
       }
     }
@@ -741,7 +742,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   />
                   <span className="font-press-start text-[12px] text-[#22222a] flex items-center">
                     {poolData.tokenX.symbol}
-                    {originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address && (
+                    {originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
                       <ArrowLeftRight
                         className="w-4 h-4 ml-1 hover:cursor-pointer text-figma-text-gray"
                         onClick={() => setIsNativeIn(!isNativeIn)}
@@ -781,7 +782,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   onClick={() => {
                     // Reserve gas fee when using native token
                     let maxBalance = tokenXBalance;
-                    if (isNativeIn && originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address) {
+                    if (isNativeIn && originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()) {
                       maxBalance = tokenXBalance - 0.01 > 0 ? tokenXBalance - 0.01 : 0;
                     }
                     setTokenXAmount(formatStringOnlyLocale(maxBalance.toFixed(originalPoolData.tokenX.decimals), numberLocale));
@@ -854,7 +855,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   />
                   <span className="font-press-start text-[12px] text-[#22222a] flex items-center">
                     {poolData.tokenY.symbol}
-                    {originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address && (
+                    {originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
                       <ArrowLeftRight
                         className="w-4 h-4 ml-1 hover:cursor-pointer text-figma-text-gray"
                         onClick={() => setIsNativeIn(!isNativeIn)}
@@ -894,7 +895,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   onClick={() => {
                     // Reserve gas fee when using native token
                     let maxBalance = tokenYBalance;
-                    if (isNativeIn && originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address) {
+                    if (isNativeIn && originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()) {
                       maxBalance = tokenYBalance - 0.01 > 0 ? tokenYBalance - 0.01 : 0;
                     }
                     setTokenYAmount(formatStringOnlyLocale(maxBalance.toFixed(originalPoolData.tokenY.decimals), numberLocale));
