@@ -99,6 +99,8 @@ export default function AIPoolDetail() {
   const [strategyData, setStrategyData] = useState<StrategyData | undefined>(undefined);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisDisplay | undefined>(undefined);
   const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
+  // Store the AI-recommended pool address
+  const [recommendedPoolAddress, setRecommendedPoolAddress] = useState<string | undefined>(undefined);
 
   const { data: tokenListData } = useTokenList();
 
@@ -166,13 +168,30 @@ export default function AIPoolDetail() {
     };
   }, [matchingGroup]);
 
+  // Get pool info - use AI-recommended pool if available, otherwise use best (highest liquidity) pool
+  const targetPoolInfo = useMemo(() => {
+    // If AI has recommended a specific pool, find it in availablePools
+    if (recommendedPoolAddress && matchingGroup) {
+      const recommendedPool = matchingGroup.groups.find((pool) => pool.pairAddress.toLowerCase() === recommendedPoolAddress.toLowerCase());
+      if (recommendedPool) {
+        return {
+          pairAddress: recommendedPool.pairAddress,
+          lbBinStep: recommendedPool.lbBinStep,
+          activeBinId: recommendedPool.activeBinId,
+        };
+      }
+    }
+    // Default to best pool (highest liquidity)
+    return bestPoolInfo;
+  }, [recommendedPoolAddress, matchingGroup, bestPoolInfo]);
+
   // First, get the best pool for this token pair
   const { data: lbPairData } = useQuery({
-    queryKey: ['lbPairAddr-ai', tokenAAddress, tokenBAddress, bestPoolInfo?.pairAddress],
+    queryKey: ['lbPairAddr-ai', tokenAAddress, tokenBAddress, targetPoolInfo?.pairAddress],
     queryFn: async () => {
-      // If we have best pool info from grouped data, use it
-      if (bestPoolInfo) {
-        return { LBPair: bestPoolInfo.pairAddress, binStep: bestPoolInfo.lbBinStep };
+      // If we have target pool info (AI-recommended or best), use it
+      if (targetPoolInfo) {
+        return { LBPair: targetPoolInfo.pairAddress, binStep: targetPoolInfo.lbBinStep };
       }
 
       // Fallback: Try common bin steps to find available pools
@@ -264,6 +283,11 @@ export default function AIPoolDetail() {
 
         // Parse AI response
         const { recommendation } = result;
+
+        // Set the AI-recommended pool address to switch to that pool
+        if (recommendation.recommendedPool?.pairAddress) {
+          setRecommendedPoolAddress(recommendation.recommendedPool.pairAddress);
+        }
 
         // Map distribution shape string to LiquidityDistribution enum
         const distributionShape = mapDistributionShape(recommendation.strategy.distributionShape);
