@@ -82,6 +82,10 @@ export class CNATIVE extends NativeCurrency {
         symbol = 'S';
         name = 'Sonic';
         break;
+      case 43522:
+        symbol = 'M';
+        name = 'Meme';
+        break;
       default:
         symbol = '';
         name = '';
