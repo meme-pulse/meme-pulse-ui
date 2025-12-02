@@ -3,7 +3,7 @@ import { CardWithHeader } from '@/components/ui/card-with-header';
 import type { PoolData, AggregatedPoolData } from '@/AIPoolDetail';
 import { formatUSDWithLocale } from '@/lib/format';
 
-type RiskPreference = 'conservative' | 'aggressive' | 'auto';
+type RiskPreference = 'defensive' | 'aggressive' | 'auto';
 
 interface AnalystCard {
   id: RiskPreference;
@@ -122,7 +122,7 @@ function AgentPulseIcon() {
 
 const analysts: AnalystCard[] = [
   {
-    id: 'conservative',
+    id: 'defensive',
     name: 'Dr. Safu',
     title: 'Conservative Analyst',
     description: 'Specializes in stable, low-risk strategies. Focuses on established pools with proven track records.',
@@ -248,4 +248,3 @@ export function AIStrategySelection({ poolData, aggregatedData, onGenerateStrate
 }
 
 export type { RiskPreference };
-

@@ -160,6 +160,15 @@ export function Header() {
               Pool
             </span>
             <span
+              onClick={(e) => handleMouseDown(e, '/portfolio')}
+              className={`text-[12px] cursor-pointer transition-colors ${
+                pathname.pathname === '/portfolio' ? 'text-[#cfbaff]' : 'text-white hover:text-[#cfbaff]'
+              }`}
+              style={{ fontFamily: '"Press Start 2P", cursive', lineHeight: '16px' }}
+            >
+              Portfolio
+            </span>
+            <span
               onClick={(e) => handleMouseDown(e, '/faucet')}
               className={`text-[12px] cursor-pointer transition-colors ${
                 pathname.pathname === '/faucet' ? 'text-[#cfbaff]' : 'text-white hover:text-[#cfbaff]'

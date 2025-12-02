@@ -353,7 +353,9 @@ export default function AIPoolDetail() {
           />
         )}
 
-        {aiFlowStep === 'analysis' && <AIAnalysisProgress poolData={poolData} onAnalysisComplete={handleAnalysisComplete} />}
+        {aiFlowStep === 'analysis' && (
+          <AIAnalysisProgress poolData={poolData} onAnalysisComplete={handleAnalysisComplete} isDataReady={!isGeneratingStrategy} />
+        )}
 
         {aiFlowStep === 'result' && (
           <AIStrategyResult poolData={poolData} tokenListData={tokenListData} strategyData={strategyData} aiAnalysis={aiAnalysis} />

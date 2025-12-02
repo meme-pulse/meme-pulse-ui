@@ -1,6 +1,5 @@
 import { ChevronDown, ChevronRight, ChevronUp, Search, HelpCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Input } from './components/ui/input';
 import { useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { DEFAULT_CHAINID } from './constants';
@@ -9,54 +8,23 @@ import { useTokenPrices } from './hooks/use-token-price';
 import TokenTicker from './components/token-ticker';
 import { useTokenList } from './hooks/use-token-list';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from './components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from './components/ui/tooltip';
 import { useLocalStorage } from 'usehooks-ts';
 import { formatNumber, formatUSDWithLocale } from '@/lib/format';
 import { customReadClient } from './main';
 import { LIQUIDITY_HELPER_V2_ADDRESS, LiquidityHelperV2ABI } from './lib/sdk';
+import { TypingAnimation } from './components/magicui/typing-animation';
+import { CardWithHeader } from './components/ui/card-with-header';
 
 const Portfolio = () => {
   const { address } = useAccount();
   const { data: tokenList } = useTokenList();
   const [numberLocale] = useLocalStorage('number-locale', navigator.language);
-  // const { data: userPoolList, isLoading: isUserPoolListLoading } = useQuery({
-  //   queryKey: ['userPoolList', address],
-  //   queryFn: () => mockUserPoolList(address || ''),
-  //   enabled: !!address,
-  // });
   const navigate = useNavigate();
-  const {
-    data: userPortfolioData,
-    // isLoading: isUserPortfolioDataLoading,
-    // isError: isAllBinIdsError,
-  } = useQuery({
+  const { data: userPortfolioData } = useQuery({
     queryKey: ['user-portfolio-data', address],
     queryFn: () => {
       return getPortfolio(address || '');
-      // return ponderClient.db.execute(
-      //   sql`
-      //   SELECT
-      //     "lbPair".*,
-      //     "tokenX"."decimals" AS "tokenXDecimals",
-      //     "tokenY"."decimals" AS "tokenYDecimals",
-      //     JSON_AGG("userBinLiquidity".*) AS "userBinLiquidities"
-      //   FROM
-      //     "userBinLiquidity"
-      //   JOIN
-      //     "lbPair" ON "userBinLiquidity"."lb_pair_id" = "lbPair"."id"
-      //   JOIN
-      //     "token" AS "tokenX" ON "lbPair"."token_x_id" = "tokenX"."id"
-      //   JOIN
-      //     "token" AS "tokenY" ON "lbPair"."token_y_id" = "tokenY"."id"
-      //   WHERE
-      //     "userBinLiquidity"."user_id" = ${address}
-      //   GROUP BY
-      //     "lbPair"."id",
-      //     "tokenX"."decimals",
-      //     "tokenY"."decimals"
-      // `
-      // );
     },
     enabled: !!address,
   });
@@ -123,7 +91,6 @@ const Portfolio = () => {
         const activeBinLiquidityY = allBinLiquidityAmounts?.[poolIdx]?.result?.[1]?.[activeBinIndex];
         inRangeTokenXAmount = Number(activeBinLiquidityX) / 10 ** pool.tokenXDecimals;
         inRangeTokenYAmount = Number(activeBinLiquidityY) / 10 ** pool.tokenYDecimals;
-        // console.log('inRangeTokenYAmount', activeBinIndex, allBinLiquidityAmounts?.[poolIdx]?.result?.[0]?.[activeBinIndex]);
         inRangeTokenXPrice = inRangeTokenXAmount * tokenXPrice;
         inRangeTokenYPrice = inRangeTokenYAmount * tokenYPrice;
         inRangeLiquidityUsd = inRangeTokenXPrice + inRangeTokenYPrice;
@@ -158,7 +125,6 @@ const Portfolio = () => {
   const filteredUserPortfolioDataWithLiquidityAmounts = useMemo(() => {
     return userPortfolioDataWithLiquidityAmounts
       ?.filter((pool: any) => {
-        // add tabs, by status
         if (activeTab === 'all') {
           return true;
         }
@@ -177,26 +143,26 @@ const Portfolio = () => {
         );
       });
   }, [userPortfolioDataWithLiquidityAmounts, searchTerm, activeTab]);
+
   const totalPortfolioValue = useMemo(() => {
     try {
       const total = userPortfolioDataWithLiquidityAmounts?.reduce((acc: any, pool: any) => acc + pool.totalLiquidityUsd, 0);
       if (!total || isNaN(total)) {
         return 0;
       }
-
       return total;
     } catch (error) {
       console.error(error);
       return 0;
     }
   }, [userPortfolioDataWithLiquidityAmounts]);
+
   const totalFeesEarned = useMemo(() => {
     try {
       const total = userPortfolioDataWithLiquidityAmounts?.reduce((acc: any, pool: any) => acc + pool.totalFeesUsd, 0);
       if (!total || isNaN(total)) {
         return 0;
       }
-
       return total;
     } catch (error) {
       console.error(error);
@@ -204,351 +170,551 @@ const Portfolio = () => {
     }
   }, [userPortfolioDataWithLiquidityAmounts]);
 
-  // const totalTradingVolume = useMemo(() => {
-  //   try {
-  //     const total = userPortfolioData?.volume?.[0]?.totalVolumeUSD;
-  //     if (!total || isNaN(total)) {
-  //       return 0;
-  //     }
-
-  //     return Number(total);
-  //   } catch (error) {
-  //     console.error(error);
-  //     return 0;
-  //   }
-  // }, [userPortfolioData]);
-
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      <main className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Portfolio</h1>
-          <p className="text-muted-foreground">Manage your positions in one place.</p>
-        </div>
+    <div className="min-h-screen relative overflow-hidden bg-[#060208]">
+      {/* Space Background with Stars */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {/* Gradient overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at top, #1a0a2e 0%, #060208 50%, #060208 100%)',
+          }}
+        />
+        {/* Stars layer 1 - small stars */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              radial-gradient(1px 1px at 20px 30px, white, transparent),
+              radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
+              radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.6), transparent),
+              radial-gradient(1px 1px at 90px 40px, white, transparent),
+              radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.7), transparent),
+              radial-gradient(1px 1px at 160px 120px, white, transparent),
+              radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.5), transparent),
+              radial-gradient(1px 1px at 250px 180px, white, transparent),
+              radial-gradient(1px 1px at 300px 90px, rgba(255,255,255,0.8), transparent),
+              radial-gradient(1px 1px at 350px 30px, white, transparent),
+              radial-gradient(1px 1px at 400px 150px, rgba(255,255,255,0.6), transparent),
+              radial-gradient(1px 1px at 450px 60px, white, transparent),
+              radial-gradient(1px 1px at 500px 200px, rgba(255,255,255,0.7), transparent),
+              radial-gradient(1px 1px at 550px 100px, white, transparent),
+              radial-gradient(1px 1px at 600px 40px, rgba(255,255,255,0.5), transparent),
+              radial-gradient(1px 1px at 650px 170px, white, transparent),
+              radial-gradient(1px 1px at 700px 80px, rgba(255,255,255,0.8), transparent),
+              radial-gradient(1px 1px at 750px 130px, white, transparent),
+              radial-gradient(1px 1px at 800px 20px, rgba(255,255,255,0.6), transparent),
+              radial-gradient(1px 1px at 850px 190px, white, transparent),
+              radial-gradient(1px 1px at 900px 70px, rgba(255,255,255,0.7), transparent),
+              radial-gradient(1px 1px at 950px 140px, white, transparent),
+              radial-gradient(1px 1px at 1000px 50px, rgba(255,255,255,0.5), transparent),
+              radial-gradient(1px 1px at 1050px 110px, white, transparent),
+              radial-gradient(1px 1px at 1100px 30px, rgba(255,255,255,0.8), transparent)
+            `,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '1200px 250px',
+          }}
+        />
+        {/* Stars layer 2 - medium stars */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              radial-gradient(2px 2px at 100px 50px, white, transparent),
+              radial-gradient(2px 2px at 220px 150px, rgba(255,255,255,0.9), transparent),
+              radial-gradient(2px 2px at 340px 80px, white, transparent),
+              radial-gradient(2px 2px at 460px 200px, rgba(255,255,255,0.8), transparent),
+              radial-gradient(2px 2px at 580px 30px, white, transparent),
+              radial-gradient(2px 2px at 700px 170px, rgba(255,255,255,0.9), transparent),
+              radial-gradient(2px 2px at 820px 100px, white, transparent),
+              radial-gradient(2px 2px at 940px 220px, rgba(255,255,255,0.8), transparent),
+              radial-gradient(2px 2px at 1060px 60px, white, transparent),
+              radial-gradient(2px 2px at 180px 250px, rgba(255,255,255,0.7), transparent),
+              radial-gradient(2px 2px at 400px 300px, white, transparent),
+              radial-gradient(2px 2px at 620px 280px, rgba(255,255,255,0.9), transparent),
+              radial-gradient(2px 2px at 840px 320px, white, transparent),
+              radial-gradient(2px 2px at 1000px 290px, rgba(255,255,255,0.8), transparent)
+            `,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '1200px 400px',
+          }}
+        />
+        {/* Purple glow accent */}
+        <div
+          className="absolute top-0 left-1/4 w-[600px] h-[400px] opacity-30"
+          style={{
+            background: 'radial-gradient(ellipse at center, rgba(137, 91, 245, 0.3) 0%, transparent 70%)',
+          }}
+        />
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-card border border-border rounded-lg">
-            <div className="flex items-center justify-between py-12 px-6 ">
-              <div>
-                <div className="text-muted-foreground text-sm">Total Portfolio Value</div>
-                <div className="text-foreground text-2xl font-bold mt-2">
-                  {formatUSDWithLocale(totalPortfolioValue, 2, 0, numberLocale)}
-                </div>
-              </div>
-              <div className=" p-3 rounded-lg">
-                <img src="/portfolio/portfolio_tvl.svg" alt="portfolio icon" className="w-6 h-6 " />
-              </div>
-            </div>
-          </div>{' '}
-          <div className="bg-card border border-border rounded-lg">
-            <div className="flex items-center justify-between py-12 px-6 ">
-              <div>
-                <div className="text-muted-foreground text-sm">Total Fees Earned</div>
-                <div className="text-foreground text-2xl font-bold mt-2">{formatUSDWithLocale(totalFeesEarned, 2, 0, numberLocale)}</div>
-              </div>
-              <div className=" p-3 rounded-lg">
-                <img src="/portfolio/portfolio_fee.svg" alt="portfolio icon" className="w-6 h-6 " />
-              </div>
-            </div>
-          </div>{' '}
-          <div className="bg-card border border-border rounded-lg">
-            <div className="flex items-center justify-between py-12 px-6 ">
-              <div>
-                <div className="text-muted-foreground text-sm">Total Positions</div>
-                <div className="text-foreground text-2xl font-bold mt-2">{userPortfolioData?.userAllPools?.length || 0}</div>
-              </div>
-              <div className=" p-3 rounded-lg">
-                <img src="/portfolio/portfolio_position.svg" alt="portfolio icon" className="w-6 h-6 " />
+      <main className="relative z-10 max-w-screen-2xl mx-auto px-2 sm:px-6 py-8">
+        {/* Page Header with Pixel Font */}
+        <div className="mb-8">
+          <div className="min-h-[42px] flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <TypingAnimation
+                as="h1"
+                className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
+                style={{ fontFamily: '"Press Start 2P", cursive' }}
+                duration={50}
+              >
+                MY PORTFOLIO
+              </TypingAnimation>
+              {/* Ant Animation */}
+              <div className="flex-shrink-0 opacity-80">
+                <img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-16 h-16 object-contain" />
               </div>
             </div>
           </div>
+          <p className="font-roboto text-zinc-400 text-[16px] leading-normal max-w-[854px] mt-[38px]">
+            Manage your liquidity positions in one place. Track your deposits, fees earned, and liquidity efficiency across all pools.
+          </p>
         </div>
-        <div className="bg-card border border-border rounded-lg px-2 py-2 sm:px-6 sm:py-6 gap-4">
-          <div className="flex flex-col gap-2 sm:gap-0 sm:flex-row justify-between items-center">
-            {/*  1. card header */}
-            <div className="flex flex-col sm:flex-row  gap-6 items-center">
-              {/* <h1 className="text-xl sm:*:text-2xl font-bold text-foreground  ">My Portfolio</h1> */}
 
-              {/* Custom Tab (all positions, active, out of ragne)  */}
-              {/* tabs wrapper */}
-              <div className="grid grid-cols-3 sm:flex items-center justify-between bg-muted p-1 rounded-lg">
-                <div
-                  className={`text-foreground text-sm px-4 py-2 rounded-lg transition-all duration-500 ease-out ${
-                    activeTab === 'all' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50'
-                  } cursor-pointer`}
-                  onClick={() => setActiveTab('all')}
-                >
-                  All Positions
+        {/* Stats Cards - Retro Windows 95 Style */}
+        <CardWithHeader title="Portfolio Overview" className="mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+            {/* Total Portfolio Value Card */}
+            <div
+              className="bg-figma-gray-bg p-4"
+              style={{
+                boxShadow:
+                  'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc, inset -2px -2px 0px 0px #9c9c9c, inset 2px 2px 0px 0px #e8e8e8',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-roboto text-figma-text-gray text-sm">Total Portfolio Value</div>
+                  <div className="font-roboto text-figma-text-dark text-2xl font-bold mt-2">
+                    {formatUSDWithLocale(totalPortfolioValue, 2, 0, numberLocale)}
+                  </div>
                 </div>
-                <div
-                  className={`text-foreground text-sm px-4 py-2 rounded-lg transition-all duration-500 ease-out ${
-                    activeTab === 'active' ? 'bg-primary text-primary-foreground' : ''
-                  } cursor-pointer`}
-                  onClick={() => setActiveTab('active')}
-                >
-                  Active
-                </div>
-                <div
-                  className={`text-foreground text-sm px-4 py-2 rounded-lg transition-all duration-500 ease-out   ${
-                    activeTab === 'outOfRange' ? 'bg-primary text-primary-foreground' : ''
-                  } cursor-pointer`}
-                  onClick={() => setActiveTab('outOfRange')}
-                >
-                  Out of Range
+                <div className="p-3">
+                  <img src="/portfolio/portfolio_tvl.svg" alt="portfolio icon" className="w-8 h-8" />
                 </div>
               </div>
             </div>
-            {/*  Search Tab */}
+
+            {/* Total Fees Earned Card */}
+            <div
+              className="bg-figma-gray-bg p-4"
+              style={{
+                boxShadow:
+                  'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc, inset -2px -2px 0px 0px #9c9c9c, inset 2px 2px 0px 0px #e8e8e8',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-roboto text-figma-text-gray text-sm">Total Fees Earned</div>
+                  <div className="font-roboto text-green-600 text-2xl font-bold mt-2">
+                    {formatUSDWithLocale(totalFeesEarned, 2, 0, numberLocale)}
+                  </div>
+                </div>
+                <div className="p-3">
+                  <img src="/portfolio/portfolio_fee.svg" alt="portfolio icon" className="w-8 h-8" />
+                </div>
+              </div>
+            </div>
+
+            {/* Total Positions Card */}
+            <div
+              className="bg-figma-gray-bg p-4"
+              style={{
+                boxShadow:
+                  'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc, inset -2px -2px 0px 0px #9c9c9c, inset 2px 2px 0px 0px #e8e8e8',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-roboto text-figma-text-gray text-sm">Total Positions</div>
+                  <div className="font-roboto text-figma-text-dark text-2xl font-bold mt-2">
+                    {userPortfolioData?.userAllPools?.length || 0}
+                  </div>
+                </div>
+                <div className="p-3">
+                  <img src="/portfolio/portfolio_position.svg" alt="portfolio icon" className="w-8 h-8" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardWithHeader>
+
+        {/* Positions Table - Retro Style */}
+        <CardWithHeader title="My Positions" contentClassName="p-3">
+          {/* Title and Filter Controls */}
+          <div className="mb-[28px]">
+            <div className="flex items-start justify-between mb-2">
+              <h2 className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px]">
+                Liquidity Positions
+              </h2>
+            </div>
+            <p className="font-roboto text-figma-text-gray text-[14px] leading-normal">
+              View and manage your active liquidity positions across all pools.
+            </p>
+          </div>
+
+          {/* Controls Row */}
+          <div className="flex flex-col gap-4 sm:flex-row justify-between items-center mb-4">
+            {/* Tabs */}
+            <div
+              className="flex items-center bg-figma-gray-bg p-1"
+              style={{
+                boxShadow:
+                  'inset -1px -1px 0px 0px #fcfcfc, inset 1px 1px 0px 0px #828282, inset -2px -2px 0px 0px #e8e8e8, inset 2px 2px 0px 0px #9c9c9c',
+              }}
+            >
+              <button
+                className={`font-roboto text-sm px-4 py-2 transition-all ${
+                  activeTab === 'all' ? 'bg-figma-purple text-white' : 'bg-figma-gray-bg text-figma-text-dark hover:bg-gray-300'
+                }`}
+                style={{
+                  boxShadow:
+                    activeTab === 'all'
+                      ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa'
+                      : 'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc',
+                }}
+                onClick={() => setActiveTab('all')}
+              >
+                All Positions
+              </button>
+              <button
+                className={`font-roboto text-sm px-4 py-2 transition-all ${
+                  activeTab === 'active' ? 'bg-figma-purple text-white' : 'bg-figma-gray-bg text-figma-text-dark hover:bg-gray-300'
+                }`}
+                style={{
+                  boxShadow:
+                    activeTab === 'active'
+                      ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa'
+                      : 'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc',
+                }}
+                onClick={() => setActiveTab('active')}
+              >
+                Active
+              </button>
+              <button
+                className={`font-roboto text-sm px-4 py-2 transition-all ${
+                  activeTab === 'outOfRange' ? 'bg-figma-purple text-white' : 'bg-figma-gray-bg text-figma-text-dark hover:bg-gray-300'
+                }`}
+                style={{
+                  boxShadow:
+                    activeTab === 'outOfRange'
+                      ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa'
+                      : 'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc',
+                }}
+                onClick={() => setActiveTab('outOfRange')}
+              >
+                Out of Range
+              </button>
+            </div>
+
+            {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-figma-text-gray" />
+              <input
+                type="text"
                 placeholder="Search by name, symbol or address"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10  w-72 bg-background border-border text-foreground placeholder:text-muted-foreground"
+                className="pl-10 w-72 h-10 bg-white font-roboto text-figma-text-dark placeholder:text-figma-text-gray text-sm"
+                style={{
+                  boxShadow:
+                    'inset -1px -1px 0px 0px #fcfcfc, inset 1px 1px 0px 0px #828282, inset -2px -2px 0px 0px #e8e8e8, inset 2px 2px 0px 0px #9c9c9c',
+                }}
               />
             </div>
           </div>
-          <div className="hidden md:block overflow-x-auto mt-8">
-            <table className="w-full" style={{ tableLayout: 'fixed' }}>
-              <colgroup>
-                <col style={{ width: '25%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '20%' }} />
-                <col style={{ width: '20%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '5%' }} />
-              </colgroup>
-              <thead>
-                <tr className="border-b border-border-muted text-left">
-                  <th className="pb-3 text-body-sm font-medium text-text-secondary uppercase tracking-wider">Pool Name</th>
-                  <th className="pb-3 text-body-sm font-medium text-text-secondary uppercase tracking-wider text-right">STATUS</th>
-                  <th className="pb-3 text-body-sm font-medium text-text-secondary uppercase tracking-wider text-right">
-                    <div
-                      className="flex items-center justify-end space-x-1 cursor-pointer"
-                      onClick={() => setSortOption(sortOption === 'depositDesc' ? 'depositAsc' : 'depositDesc')}
-                    >
-                      <span>YOUR DEPOSITS</span>
-                      {sortOption === 'depositAsc' ? (
-                        <ChevronUp className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
-                      ) : sortOption === 'depositDesc' ? (
-                        <ChevronDown className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
-                      ) : null}
-                    </div>
-                  </th>
-                  <th className="pb-3 text-body-sm font-medium text-text-secondary uppercase tracking-wider text-right">
-                    <div
-                      className="flex items-center justify-end space-x-1 cursor-pointer"
-                      // onClick={() => setSortOption(sortOption === 'feeDesc' ? 'feeAsc' : 'feeDesc')}
-                    >
-                      <span>FEES EARNED</span>
-                      {/* {sortOption === 'feeAsc' ? (
-                        <ChevronUp className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
-                      ) : sortOption === 'feeDesc' ? (
-                        <ChevronDown className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
-                      ) : null} */}
-                    </div>
-                  </th>
-                  <th className="pb-3 text-body-sm font-medium text-text-secondary uppercase tracking-wider text-right">
-                    <div className="flex items-center justify-end space-x-1">
-                      <span>LIQUIDITY EFFICIENCY</span>
-                      <Tooltip delayDuration={200}>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white border border-gray-200 shadow-lg">
-                          <div className="text-sm text-gray-800">
-                            <p className="font-semibold mb-2 text-gray-900">Liquidity Efficiency</p>
-                            <p className="mb-2 text-gray-700">Shows how much of your deposited liquidity is actively earning fees.</p>
-                            <p className="text-xs text-gray-600">Formula: (Active Liquidity ÷ Total Deposits) × 100%</p>
-                            <p className="text-xs text-gray-600 mt-1">Higher percentage = More efficient liquidity placement</p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </th>
-                  <th className="pb-3 text-body-sm font-medium text-text-secondary uppercase tracking-wider text-right"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E3E8EF]">
-                {filteredUserPortfolioDataWithLiquidityAmounts
-                  ?.sort((a: any, b: any) => {
-                    if (sortOption === 'depositDesc') return b.totalLiquidityUsd - a.totalLiquidityUsd;
-                    if (sortOption === 'depositAsc') return a.totalLiquidityUsd - b.totalLiquidityUsd;
-                    if (sortOption === 'activeLiquidityDesc') return b.inRangeLiquidityUsd - a.inRangeLiquidityUsd;
-                    if (sortOption === 'activeLiquidityAsc') return a.inRangeLiquidityUsd - b.inRangeLiquidityUsd;
-                    // if (sortOption === 'fee/tvlDesc') return b.totalFees24h - a.totalFees24h;
-                    // if (sortOption === 'fee/tvlAsc') return a.totalFees24h - b.totalFees24h;
-                    return 0;
-                  })
-                  .map((pool: any) => (
-                    <tr
-                      className="hover:bg-primary/10 transition-colors cursor-pointer"
-                      onClick={() => {
-                        navigate(`/pool/v22/${pool.tokenXId}/${pool.tokenYId}/${pool.binStep}`);
+
+          {/* Table Container */}
+          <div
+            className="bg-figma-gray-table mx-2"
+            style={{
+              boxShadow:
+                'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #3d3d43, inset -2px -2px 0px 0px #e7e7eb, inset 2px 2px 0px 0px #808088',
+              padding: '4px',
+            }}
+          >
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full" style={{ tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: '25%' }} />
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '18%' }} />
+                  <col style={{ width: '18%' }} />
+                  <col style={{ width: '17%' }} />
+                  <col style={{ width: '10%' }} />
+                </colgroup>
+                <thead>
+                  <tr className="font-roboto">
+                    <th
+                      className="h-[36px] text-left font-normal text-black text-[16px] leading-[19px] bg-figma-gray-table relative"
+                      style={{
+                        boxShadow:
+                          'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                        paddingLeft: '8px',
+                        paddingTop: '18px',
+                        paddingBottom: '18px',
                       }}
                     >
-                      <td className="py-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center -space-x-2">
-                            <TokenTicker
-                              logoURI={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenXId.toLowerCase())?.logoURI}
-                              symbol={pool.tokenXId}
-                              className="w-8 h-8 rounded-full bg-muted"
-                            />
-                            <TokenTicker
-                              logoURI={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenYId.toLowerCase())?.logoURI}
-                              symbol={pool.tokenYId}
-                              className="w-8 h-8 rounded-full bg-muted"
-                            />
-                          </div>
-                          <div className="flex flex-col ">
-                            <span className="font-medium text-foreground">{pool.name.split('-')[0] + '-' + pool.name.split('-')[1]}</span>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-muted-foreground  py-1 rounded">
-                                <span className="text-[1rem]">Bin Step</span> <span className="ml-1 text-foreground">{pool.binStep}</span>
-                              </span>
-                              <span className="text-muted-foreground  py-1 rounded">
-                                <span className="text-[1rem]">Fee</span>{' '}
-                                <span className="ml-1 text-foreground">{formatNumber(Number(pool.baseFeePct), 4, 0, numberLocale)} %</span>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right font-medium text-foreground">
-                        {pool.isInRange ? (
-                          <span className="inline-flex items-center gap-2 px-2 py-1 text-green-400 border border-green-400 rounded-md bg-green-400/10">
-                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                            In Range
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-2 px-2 py-1 text-yellow-400 border border-yellow-400 rounded-md bg-yellow-400/10">
-                            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                            Out of Range
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 text-right font-medium text-foreground">
-                        {formatUSDWithLocale(pool.totalLiquidityUsd, 0, 0, numberLocale)}
-                      </td>
-                      <td className="py-3 text-right font-medium text-green-400">
-                        {formatUSDWithLocale(pool.totalFeesUsd, 2, 0, numberLocale)}
-                      </td>
-                      <td className="py-3 text-right font-medium text-foreground">
-                        {pool.totalLiquidityUsd > 0
-                          ? formatNumber((pool.inRangeLiquidityUsd / pool.totalLiquidityUsd) * 100, 2, 0, numberLocale)
-                          : '0'}{' '}
-                        %
-                      </td>
-                      <td
-                        className="py-3 flex h-[88px] items-center justify-end  "
-                        onClick={() => {
-                          navigate(`/pool/v22/${pool.tokenXId}/${pool.tokenYId}/${pool.binStep}`);
-                        }}
+                      <span className="absolute left-[8px] top-1/2 -translate-y-1/2">Pool Name</span>
+                    </th>
+                    <th
+                      className="h-[36px] text-center font-normal text-black text-[16px] leading-[19px] bg-figma-gray-table relative"
+                      style={{
+                        boxShadow:
+                          'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                        paddingTop: '18px',
+                        paddingBottom: '18px',
+                      }}
+                    >
+                      <span className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">Status</span>
+                    </th>
+                    <th
+                      className="h-[36px] text-left font-normal text-black text-[16px] leading-[19px] bg-figma-gray-table relative"
+                      style={{
+                        boxShadow:
+                          'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                        paddingLeft: '8px',
+                        paddingTop: '18px',
+                        paddingBottom: '18px',
+                      }}
+                    >
+                      <div
+                        className="absolute left-[8px] top-1/2 -translate-y-1/2 flex items-center gap-1 cursor-pointer"
+                        onClick={() => setSortOption(sortOption === 'depositDesc' ? 'depositAsc' : 'depositDesc')}
                       >
-                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="block md:hidden mt-4">
-            {filteredUserPortfolioDataWithLiquidityAmounts?.map((pool: any) => (
-              <Card
-                className="mb-4 cursor-pointer hover:shadow-lg transition-shadow bg-card border border-border hover:border-primary/50"
-                // onClick={() => navigate(`/pool/v22/${pool.tokenXId}/${pool.tokenYId}/${pool.binStep}`)}
-                onClick={() => navigate(`/pool/v22/${pool.tokenXId}/${pool.tokenYId}/${pool.binStep}`)}
-              >
-                <CardContent className="flex flex-col gap-3 p-4 ">
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="flex -space-x-2">
-                      <img
-                        src={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenXId.toLowerCase())?.logoURI}
-                        alt={pool.tokenXId}
-                        className="w-6 h-6 rounded-full bg-muted"
-                      />
-                      <img
-                        src={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenYId.toLowerCase())?.logoURI}
-                        alt={pool.tokenYId}
-                        className="w-6 h-6 rounded-full bg-muted"
-                      />
-                    </div>
-                    <div className="flex flex-col flex-1">
-                      <div className="font-medium text-foreground text-xs">
-                        <div className="flex items-center justify-between w-full">
-                          <span>{pool.name.split('-')[0] + '-' + pool.name.split('-')[1]}</span>
-                          <div>
-                            {pool.isInRange ? (
-                              <span className="inline-flex items-center gap-2 px-2 py-1 text-green-400 border border-green-400 rounded-md bg-green-400/10">
-                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                                In Range
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-2 px-2 py-1 text-yellow-400 border border-yellow-400 rounded-md bg-yellow-400/10">
-                                <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                                Out of Range
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                        <span>Your Deposits</span>
+                        {sortOption === 'depositAsc' ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : sortOption === 'depositDesc' ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : null}
                       </div>
-                      <div className="flex items-center space-x-2 text-xs">
-                        <span className="text-muted-foreground  py-1 rounded">
-                          <span className="text-sm">Bin Step</span> <span className="ml-1 text-foreground">{pool.binStep}</span>
-                        </span>
-                        <span className=" text-muted-foreground  py-1 rounded">
-                          <span className="text-sm">Fee</span>{' '}
-                          <span className="ml-1 text-foreground">{formatNumber(Number(pool.baseFeePct), 4, 0, numberLocale)} %</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-4 mt-2 text-sm">
-                    <div className="flex flex-col flex-1 min-w-[120px]">
-                      <span className="text-muted-foreground">Your Deposits</span>
-                      <span className="font-medium text-foreground">{formatUSDWithLocale(pool.totalLiquidityUsd, 0, 0, numberLocale)}</span>
-                    </div>
-                    <div className="flex flex-col flex-1 min-w-[120px]">
-                      <span className="text-muted-foreground">Fees Earned</span>
-                      <span className="font-medium text-foreground">{formatUSDWithLocale(pool.totalFeesUsd, 0, 0, numberLocale)}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <div className="flex flex-col flex-1 min-w-[120px] relative">
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Liquidity Efficiency</span>
+                    </th>
+                    <th
+                      className="h-[36px] text-center font-normal text-black text-[16px] leading-[19px] bg-figma-gray-table relative"
+                      style={{
+                        boxShadow:
+                          'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                        paddingTop: '18px',
+                        paddingBottom: '18px',
+                      }}
+                    >
+                      <span className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">Fees Earned</span>
+                    </th>
+                    <th
+                      className="h-[36px] text-center font-normal text-black text-[16px] leading-[19px] bg-figma-gray-table relative"
+                      style={{
+                        boxShadow:
+                          'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                        paddingTop: '18px',
+                        paddingBottom: '18px',
+                      }}
+                    >
+                      <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <span>Efficiency</span>
                         <Tooltip delayDuration={200}>
                           <TooltipTrigger asChild>
-                            <HelpCircle className="w-3 h-3 text-muted-foreground cursor-help" />
+                            <HelpCircle className="w-4 h-4 text-figma-text-gray cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs bg-white border border-gray-200 shadow-lg">
                             <div className="text-sm text-gray-800">
                               <p className="font-semibold mb-2 text-gray-900">Liquidity Efficiency</p>
                               <p className="mb-2 text-gray-700">Shows how much of your deposited liquidity is actively earning fees.</p>
-                              <p className="text-xs text-gray-600">Formula: (Active Liquidity ÷ Total Deposits) × 100%</p>
-                              <p className="text-xs text-gray-600 mt-1">Higher percentage = More efficient liquidity placement</p>
+                              <p className="text-xs text-gray-600">Formula: (Active Liquidity / Total Deposits) x 100%</p>
                             </div>
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                      <span className="font-medium text-foreground">
-                        {pool.totalLiquidityUsd > 0
-                          ? formatNumber((pool.inRangeLiquidityUsd / pool.totalLiquidityUsd) * 100, 2, 0, numberLocale)
-                          : '0'}{' '}
-                        %
-                      </span>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground absolute right-0 bottom-0" />
+                    </th>
+                    <th
+                      className="h-[36px] bg-figma-gray-table"
+                      style={{
+                        boxShadow:
+                          'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                      }}
+                    ></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUserPortfolioDataWithLiquidityAmounts
+                    ?.sort((a: any, b: any) => {
+                      if (sortOption === 'depositDesc') return b.totalLiquidityUsd - a.totalLiquidityUsd;
+                      if (sortOption === 'depositAsc') return a.totalLiquidityUsd - b.totalLiquidityUsd;
+                      if (sortOption === 'activeLiquidityDesc') return b.inRangeLiquidityUsd - a.inRangeLiquidityUsd;
+                      if (sortOption === 'activeLiquidityAsc') return a.inRangeLiquidityUsd - b.inRangeLiquidityUsd;
+                      return 0;
+                    })
+                    .map((pool: any, idx: number) => (
+                      <tr
+                        key={idx}
+                        className="bg-white hover:bg-figma-purple/10 transition-colors cursor-pointer font-roboto"
+                        onClick={() => {
+                          navigate(`/pool/v22/${pool.tokenXId}/${pool.tokenYId}/${pool.binStep}`);
+                        }}
+                        style={{
+                          boxShadow:
+                            'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                        }}
+                      >
+                        <td className="py-4 px-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center -space-x-2">
+                              <TokenTicker
+                                logoURI={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenXId.toLowerCase())?.logoURI}
+                                symbol={pool.tokenXId}
+                                className="w-8 h-8 rounded-full bg-gray-200"
+                              />
+                              <TokenTicker
+                                logoURI={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenYId.toLowerCase())?.logoURI}
+                                symbol={pool.tokenYId}
+                                className="w-8 h-8 rounded-full bg-gray-200"
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-figma-text-dark">
+                                {pool.name.split('-')[0] + '-' + pool.name.split('-')[1]}
+                              </span>
+                              <div className="flex items-center space-x-2 text-xs text-figma-text-gray">
+                                <span>Bin Step {pool.binStep}</span>
+                                <span>|</span>
+                                <span>Fee {formatNumber(Number(pool.baseFeePct), 4, 0, numberLocale)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 text-center">
+                          {pool.isInRange ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              In Range
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                              Out of Range
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-4 px-2 font-medium text-figma-text-dark">
+                          {formatUSDWithLocale(pool.totalLiquidityUsd, 0, 0, numberLocale)}
+                        </td>
+                        <td className="py-4 text-center font-medium text-green-600">
+                          {formatUSDWithLocale(pool.totalFeesUsd, 2, 0, numberLocale)}
+                        </td>
+                        <td className="py-4 text-center font-medium text-figma-text-dark">
+                          {pool.totalLiquidityUsd > 0
+                            ? formatNumber((pool.inRangeLiquidityUsd / pool.totalLiquidityUsd) * 100, 2, 0, numberLocale)
+                            : '0'}
+                          %
+                        </td>
+                        <td className="py-4 pr-4 text-right">
+                          <ChevronRight className="w-5 h-5 text-figma-text-gray inline-block" />
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="block md:hidden p-2">
+              {filteredUserPortfolioDataWithLiquidityAmounts?.map((pool: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="mb-4 bg-white cursor-pointer hover:bg-figma-purple/5 transition-colors"
+                  style={{
+                    boxShadow:
+                      'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc, inset -2px -2px 0px 0px #9c9c9c, inset 2px 2px 0px 0px #e8e8e8',
+                  }}
+                  onClick={() => navigate(`/pool/v22/${pool.tokenXId}/${pool.tokenYId}/${pool.binStep}`)}
+                >
+                  <div className="p-4">
+                    {/* Header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex -space-x-2">
+                        <img
+                          src={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenXId.toLowerCase())?.logoURI}
+                          alt={pool.tokenXId}
+                          className="w-8 h-8 rounded-full bg-gray-200"
+                        />
+                        <img
+                          src={tokenList?.find((token) => token.address.toLowerCase() === pool.tokenYId.toLowerCase())?.logoURI}
+                          alt={pool.tokenYId}
+                          className="w-8 h-8 rounded-full bg-gray-200"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-roboto font-medium text-figma-text-dark">
+                            {pool.name.split('-')[0] + '-' + pool.name.split('-')[1]}
+                          </span>
+                          {pool.isInRange ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              In Range
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                              Out of Range
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2 text-xs text-figma-text-gray font-roboto">
+                          <span>Bin Step {pool.binStep}</span>
+                          <span>|</span>
+                          <span>Fee {formatNumber(Number(pool.baseFeePct), 4, 0, numberLocale)}%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-4 font-roboto">
+                      <div>
+                        <div className="text-xs text-figma-text-gray">Your Deposits</div>
+                        <div className="font-medium text-figma-text-dark">
+                          {formatUSDWithLocale(pool.totalLiquidityUsd, 0, 0, numberLocale)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-figma-text-gray">Fees Earned</div>
+                        <div className="font-medium text-green-600">{formatUSDWithLocale(pool.totalFeesUsd, 2, 0, numberLocale)}</div>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs text-figma-text-gray flex items-center gap-1">
+                            Efficiency
+                            <Tooltip delayDuration={200}>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="w-3 h-3 text-figma-text-gray cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs bg-white border border-gray-200 shadow-lg">
+                                <div className="text-sm text-gray-800">
+                                  <p className="font-semibold mb-2 text-gray-900">Liquidity Efficiency</p>
+                                  <p className="mb-2 text-gray-700">Shows how much of your deposited liquidity is actively earning fees.</p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <div className="font-medium text-figma-text-dark">
+                            {pool.totalLiquidityUsd > 0
+                              ? formatNumber((pool.inRangeLiquidityUsd / pool.totalLiquidityUsd) * 100, 2, 0, numberLocale)
+                              : '0'}
+                            %
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-figma-text-gray" />
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-        {/*  tables */}
+        </CardWithHeader>
       </main>
     </div>
   );

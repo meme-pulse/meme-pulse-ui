@@ -12,6 +12,7 @@ interface AnalysisStep {
 interface AIAnalysisProgressProps {
   poolData: PoolData;
   onAnalysisComplete: () => void;
+  isDataReady: boolean; // true when API mutation is complete
 }
 
 const initialSteps: AnalysisStep[] = [
@@ -21,10 +22,11 @@ const initialSteps: AnalysisStep[] = [
   { id: 'complete', label: 'Analysis Completed', status: 'pending' },
 ];
 
-export function AIAnalysisProgress({ poolData, onAnalysisComplete }: AIAnalysisProgressProps) {
+export function AIAnalysisProgress({ poolData, onAnalysisComplete, isDataReady }: AIAnalysisProgressProps) {
   const [progress, setProgress] = useState(0);
   const [steps, setSteps] = useState<AnalysisStep[]>(initialSteps);
   const [, setCurrentStepIndex] = useState(0);
+  const [animationComplete, setAnimationComplete] = useState(false);
   const hasCompletedRef = useRef(false);
 
   useEffect(() => {
@@ -75,19 +77,26 @@ export function AIAnalysisProgress({ poolData, onAnalysisComplete }: AIAnalysisP
     };
   }, [steps.length]);
 
-  // Handle completion
+  // Mark animation as complete when progress reaches 100%
   useEffect(() => {
-    if (progress >= 100 && !hasCompletedRef.current) {
-      hasCompletedRef.current = true;
+    if (progress >= 100 && !animationComplete) {
+      setAnimationComplete(true);
       // Mark all steps as completed
       setSteps((prevSteps) => prevSteps.map((step) => ({ ...step, status: 'completed' })));
+    }
+  }, [progress, animationComplete]);
+
+  // Handle completion - wait for BOTH animation AND data to be ready
+  useEffect(() => {
+    if (animationComplete && isDataReady && !hasCompletedRef.current) {
+      hasCompletedRef.current = true;
       // Wait a moment before navigating to results
       const timeout = setTimeout(() => {
         onAnalysisComplete();
-      }, 800);
+      }, 500);
       return () => clearTimeout(timeout);
     }
-  }, [progress, onAnalysisComplete]);
+  }, [animationComplete, isDataReady, onAnalysisComplete]);
 
   return (
     <CardWithHeader title="AI Analysis in Progress" contentClassName="p-0">
@@ -169,7 +178,7 @@ export function AIAnalysisProgress({ poolData, onAnalysisComplete }: AIAnalysisP
           </div>
         </div>
 
-        {/* Tip Box */}
+        {/* Tip Box / Waiting for AI message */}
         <div
           className="bg-figma-gray-table mx-[10px] mt-[10px] mb-[10px] p-4"
           style={{
@@ -178,9 +187,11 @@ export function AIAnalysisProgress({ poolData, onAnalysisComplete }: AIAnalysisP
           }}
         >
           <div className="flex items-start gap-3">
-            <span className="text-[14px]">💡</span>
+            <span className="text-[14px]">{animationComplete && !isDataReady ? '⏳' : '💡'}</span>
             <p className="font-roboto text-[14px] text-black text-center leading-[18.75px]">
-              Tip: Analysis typically takes 6-8 seconds. Our AI is reviewing real-time on-chain data to generate your personalized strategy.
+              {animationComplete && !isDataReady
+                ? 'Finalizing AI analysis... Please wait a moment.'
+                : 'Tip: Analysis typically takes 6-8 seconds. Our AI is reviewing real-time on-chain data to generate your personalized strategy.'}
             </p>
           </div>
         </div>
@@ -188,4 +199,3 @@ export function AIAnalysisProgress({ poolData, onAnalysisComplete }: AIAnalysisP
     </CardWithHeader>
   );
 }
-
