@@ -24,7 +24,7 @@ const initialSteps: AnalysisStep[] = [
 export function AIAnalysisProgress({ poolData, onAnalysisComplete }: AIAnalysisProgressProps) {
   const [progress, setProgress] = useState(0);
   const [steps, setSteps] = useState<AnalysisStep[]>(initialSteps);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [, setCurrentStepIndex] = useState(0);
   const hasCompletedRef = useRef(false);
 
   useEffect(() => {

@@ -12,7 +12,7 @@ import { mockPoolData } from './mock/api-data';
 import { useMemo, useState } from 'react';
 import { LB_FACTORY_V22_ADDRESS, LBFactoryV21ABI } from './lib/sdk';
 
-import { usePublicClient, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { DEFAULT_CHAINID } from './constants';
 import { useActiveId } from './hooks/use-active-id';
 import { getPriceFromId } from './lib/bin';
@@ -66,7 +66,6 @@ export default function PoolDetail() {
   const { tokenAAddress, tokenBAddress, lbBinStep } = useParams();
   const [activeTab, setActiveTab] = useState('add');
   const { address } = useAccount();
-  const publicClient = usePublicClient();
 
   const { data: tokenListData } = useTokenList();
 

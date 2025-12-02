@@ -3,7 +3,7 @@ import { usePublicClient, useAccount } from 'wagmi';
 import { WNATIVE, Token, TokenAmount, Percent, Price } from '../lib/sdk';
 import { LB_ROUTER_V22_ADDRESS, PairV2, RouteV2, TradeV2, type Quote } from '../lib/sdk';
 import { LBRouterV22ABI } from '../lib/sdk';
-import { BaseError, ContractFunctionRevertedError, getAddress, parseUnits, zeroAddress } from 'viem';
+import { BaseError, ContractFunctionRevertedError, parseUnits, zeroAddress } from 'viem';
 import { DEFAULT_CHAINID } from '@/constants';
 
 interface UseTradeQuoteParams {
