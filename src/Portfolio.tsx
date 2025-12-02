@@ -97,6 +97,7 @@ const Portfolio = () => {
       }
 
       const lbPairFeeData = userPortfolioData?.feesEarned?.find((fee: any) => fee.lbPairId === pool.lbPairId);
+      // Hasura에서 반환하는 fee 값은 이미 decimals가 적용된 형태임
       const totalTokenXFee = Number(lbPairFeeData?.totalAccruedFeesX);
       const totalTokenYFee = Number(lbPairFeeData?.totalAccruedFeesY);
       const totalTokenXFeePrice = totalTokenXFee * tokenXPrice;

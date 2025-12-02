@@ -163,13 +163,13 @@ function AddLiquidityButton({
     try {
       setStatus('addLiquidity');
       const chunk = addLiquidityChunks[index];
-      
+
       // Calculate native value for addLiquidityNATIVE
       // Compare addresses case-insensitively since addresses may have different casing
       const wnativeAddress = WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
       const isTokenXNative = chunk.tokenX.toLowerCase() === wnativeAddress;
       const isTokenYNative = chunk.tokenY.toLowerCase() === wnativeAddress;
-      
+
       let nativeValue = BigInt(0);
       if (isNativeIn) {
         if (isTokenXNative && chunk.amountX !== '0') {
@@ -199,7 +199,10 @@ function AddLiquidityButton({
       });
 
       retroToast.success(`Add Liquidity transaction ${index + 1} of ${addLiquidityChunks.length} sent`, {
-        action: { label: 'View on Explorer', onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank') },
+        action: {
+          label: 'View on Explorer',
+          onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
+        },
       });
       setAddLiquidityTxHash(hash);
       setCurrentTxIndex(index + 1);

@@ -1,12 +1,4 @@
-import {
-  getUserBinLiquidity,
-  getDexAnalytics,
-  getUserPoolIds,
-  getPoolData,
-  getTokenPrices,
-  getUserFeesEarned,
-  getUserFeesAnalytics,
-} from '@/lib/hasura-client';
+import { getUserBinLiquidity, getUserPoolIds, getPoolData, getTokenPrices, getUserFeesEarned } from '@/lib/hasura-client';
 
 // Helper function to extract address from chainId-prefixed ID
 // e.g., "43522:0x1234..." -> "0x1234..."
@@ -24,12 +16,6 @@ export const getUserLiquidityBinIds = async (poolAddress: string, userAddress: s
   // GraphQL may return binId as string for large integers
   return result.UserBinLiquidity.map((item) => Number(item.binId));
 };
-
-// DEX Analytics (Last 180 days)
-export async function mockTvlAnalyticsLast180d() {
-  const startTime = Math.floor(Date.now() / 1000) - 180 * 24 * 60 * 60;
-  return await getDexAnalytics(startTime);
-}
 
 // User Pool List
 export async function mockUserPoolList(userAddress: string) {
@@ -119,32 +105,4 @@ export async function mockUserFeeEarned(poolAddress: string, userAddress: string
     priceXY: Number(item.priceY),
     priceYX: Number(item.priceX),
   }));
-}
-
-// User Fees Analytics
-export async function mockUserFeesAnalytics(poolAddress: string, userAddress: string) {
-  const result = await getUserFeesAnalytics(poolAddress, userAddress);
-  return {
-    '24h': result.UserFeesHourData.map((fee) => ({
-      date: new Date(Number(fee.date) * 1000).toISOString(),
-      timestamp: Number(fee.date),
-      accruedFeesX: Number(fee.accruedFeesX),
-      accruedFeesY: Number(fee.accruedFeesY),
-      accruedFeesL: 0,
-    })),
-    '7d': result.UserFeesDayData.slice(0, 7).map((fee) => ({
-      date: new Date(Number(fee.date) * 1000).toISOString(),
-      timestamp: Number(fee.date),
-      accruedFeesX: Number(fee.accruedFeesX),
-      accruedFeesY: Number(fee.accruedFeesY),
-      accruedFeesL: 0,
-    })),
-    '30d': result.UserFeesDayData.map((fee) => ({
-      date: new Date(Number(fee.date) * 1000).toISOString(),
-      timestamp: Number(fee.date),
-      accruedFeesX: Number(fee.accruedFeesX),
-      accruedFeesY: Number(fee.accruedFeesY),
-      accruedFeesL: 0,
-    })),
-  };
 }

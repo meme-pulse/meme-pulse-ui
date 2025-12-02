@@ -140,14 +140,14 @@ export default function SwapComponent() {
 
   const fromTokenLogoURI = useMemo(() => {
     if (fromToken.address === NATIVE_TOKEN_ADDRESS) {
-      return '/tokens/hype.png';
+      return '/token_default.svg';
     }
     return tokenList?.find((token) => token.address.toLowerCase() === fromToken.address.toLowerCase())?.logoURI;
   }, [fromToken, tokenList]);
 
   const toTokenLogoURI = useMemo(() => {
     if (toToken?.address === NATIVE_TOKEN_ADDRESS) {
-      return '/tokens/hype.png';
+      return '/token_default.svg';
     }
     return tokenList?.find((token) => token.address.toLowerCase() === toToken?.address.toLowerCase())?.logoURI;
   }, [toToken, tokenList]);

@@ -164,60 +164,18 @@ export default function TokenSelectionModal({
             return bValue - aValue;
           }
 
-          // 2nd: Sort tokens with zero value by priority (lower number on top)
+          // 2nd: Sort tokens with zero value alphabetically by symbol
           if (aValue === 0 && bValue === 0) {
-            const tokenOrderBySymbol: Record<string, number> = {
-              // Remove zeroAddress and use only actual token addresses
-              ['0x5555555555555555555555555555555555555555'.toLowerCase()]: 1,
-              ['0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb'.toLowerCase()]: 2,
-              ['0xfd739d4e423301ce9385c1fb8850539d657c296d'.toLowerCase()]: 3,
-              ['0x9fdbda0a5e284c32744d2f17ee5c74b284993463'.toLowerCase()]: 4,
-              ['0xbe6727b535545c67d5caa73dea54865b92cf7907'.toLowerCase()]: 5,
-              ['0x27ec642013bcb3d80ca3706599d3cda04f6f4452'.toLowerCase()]: 6,
-              ['0x3b4575e689ded21caad31d64c4df1f10f3b2cedf'.toLowerCase()]: 7,
-              ['0x068f321fa8fb9f0d135f290ef6a3e2813e1c8a29'.toLowerCase()]: 8,
-              ['0x02c6a2fa58cc01a18b8d9e00ea48d65e4df26c70'.toLowerCase()]: 9,
-              ['0xb50a96253abdf803d85efcdce07ad8becbc52bd5'.toLowerCase()]: 10,
-              // Set BUDDY and feUSD-1 to lowest priority
-              ['BUDDY']: 9999,
-              ['feUSD-1']: 9999,
-              // others: 999
-            };
-
-            const aPriority = tokenOrderBySymbol[a.address.toLowerCase()] ?? tokenOrderBySymbol[a.symbol] ?? 999;
-            const bPriority = tokenOrderBySymbol[b.address.toLowerCase()] ?? tokenOrderBySymbol[b.symbol] ?? 999;
-
-            return aPriority - bPriority;
+            return a.symbol.localeCompare(b.symbol);
           }
 
           // 3rd: Put tokens with value above tokens with zero value
           if (aValue > 0 && bValue === 0) return -1;
           if (aValue === 0 && bValue > 0) return 1;
 
-          // 4th: Sort by priority when balance info is missing or undefined
+          // 4th: Sort alphabetically by symbol when balance info is missing
           if (!aBalance && !bBalance) {
-            const tokenOrderBySymbol: Record<string, number> = {
-              // Remove zeroAddress and use only actual token addresses
-              ['0x5555555555555555555555555555555555555555'.toLowerCase()]: 1,
-              ['0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb'.toLowerCase()]: 2,
-              ['0xfd739d4e423301ce9385c1fb8850539d657c296d'.toLowerCase()]: 3,
-              ['0x9fdbda0a5e284c32744d2f17ee5c74b284993463'.toLowerCase()]: 4,
-              ['0xbe6727b535545c67d5caa73dea54865b92cf7907'.toLowerCase()]: 5,
-              ['0x27ec642013bcb3d80ca3706599d3cda04f6f4452'.toLowerCase()]: 6,
-              ['0x3b4575e689ded21caad31d64c4df1f10f3b2cedf'.toLowerCase()]: 7,
-              ['0x068f321fa8fb9f0d135f290ef6a3e2813e1c8a29'.toLowerCase()]: 8,
-              ['0x02c6a2fa58cc01a18b8d9e00ea48d65e4df26c70'.toLowerCase()]: 9,
-              ['0xb50a96253abdf803d85efcdce07ad8becbc52bd5'.toLowerCase()]: 10,
-              // Set BUDDY and feUSD-1 to lowest priority
-              ['BUDDY']: 9999,
-              ['feUSD-1']: 9999,
-              // others: 999
-            };
-
-            const aPriority = tokenOrderBySymbol[a.address.toLowerCase()] ?? tokenOrderBySymbol[a.symbol] ?? 999;
-            const bPriority = tokenOrderBySymbol[b.address.toLowerCase()] ?? tokenOrderBySymbol[b.symbol] ?? 999;
-
-            return aPriority - bPriority;
+            return a.symbol.localeCompare(b.symbol);
           }
 
           // 5th: Put tokens with balance info above tokens without balance info

@@ -40,7 +40,12 @@ export function YourLiquidityCard({ poolData, yBaseCurrency, setYBaseCurrency, c
     return myBinIds.map((id) => BigInt(id));
   }, [myBinIds]);
 
-  const { data: binLiquidityAmounts, error: binLiquidityError, isError: isBinLiquidityError, status: binLiquidityStatus } = useReadContract({
+  const {
+    data: binLiquidityAmounts,
+    error: binLiquidityError,
+    isError: isBinLiquidityError,
+    status: binLiquidityStatus,
+  } = useReadContract({
     address: LIQUIDITY_HELPER_V2_ADDRESS[DEFAULT_CHAINID] as `0x${string}`,
     abi: LiquidityHelperV2ABI,
     functionName: 'getAmountsOf',
@@ -144,6 +149,7 @@ export function YourLiquidityCard({ poolData, yBaseCurrency, setYBaseCurrency, c
       };
     }
 
+    // Hasura에서 반환하는 fee 값은 이미 decimals가 적용된 형태임
     const totalXPerBin = userFeeEarnedPerBin.reduce((sum, bin) => sum + bin.accruedFeesX, 0);
     const totalYPerBin = userFeeEarnedPerBin.reduce((sum, bin) => sum + bin.accruedFeesY, 0);
 
