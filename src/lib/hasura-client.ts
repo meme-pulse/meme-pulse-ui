@@ -1,10 +1,7 @@
 // Hasura GraphQL Client
 // Envio API를 대체하여 Hasura GraphQL을 직접 호출합니다
 
-// 프로덕션 환경에서는 Vercel 프록시 사용 (HTTPS), 개발 환경에서는 직접 HTTP 사용 가능
-const HASURA_ENDPOINT = import.meta.env.PROD
-  ? '/api/graphql' // Vercel 프록시 사용 (HTTPS)
-  : import.meta.env.VITE_HASURA_ENDPOINT || 'http://3.34.129.83:8080/v1/graphql';
+const HASURA_ENDPOINT = import.meta.env.VITE_HASURA_ENDPOINT || 'http://localhost:8080/v1/graphql';
 const HASURA_SECRET = import.meta.env.VITE_HASURA_SECRET || '';
 
 // Chain ID for entity ID prefixes

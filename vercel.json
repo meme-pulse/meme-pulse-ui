@@ -1,10 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/api/graphql",
-      "destination": "http://3.34.129.83:8080/v1/graphql"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
