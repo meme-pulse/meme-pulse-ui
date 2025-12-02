@@ -72,8 +72,9 @@ export default function PoolDetail() {
 
   const {
     data: lbPairData,
-    // isLoading: isLbPairAddrLoading,
-    // isError: isLbPairAddrError,
+    isLoading: lbPairLoading,
+    isError: lbPairError,
+    error: lbPairErrorData,
   } = useQuery({
     queryKey: ['lbPairAddr', tokenAAddress, tokenBAddress, lbBinStep],
     queryFn: async () => {
@@ -83,21 +84,29 @@ export default function PoolDetail() {
         functionName: 'getLBPairInformation',
         args: [tokenAAddress as `0x${string}`, tokenBAddress as `0x${string}`, BigInt(lbBinStep || 0)],
       });
+      console.log(lbPairInfo, 'lbPairInfo');
 
       return lbPairInfo as { LBPair: string };
     },
-    enabled: !!tokenAAddress && !!tokenBAddress && !!lbBinStep && !!publicClient,
+    enabled: !!tokenAAddress && !!tokenBAddress && !!lbBinStep,
     staleTime: 1000 * 60,
   });
+  console.log(lbPairLoading, lbPairError, lbPairErrorData, 'lbPairLoading, lbPairError, lbPairErrorData');
 
-  const { data: poolData, isLoading } = useQuery<PoolData>({
+  const {
+    data: poolData,
+    isLoading,
+    isError: poolError,
+  } = useQuery<PoolData>({
     queryKey: ['poolData', tokenAAddress, tokenBAddress, lbBinStep],
     queryFn: async () => {
       const poolData = await mockPoolData(lbPairData?.LBPair as string);
+      console.log(poolData, 'poolData');
       return poolData;
     },
     enabled: !!lbPairData,
     staleTime: 1000 * 60,
+    retry: false,
   });
   const activeId = useActiveId(poolData?.pairAddress as `0x${string}`, poolData?.activeBinId as number, !!poolData);
 
@@ -125,6 +134,8 @@ export default function PoolDetail() {
 
   const hasPositions = myBinIds && myBinIds.length > 0;
 
+  console.log(isLoading, poolData);
+
   if (isLoading || !poolData) {
     return (
       <div className="min-h-[90vh] bg-[#060208] flex justify-center items-center relative overflow-hidden">
@@ -137,9 +148,87 @@ export default function PoolDetail() {
       </div>
     );
   }
-  // @ts-expect-error poolData is not typed
-  if (poolData?.error) {
-    return <div>Error</div>;
+  if (poolError) {
+    return (
+      <div className="min-h-[90vh] bg-[#060208] flex justify-center items-center relative overflow-hidden">
+        {/* Space Background with Stars */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(ellipse at top, #1a0a2e 0%, #060208 50%, #060208 100%)',
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                radial-gradient(1px 1px at 20px 30px, white, transparent),
+                radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, white, transparent),
+                radial-gradient(1px 1px at 160px 120px, white, transparent),
+                radial-gradient(1px 1px at 250px 180px, white, transparent),
+                radial-gradient(1px 1px at 350px 30px, white, transparent),
+                radial-gradient(1px 1px at 500px 200px, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1px 1px at 650px 170px, white, transparent),
+                radial-gradient(1px 1px at 800px 20px, rgba(255,255,255,0.6), transparent)
+              `,
+              backgroundRepeat: 'repeat',
+              backgroundSize: '1200px 250px',
+            }}
+          />
+          <div
+            className="absolute top-0 left-1/4 w-[600px] h-[400px] opacity-20"
+            style={{
+              background: 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.4) 0%, transparent 70%)',
+            }}
+          />
+        </div>
+
+        {/* Error Content */}
+        <div className="flex flex-col justify-center items-center z-10 gap-6 px-4 text-center">
+          {/* Error Icon */}
+          <div
+            className="w-20 h-20 bg-figma-gray-table flex items-center justify-center"
+            style={{
+              boxShadow:
+                'inset -2px -2px 0px 0px #f9f9fa, inset 2px 2px 0px 0px #a1a1aa, inset -4px -4px 0px 0px #a1a1aa, inset 4px 4px 0px 0px #f9f9fa',
+            }}
+          >
+            <span className="text-4xl">❌</span>
+          </div>
+
+          {/* Error Title */}
+          <h1 className="text-[#ef4444] text-[16px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+            Pool Not Found
+          </h1>
+
+          {/* Error Message */}
+          <p className="text-[#a1a1aa] font-roboto text-[14px] max-w-md">
+            The pool you're looking for doesn't exist or hasn't been indexed yet.
+            <br />
+            Please check the URL or try again later.
+          </p>
+
+          {/* Back Button */}
+          <button
+            onClick={() => window.history.back()}
+            className="mt-4 px-6 py-3 bg-figma-gray-table font-roboto text-[#030303] text-[14px] hover:bg-[#d0d0d4] transition-colors"
+            style={{
+              boxShadow:
+                'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
+            }}
+          >
+            ← Go Back
+          </button>
+
+          {/* Pool List Link */}
+          <a href="/pool" className="text-figma-purple font-roboto text-[13px] hover:underline">
+            or browse all pools
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (

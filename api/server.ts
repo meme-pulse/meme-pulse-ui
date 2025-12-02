@@ -3,7 +3,7 @@
 
 const PORT = 3002;
 
-const server = Bun.serve({
+Bun.serve({
   port: PORT,
   async fetch(req: Request) {
     const url = new URL(req.url);

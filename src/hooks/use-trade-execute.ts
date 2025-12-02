@@ -84,7 +84,7 @@ export function useTradeExecute({
         action: {
           label: 'View on Explorer',
           onClick: () => {
-            window.open(`https://hyperevmscan.io/tx/${data}`, '_blank');
+            window.open(`https://insectarium.blockscout.memecore.com/tx/${data}`, '_blank');
           },
         },
       });

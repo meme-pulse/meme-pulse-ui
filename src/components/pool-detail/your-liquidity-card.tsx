@@ -34,14 +34,35 @@ export function YourLiquidityCard({ poolData, yBaseCurrency, setYBaseCurrency, c
     enabled: !!address,
   });
 
-  const { data: binLiquidityAmounts } = useReadContract({
+  // Convert bin IDs to BigInt for contract call (uint256[])
+  const binIdsAsBigInt = useMemo(() => {
+    if (!myBinIds || myBinIds.length === 0) return [];
+    return myBinIds.map((id) => BigInt(id));
+  }, [myBinIds]);
+
+  const { data: binLiquidityAmounts, error: binLiquidityError, isError: isBinLiquidityError, status: binLiquidityStatus } = useReadContract({
     address: LIQUIDITY_HELPER_V2_ADDRESS[DEFAULT_CHAINID] as `0x${string}`,
     abi: LiquidityHelperV2ABI,
     functionName: 'getAmountsOf',
-    args: [poolData.pairAddress as `0x${string}`, address as `0x${string}`, myBinIds as any],
+    args: [poolData.pairAddress as `0x${string}`, address as `0x${string}`, binIdsAsBigInt],
     query: {
-      enabled: myBinIds && myBinIds.length > 0,
+      enabled: binIdsAsBigInt.length > 0 && !!address,
     },
+  });
+
+  // Debug logs for liquidity amounts
+  console.log('[YourLiquidityCard] Debug Info:', {
+    myBinIds,
+    myBinIdsTypes: myBinIds?.slice(0, 3).map((id) => typeof id),
+    binIdsAsBigInt: binIdsAsBigInt.slice(0, 3).map(String),
+    binLiquidityAmounts,
+    binLiquidityError: binLiquidityError?.message || binLiquidityError,
+    isBinLiquidityError,
+    binLiquidityStatus,
+    poolAddress: poolData.pairAddress,
+    userAddress: address,
+    helperAddress: LIQUIDITY_HELPER_V2_ADDRESS[DEFAULT_CHAINID],
+    queryEnabled: binIdsAsBigInt.length > 0 && !!address,
   });
 
   // Get user fee earned data

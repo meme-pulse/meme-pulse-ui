@@ -77,28 +77,48 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
     }
   }, [myBinIds]);
 
+  // Convert bin IDs to BigInt for contract call (uint256[])
+  const binIdsAsBigInt = useMemo(() => {
+    if (!myBinIds || myBinIds.length === 0) return [];
+    return myBinIds.map((id) => BigInt(id));
+  }, [myBinIds]);
+
   // Fetch bin liquidity amounts
-  const { data: binLiquidityAmounts, refetch: refetchBinLiquidityAmounts } = useReadContract({
+  const { data: binLiquidityAmounts, refetch: refetchBinLiquidityAmounts, error: binLiquidityError, status: binLiquidityStatus } = useReadContract({
     address: LIQUIDITY_HELPER_V2_ADDRESS[DEFAULT_CHAINID] as `0x${string}`,
     abi: LiquidityHelperV2ABI,
     functionName: 'getAmountsOf',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args: [poolData.pairAddress as `0x${string}`, address as `0x${string}`, myBinIds as any],
+    args: [poolData.pairAddress as `0x${string}`, address as `0x${string}`, binIdsAsBigInt],
     query: {
-      enabled: myBinIds && myBinIds.length > 0,
+      enabled: binIdsAsBigInt.length > 0 && !!address,
     },
   });
 
   // Fetch bin shares amounts
-  const { data: binSharesAmounts, refetch: refetchBinSharesAmounts } = useReadContract({
+  const { data: binSharesAmounts, refetch: refetchBinSharesAmounts, error: binSharesError, status: binSharesStatus } = useReadContract({
     address: LIQUIDITY_HELPER_V2_ADDRESS[DEFAULT_CHAINID] as `0x${string}`,
     abi: LiquidityHelperV2ABI,
     functionName: 'getSharesOf',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args: [poolData.pairAddress as `0x${string}`, address as `0x${string}`, myBinIds as any],
+    args: [poolData.pairAddress as `0x${string}`, address as `0x${string}`, binIdsAsBigInt],
     query: {
-      enabled: myBinIds && myBinIds.length > 0,
+      enabled: binIdsAsBigInt.length > 0 && !!address,
     },
+  });
+
+  // Debug logs for remove position card
+  console.log('[RemovePositionCard] Debug Info:', {
+    myBinIds,
+    myBinIdsTypes: myBinIds?.slice(0, 3).map((id) => typeof id),
+    binIdsAsBigInt: binIdsAsBigInt.slice(0, 3).map(String),
+    binLiquidityAmounts,
+    binLiquidityError: binLiquidityError?.message || binLiquidityError,
+    binLiquidityStatus,
+    binSharesAmounts,
+    binSharesError: binSharesError?.message || binSharesError,
+    binSharesStatus,
+    poolAddress: poolData.pairAddress,
+    userAddress: address,
+    queryEnabled: binIdsAsBigInt.length > 0 && !!address,
   });
 
   // Calculate user bins amounts
@@ -406,7 +426,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
       toast.success(`Remove Liquidity transaction ${index + 1} of ${removeLiquidityChunks.length} sent`, {
         action: {
           label: 'View on Explorer',
-          onClick: () => window.open(`https://hyperevmscan.io/tx/${hash}`, '_blank'),
+          onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
         },
       });
 
@@ -584,7 +604,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
         toast.success(`Transaction ${index + 1} of ${removeAllChunks.length} sent`, {
           action: {
             label: 'View on Explorer',
-            onClick: () => window.open(`https://hyperevmscan.io/tx/${hash}`, '_blank'),
+            onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
           },
         });
 
@@ -653,7 +673,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
       {/* Native Token Toggle */}
       {hasNativeToken && (
         <div className="flex items-center justify-between">
-          <span className="font-roboto text-[13px] text-figma-text-gray">Receive as HYPE (native)</span>
+          <span className="font-roboto text-[13px] text-figma-text-gray">Receive as M (native)</span>
           <button
             onClick={() => setIsNativeOut(!isNativeOut)}
             className={`px-3 py-1 font-roboto text-[12px] ${

@@ -8,10 +8,21 @@ import {
   getUserFeesAnalytics,
 } from '@/lib/hasura-client';
 
+// Helper function to extract address from chainId-prefixed ID
+// e.g., "43522:0x1234..." -> "0x1234..."
+function fromChainId(chainIdPrefixedId: string): string {
+  if (chainIdPrefixedId && chainIdPrefixedId.includes(':')) {
+    return chainIdPrefixedId.split(':')[1];
+  }
+  return chainIdPrefixedId;
+}
+
 // User Bin Liquidity IDs
 export const getUserLiquidityBinIds = async (poolAddress: string, userAddress: string) => {
   const result = await getUserBinLiquidity(poolAddress, userAddress);
-  return result.UserBinLiquidity.map((item) => item.binId);
+  // Convert binId to number to ensure proper type for contract calls
+  // GraphQL may return binId as string for large integers
+  return result.UserBinLiquidity.map((item) => Number(item.binId));
 };
 
 // DEX Analytics (Last 180 days)
@@ -31,14 +42,19 @@ export async function mockPoolData(poolAddress: string) {
   const pool = result.LBPair[0];
   const lbPairParameterSet = result.LBPairParameterSet[0];
 
+  // Pool이 존재하지 않는 경우 에러 throw
+  if (!pool) {
+    throw new Error('Pool not found');
+  }
+
   return {
-    pairAddress: pool.id,
-    chain: 'hyperevm',
+    pairAddress: fromChainId(pool.id),
+    chain: 'memecore_testnet',
     name: `${pool.tokenX.symbol}-${pool.tokenY.symbol}`,
     status: 'main',
     version: 'v2.2',
     tokenX: {
-      address: pool.tokenX.id,
+      address: fromChainId(pool.tokenX.id),
       name: pool.tokenX.name,
       symbol: pool.tokenX.symbol,
       decimals: pool.tokenX.decimals,
@@ -46,7 +62,7 @@ export async function mockPoolData(poolAddress: string) {
       priceNative: '0',
     },
     tokenY: {
-      address: pool.tokenY.id,
+      address: fromChainId(pool.tokenY.id),
       name: pool.tokenY.name,
       symbol: pool.tokenY.symbol,
       decimals: pool.tokenY.decimals,
@@ -59,7 +75,8 @@ export async function mockPoolData(poolAddress: string) {
     lbBaseFeePct: Number(pool.baseFeePct),
     lbMaxFeePct:
       Number(pool.baseFeePct) +
-      ((Number(lbPairParameterSet.maxVolatilityAccumulator) * Number(pool.binStep)) ** 2 * Number(lbPairParameterSet.variableFeeControl)) /
+      ((Number(lbPairParameterSet?.maxVolatilityAccumulator || 0) * Number(pool.binStep)) ** 2 *
+        Number(lbPairParameterSet?.variableFeeControl || 0)) /
         1e18,
     activeBinId: Number(pool.activeId),
     liquidityUsd: Number(pool.totalValueLockedUSD),
@@ -72,7 +89,7 @@ export async function mockPoolData(poolAddress: string) {
     volumeNative: '0',
     feesUsd: Number(pool.feesUSD),
     feesNative: '0',
-    protocolSharePct: Number(lbPairParameterSet.protocolShare) / 100,
+    protocolSharePct: Number(lbPairParameterSet?.protocolShare || 0) / 100,
   };
 }
 
@@ -81,7 +98,7 @@ export async function mockTokenPrices() {
   const result = await getTokenPrices();
   return result.Token.map((item) => ({
     id: item.id,
-    tokenAddress: item.id,
+    tokenAddress: fromChainId(item.id),
     symbol: item.symbol,
     name: item.name,
     decimals: item.decimals,

@@ -37,6 +37,7 @@ type Props = {
   tokenXSymbol: string;
   tokenYSymbol: string;
   isNativeIn: boolean;
+  needsApproval?: boolean;
 
   binCountLimit?: number;
   onFail?: () => void;
@@ -55,6 +56,7 @@ function AddLiquidityButton({
   amountYBalance,
   binCountLimit,
   isNativeIn,
+  needsApproval = false,
   onFail,
 }: Props) {
   const { address } = useAccount();
@@ -85,7 +87,7 @@ function AddLiquidityButton({
     //     action: {
     //       label: 'View on Explorer',
     //       onClick: () => {
-    //         window.open(`https://hyperevmscan.io/tx/${hash}`, '_blank');
+    //         window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank');
     //       },
     //     },
     //   });
@@ -161,23 +163,34 @@ function AddLiquidityButton({
     try {
       setStatus('addLiquidity');
       const chunk = addLiquidityChunks[index];
+      
+      // Calculate native value for addLiquidityNATIVE
+      // Compare addresses case-insensitively since addresses may have different casing
+      const wnativeAddress = WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
+      const isTokenXNative = chunk.tokenX.toLowerCase() === wnativeAddress;
+      const isTokenYNative = chunk.tokenY.toLowerCase() === wnativeAddress;
+      
+      let nativeValue = BigInt(0);
+      if (isNativeIn) {
+        if (isTokenXNative && chunk.amountX !== '0') {
+          nativeValue = BigInt(chunk.amountX);
+        } else if (isTokenYNative && chunk.amountY !== '0') {
+          nativeValue = BigInt(chunk.amountY);
+        }
+      }
+
       const contractParamsObj = isNativeIn
         ? {
             address: LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID],
             abi: LBRouterV22ABI,
-            functionName: 'addLiquidityNATIVE' as any,
+            functionName: 'addLiquidityNATIVE' as const,
             args: [chunk],
-            value:
-              chunk.amountX !== '0' && chunk.tokenX === WNATIVE[DEFAULT_CHAINID].address && chunk.amountX !== '0'
-                ? BigInt(chunk.amountX)
-                : chunk.amountY !== '0' && chunk.tokenY === WNATIVE[DEFAULT_CHAINID].address && chunk.amountY !== '0'
-                ? BigInt(chunk.amountY)
-                : BigInt(0),
+            value: nativeValue,
           }
         : {
             address: LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID],
             abi: LBRouterV22ABI,
-            functionName: 'addLiquidity' as any,
+            functionName: 'addLiquidity' as const,
             args: [chunk],
           };
 
@@ -186,7 +199,7 @@ function AddLiquidityButton({
       });
 
       retroToast.success(`Add Liquidity transaction ${index + 1} of ${addLiquidityChunks.length} sent`, {
-        action: { label: 'View on Explorer', onClick: () => window.open(`https://hyperevmscan.io/tx/${hash}`, '_blank') },
+        action: { label: 'View on Explorer', onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank') },
       });
       setAddLiquidityTxHash(hash);
       setCurrentTxIndex(index + 1);
@@ -240,6 +253,11 @@ function AddLiquidityButton({
       return { text: `Insufficient ${tokenYSymbol} Balance`, disabled: true };
     }
 
+    // Check if approval is needed
+    if (needsApproval) {
+      return { text: 'Approve Token First', disabled: true };
+    }
+
     if (addLiquidityChunks.length > 1) {
       if (status === 'addLiquidity' || status === 'waitingForAddLiquidityConfirmation') {
         return { text: `Adding Liquidity... (${currentTxIndex} / ${addLiquidityChunks.length})`, disabled: true };
@@ -258,6 +276,7 @@ function AddLiquidityButton({
     typedAmountY,
     amountXBalance,
     amountYBalance,
+    needsApproval,
     addLiquidityChunks.length,
     binCountLimit,
     addLiquidityInput.deltaIds.length,
@@ -279,9 +298,6 @@ function AddLiquidityButton({
           </TooltipTrigger>
           <TooltipContent asChild>
             <div className="text-center text-body-sm   bg-surface-muted text-text-primary">
-              <span className="font-bold">HyperEVM has 2M gas limit.</span>
-              <br />
-              <br />
               <span className="font-bold">If you want to send 1 transactions, please select a smaller(15 bins) range.</span>
             </div>
           </TooltipContent>

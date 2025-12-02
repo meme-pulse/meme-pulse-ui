@@ -36,8 +36,10 @@ export function GroupPoolRow({
   const handleDepositClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (aiMode) {
-      navigate(`/ai-deposit/${tokenX.address}/${tokenY.address}`);
+      // AI mode navigates to the dedicated AI pool detail page (no bin step required)
+      navigate(`/pool/ai/${tokenX.address}/${tokenY.address}`);
     } else {
+      // Normal mode navigates to the first pool's detail page
       navigate(`/pool/v22/${tokenX.address}/${tokenY.address}/${groups[0]?.lbBinStep || 1}`);
     }
   };

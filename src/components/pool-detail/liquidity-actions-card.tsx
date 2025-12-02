@@ -17,8 +17,8 @@
 //   LIQUIDITY_HELPER_V2_ADDRESS,
 //   LiquidityDistribution,
 //   // PairV2,
-// } from '@hyperbricklabs/sdk-v2';
-// import { Token, TokenAmount, WNATIVE } from '@hyperbricklabs/sdk-core';
+// } from 'sdk-v2';
+// import { Token, TokenAmount, WNATIVE } from 'sdk-core';
 // import { getIdFromPrice, getPriceFromId } from '@/lib/bin';
 // import { DualRangeSlider } from '../ui/dual-range-slider';
 // import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Cell, ReferenceLine } from 'recharts';
@@ -1195,7 +1195,7 @@
 //       toast.success(`Remove Liquidity transaction ${index + 1} of ${removeLiquidityChunks.length} sent`, {
 //         action: {
 //           label: 'View on Explorer',
-//           onClick: () => window.open(`https://hyperevmscan.io/tx/${hash}`, '_blank'),
+//           onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
 //         },
 //       });
 

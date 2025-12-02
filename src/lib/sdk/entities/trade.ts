@@ -320,10 +320,14 @@ export class TradeV2 {
         allowFailure: true,
       });
 
+      console.log('reads', reads);
+
       const trades = reads.map((read, i) => {
         if (read.status !== 'success') return undefined;
         return new TradeV2(routes[i], tokenAmountIn.token, tokenOut, read.result, isExactIn, isNativeIn, isNativeOut);
       });
+
+      console.log('trades', trades);
 
       return trades.filter((trade) => !!trade && JSBI.greaterThan(trade.outputAmount.raw, JSBI.BigInt(0)));
     } catch (e) {

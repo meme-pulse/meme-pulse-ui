@@ -56,12 +56,7 @@ export function useTradeQuote({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   // const chainId = useChainId();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const BASES = [
-    WNATIVE[DEFAULT_CHAINID],
-    new Token(DEFAULT_CHAINID, getAddress('0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb'), 6, 'USDT0', 'USDT0'),
-  ];
+  const BASES = [WNATIVE[DEFAULT_CHAINID]];
 
   const fetchQuote = async () => {
     setIsLoading(true);
@@ -137,7 +132,10 @@ export function useTradeQuote({
       const amountIn = new TokenAmount(inputToken, typedValueInParsed);
       const allTokenPairs = PairV2.createAllTokenPairs(inputToken, outputToken, BASES);
       const allPairs = PairV2.initPairs(allTokenPairs);
+      console.log('allPairs', allPairs);
       const allRoutes = RouteV2.createAllRoutes(allPairs, inputToken, outputToken);
+
+      console.log('allRoutes', allRoutes);
       const trades = await TradeV2.getTradesExactIn(
         allRoutes,
         amountIn,

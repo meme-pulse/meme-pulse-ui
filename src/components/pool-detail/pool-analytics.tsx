@@ -52,7 +52,7 @@ export function PoolAnalytics({ poolData, activeId, yBaseCurrency }: PoolAnalyti
               <div>
                 <div className="font-roboto font-medium text-[#030303] text-[14px]">{poolData.tokenX?.symbol}</div>
                 <a
-                  href={`https://hyperevmscan.io/address/${poolData.tokenX?.address}`}
+                  href={`https://insectarium.blockscout.memecore.com/address/${poolData.tokenX?.address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] text-figma-text-gray hover:text-[#895bf5] transition-colors font-roboto"
@@ -75,7 +75,7 @@ export function PoolAnalytics({ poolData, activeId, yBaseCurrency }: PoolAnalyti
               <div>
                 <div className="font-roboto font-medium text-[#030303] text-[14px]">{poolData.tokenY?.symbol}</div>
                 <a
-                  href={`https://hyperevmscan.io/address/${poolData.tokenY?.address}`}
+                  href={`https://insectarium.blockscout.memecore.com/address/${poolData.tokenY?.address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] text-figma-text-gray hover:text-[#895bf5] transition-colors font-roboto"

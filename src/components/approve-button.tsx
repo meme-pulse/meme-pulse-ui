@@ -58,7 +58,7 @@ function ApproveButton({ tokenAddress, spenderAddress, amountInBigInt, disabled,
         action: {
           label: 'View on Explorer',
           onClick: () => {
-            window.open(`https://hyperevmscan.io/tx/${hash}`, '_blank');
+            window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank');
           },
         },
       });

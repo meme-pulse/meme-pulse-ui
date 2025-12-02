@@ -21,7 +21,11 @@ export default function StackBonusCard() {
           type="button"
         >
           <img src="/icon/heroicons-solid/gift.svg" alt="stack bonus" className="w-5 h-5" />
-          {hasReward && <div className="bg-accent-primary absolute -top-2 -right-2 rounded-md px-2 py-1 text-caption font-bold text-surface-default">1</div>}
+          {hasReward && (
+            <div className="bg-accent-primary absolute -top-2 -right-2 rounded-md px-2 py-1 text-caption font-bold text-surface-default">
+              1
+            </div>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className={`mt-2 bg-surface-muted   rounded-md p-2 border-none ${isMobile ? 'w-80' : ' w-96'}`}>
@@ -31,10 +35,10 @@ export default function StackBonusCard() {
             <div className="flex flex-col gap-1">
               <div className="text-body-lg font-bold">Stack Bonus</div>
               <div className="text-caption text-text-secondary">
-                Earn bonus HYPE by providing liquidity in the HYPE-USD₮0 (Bin Step 10) pool within the active range.
+                Earn bonus M by providing liquidity in the M-MGOLD (Bin Step 10) pool within the active range.
               </div>
               <div className="text-body-sm font-bold text-green-dark-200 flex items-center gap-2">
-                <img src="/tokens/hype.png" alt="hype" className="w-[18px] h-[18px]" />0 HYPE
+                <img src="/token_default.svg" alt="M" className="w-[18px] h-[18px]" />0 M
               </div>
             </div>
             {!isMobile && (
@@ -43,7 +47,7 @@ export default function StackBonusCard() {
                 size="sm"
                 className=" bg-accent-primary text-surface-default hover:bg-accent-primary h-10 text-body-sm"
                 onClick={() => {
-                  navigate('/pool/v22/0x5555555555555555555555555555555555555555/0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb/10');
+                  navigate('/pool/v22/0x5555555555555555555555555555555555555555/0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb/10');
                 }}
               >
                 Deposit
@@ -56,7 +60,7 @@ export default function StackBonusCard() {
               size="sm"
               className="mt-2 bg-accent-primary text-surface-default hover:bg-accent-primary h-10 text-body-sm w-full"
               onClick={() => {
-                navigate('/pool/v22/0x5555555555555555555555555555555555555555/0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb/10');
+                navigate('/pool/v22/0x5555555555555555555555555555555555555555/0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb/10');
               }}
             >
               Deposit

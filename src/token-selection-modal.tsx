@@ -370,21 +370,21 @@ export default function TokenSelectionModal({
 
               {/* Token List Container */}
               <div className="bg-white max-h-[367px] overflow-y-auto" style={{ boxShadow: retroListShadow }}>
-                {/* Native Token (HYPE) */}
-                {!onlyQuoteTokenAddresses && !withoutNativeToken && 'hype'.includes(searchTerm.toLowerCase()) && (
+                {/* Native Token (M) */}
+                {!onlyQuoteTokenAddresses && !withoutNativeToken && 'm'.includes(searchTerm.toLowerCase()) && (
                   <>
                     {(selectedCategory === 'All' || selectedCategory === 'LST') && (
                       <div
                         key={NATIVE_TOKEN_ADDRESS}
                         className="flex items-center justify-between px-4 py-3 hover:bg-figma-gray-bg cursor-pointer border-b border-gray-100"
-                        onClick={() => handleTokenSelect(new Token(chainId, NATIVE_TOKEN_ADDRESS, 18, 'HYPE', 'HYPE'))}
+                        onClick={() => handleTokenSelect(new Token(chainId, NATIVE_TOKEN_ADDRESS, 18, 'M', 'Memecore'))}
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-figma-gray-table flex items-center justify-center">
-                            <img src="/tokens/hype.png" alt="HYPE" className="w-[30px] h-[30px]" />
+                            <img src="/token_default.svg" alt="M" className="w-[30px] h-[30px]" />
                           </div>
                           <div>
-                            <div className="font-roboto text-[#22222a] text-[14px] font-medium">HYPE</div>
+                            <div className="font-roboto text-[#22222a] text-[14px] font-medium">M</div>
                             <div className="font-roboto text-[#5a5a61] text-[12px]">Native Token</div>
                           </div>
                         </div>
@@ -396,7 +396,7 @@ export default function TokenSelectionModal({
                             <div className="text-[#5a5a61] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                               {getUsdValue(
                                 tokenListData?.[NATIVE_TOKEN_ADDRESS]?.formattedBalance,
-                                tokenList?.find((token) => token.symbol === 'WHYPE')?.address ?? ''
+                                tokenList?.find((token) => token.symbol === 'WM')?.address ?? ''
                               )}
                             </div>
                           </div>

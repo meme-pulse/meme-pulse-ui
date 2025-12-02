@@ -7,6 +7,32 @@ const HASURA_ENDPOINT = import.meta.env.PROD
   : import.meta.env.VITE_HASURA_ENDPOINT || 'http://3.34.129.83:8080/v1/graphql';
 const HASURA_SECRET = import.meta.env.VITE_HASURA_SECRET || '';
 
+// Chain ID for entity ID prefixes
+const CHAIN_ID = 43522;
+
+// Helper functions for chainId-prefixed IDs
+// 주소를 소문자로 정규화하여 Hasura DB 조회 시 대소문자 불일치 문제 방지
+function toChainPairId(pairAddress: string): string {
+  return `${CHAIN_ID}:${pairAddress.toLowerCase()}`;
+}
+
+function toChainUserId(userAddress: string): string {
+  return `${CHAIN_ID}:${userAddress.toLowerCase()}`;
+}
+
+function toBundleId(): string {
+  return `${CHAIN_ID}:1`;
+}
+
+// Helper function to extract address from chainId-prefixed ID
+// e.g., "43522:0x1234..." -> "0x1234..."
+function fromChainId(chainIdPrefixedId: string): string {
+  if (chainIdPrefixedId && chainIdPrefixedId.includes(':')) {
+    return chainIdPrefixedId.split(':')[1];
+  }
+  return chainIdPrefixedId;
+}
+
 interface GraphQLResponse<T> {
   data?: T;
   errors?: Array<{ message: string }>;
@@ -25,7 +51,7 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, unkno
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-hasura-admin-secret': HASURA_SECRET,
+      // 'x-hasura-admin-secret': HASURA_SECRET,
     },
     body: JSON.stringify({
       query,
@@ -52,6 +78,7 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, unkno
 
 // Bin Distribution Data Query
 export async function getBinDistributionData(pairAddress: string, fromId: number, toId: number) {
+  const chainPairId = toChainPairId(pairAddress);
   const query = `
     query GetBinDistribution($pairAddress: String!, $fromId: Int!, $toId: Int!) {
       Bin(
@@ -94,15 +121,16 @@ export async function getBinDistributionData(pairAddress: string, fromId: number
       tokenX: { symbol: string; decimals: number };
       tokenY: { symbol: string; decimals: number };
     }>;
-  }>(query, { pairAddress, fromId, toId });
+  }>(query, { pairAddress: chainPairId, fromId, toId });
 }
 
 // Grouped Pools Query
 export async function getGroupedPoolsWithDetails() {
   const twentyFourHoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
 
+  const bundleId = toBundleId();
   const query = `
-    query GetGroupedPools($twentyFourHoursAgo: Int!) {
+    query GetGroupedPools($twentyFourHoursAgo: Int!, $bundleId: String!) {
       LBPairParameterSet(order_by: { lbPair_id: desc }) {
         lbPair_id
         maxVolatilityAccumulator
@@ -132,8 +160,8 @@ export async function getGroupedPoolsWithDetails() {
           priceUSD
         }
       }
-      Bundle(where: { id: { _eq: "1" } }) {
-        hypePriceUSD
+      Bundle(where: { id: { _eq: $bundleId } }) {
+        nativePriceUSD
       }
       LBPairHourData(where: { date: { _gte: $twentyFourHoursAgo } }) {
         lbPair_id
@@ -173,13 +201,13 @@ export async function getGroupedPoolsWithDetails() {
         priceUSD: string;
       };
     }>;
-    Bundle: Array<{ hypePriceUSD: string }>;
+    Bundle: Array<{ nativePriceUSD: string }>;
     LBPairHourData: Array<{
       lbPair_id: string;
       volumeUSD: string;
       feesUSD: string;
     }>;
-  }>(query, { twentyFourHoursAgo });
+  }>(query, { twentyFourHoursAgo, bundleId });
 
   // Envio 코드의 데이터 가공 로직 적용
   interface GroupedPool {
@@ -233,8 +261,12 @@ export async function getGroupedPoolsWithDetails() {
     // 유효한 토큰 쌍이 아니면 건너뜁니다
     if (!tokenXId || !tokenYId) return acc;
 
-    // 그룹 키 생성
-    const groupKey = `${tokenXId}-${tokenYId}`;
+    // Extract actual addresses from chainId-prefixed IDs
+    const tokenXAddress = fromChainId(tokenXId);
+    const tokenYAddress = fromChainId(tokenYId);
+
+    // 그룹 키 생성 (use addresses for grouping)
+    const groupKey = `${tokenXAddress}-${tokenYAddress}`;
 
     // 그룹이 없으면 초기화합니다
     if (!acc[groupKey]) {
@@ -242,14 +274,14 @@ export async function getGroupedPoolsWithDetails() {
         // 메인 그룹 정보
         name: `${pool.tokenX?.symbol}-${pool.tokenY?.symbol}`,
         tokenX: {
-          address: tokenXId,
+          address: tokenXAddress,
           name: pool.tokenX?.name,
           symbol: pool.tokenX?.symbol,
           decimals: pool.tokenX?.decimals,
           priceUsd: Number(pool.tokenX?.priceUSD),
         },
         tokenY: {
-          address: tokenYId,
+          address: tokenYAddress,
           name: pool.tokenY?.name,
           symbol: pool.tokenY?.symbol,
           decimals: pool.tokenY?.decimals,
@@ -283,7 +315,7 @@ export async function getGroupedPoolsWithDetails() {
 
     // 개별 풀 데이터를 `groups` 배열에 추가
     acc[groupKey].groups.push({
-      pairAddress: pool.id,
+      pairAddress: fromChainId(pool.id),
       baseFeePct: Number(pool.baseFeePct),
       activeBinId: Number(pool.activeId),
       liquidityUsd: Number(pool.totalValueLockedUSD),
@@ -318,8 +350,10 @@ export async function getGroupedPoolsWithDetails() {
 
 // Pool Data Query
 export async function getPoolData(pairAddress: string) {
+  const chainPairId = toChainPairId(pairAddress);
+  const bundleId = toBundleId();
   const query = `
-    query GetPool($pairAddress: String!) {
+    query GetPool($pairAddress: String!, $bundleId: String!) {
       LBPair(where: { id: { _eq: $pairAddress } }) {
         id
         tokenX {
@@ -345,8 +379,8 @@ export async function getPoolData(pairAddress: string) {
         volumeUSD
         feesUSD
       }
-      Bundle(where: { id: { _eq: "1" } }) {
-        hypePriceUSD
+      Bundle(where: { id: { _eq: $bundleId } }) {
+        nativePriceUSD
       }
       LBPairParameterSet(where: { lbPair_id: { _eq: $pairAddress } }) {
         maxVolatilityAccumulator
@@ -382,21 +416,23 @@ export async function getPoolData(pairAddress: string) {
       volumeUSD: string;
       feesUSD: string;
     }>;
-    Bundle: Array<{ hypePriceUSD: string }>;
+    Bundle: Array<{ nativePriceUSD: string }>;
     LBPairParameterSet: Array<{
       maxVolatilityAccumulator: string;
       variableFeeControl: string;
       protocolShare: string;
     }>;
-  }>(query, { pairAddress });
+  }>(query, { pairAddress: chainPairId, bundleId });
 }
 
 // User Pool IDs Query
 export async function getUserPoolIds(userAddress: string) {
   const twentyFourHoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
+  const chainUserId = toChainUserId(userAddress);
+  const bundleId = toBundleId();
 
   const query = `
-    query GetUserPoolIds($userAddress: String!, $twentyFourHoursAgo: Int!) {
+    query GetUserPoolIds($userAddress: String!, $twentyFourHoursAgo: Int!, $bundleId: String!) {
       UserBinLiquidity(where: { user_id: { _eq: $userAddress } }) {
         lbPair {
           id
@@ -428,8 +464,8 @@ export async function getUserPoolIds(userAddress: string) {
         variableFeeControl
         protocolShare
       }
-      Bundle(where: { id: { _eq: "1" } }) {
-        hypePriceUSD
+      Bundle(where: { id: { _eq: $bundleId } }) {
+        nativePriceUSD
       }
       LBPairHourData(where: { date: { _gte: $twentyFourHoursAgo } }) {
         lbPair_id
@@ -471,13 +507,13 @@ export async function getUserPoolIds(userAddress: string) {
       variableFeeControl: string;
       protocolShare: string;
     }>;
-    Bundle: Array<{ hypePriceUSD: string }>;
+    Bundle: Array<{ nativePriceUSD: string }>;
     LBPairHourData: Array<{
       lbPair_id: string;
       volumeUSD: string;
       feesUSD: string;
     }>;
-  }>(query, { userAddress, twentyFourHoursAgo });
+  }>(query, { userAddress: chainUserId, twentyFourHoursAgo, bundleId });
 
   // Envio 코드의 데이터 가공 로직 적용
   // 중복 제거 및 데이터 변환
@@ -496,17 +532,17 @@ export async function getUserPoolIds(userAddress: string) {
     );
 
     return {
-      pairAddress: pool.id,
+      pairAddress: fromChainId(pool.id),
       name: `${pool.tokenX?.symbol}-${pool.tokenY?.symbol}`,
       tokenX: {
-        address: pool.tokenX?.id,
+        address: fromChainId(pool.tokenX?.id || ''),
         name: pool.tokenX?.name,
         symbol: pool.tokenX?.symbol,
         decimals: pool.tokenX?.decimals,
         priceUsd: Number(pool.tokenX?.priceUSD),
       },
       tokenY: {
-        address: pool.tokenY?.id,
+        address: fromChainId(pool.tokenY?.id || ''),
         name: pool.tokenY?.name,
         symbol: pool.tokenY?.symbol,
         decimals: pool.tokenY?.decimals,
@@ -541,6 +577,8 @@ export async function getUserPoolIds(userAddress: string) {
 
 // User Bin Liquidity Query
 export async function getUserBinLiquidity(pairAddress: string, userAddress: string) {
+  const chainPairId = toChainPairId(pairAddress);
+  const chainUserId = toChainUserId(userAddress);
   const query = `
     query GetUserBinLiquidity($pairAddress: String!, $userAddress: String!) {
       UserBinLiquidity(
@@ -558,7 +596,7 @@ export async function getUserBinLiquidity(pairAddress: string, userAddress: stri
     UserBinLiquidity: Array<{
       binId: number;
     }>;
-  }>(query, { pairAddress, userAddress });
+  }>(query, { pairAddress: chainPairId, userAddress: chainUserId });
 }
 
 // Token Prices Query
@@ -590,7 +628,7 @@ export async function getTokenPrices() {
 export async function getDexAnalytics(startTime: number) {
   const query = `
     query GetDexAnalytics($startTime: Int!) {
-      HyperbrickDayData(
+      LBDayData(
         where: { date: { _gte: $startTime } }
         limit: 180
         order_by: { date: asc }
@@ -606,7 +644,7 @@ export async function getDexAnalytics(startTime: number) {
   `;
 
   const result = await graphqlRequest<{
-    HyperbrickDayData: Array<{
+    LBDayData: Array<{
       id: string;
       date: number;
       volumeUSD: string;
@@ -616,7 +654,7 @@ export async function getDexAnalytics(startTime: number) {
     }>;
   }>(query, { startTime });
 
-  return result.HyperbrickDayData.map((item) => ({
+  return result.LBDayData.map((item) => ({
     date: new Date(item.date * 1000).toISOString(),
     timestamp: item.date,
     volumeUSD: Number(item.volumeUSD),
@@ -628,6 +666,8 @@ export async function getDexAnalytics(startTime: number) {
 
 // User Fees Earned Query
 export async function getUserFeesEarned(pairAddress: string, userAddress: string) {
+  const chainPairId = toChainPairId(pairAddress);
+  const chainUserId = toChainUserId(userAddress);
   const query = `
     query GetUserFeesEarned($pairAddress: String!, $userAddress: String!) {
       UserFeesPerBinData(
@@ -655,11 +695,13 @@ export async function getUserFeesEarned(pairAddress: string, userAddress: string
       priceY: string;
       priceX: string;
     }>;
-  }>(query, { pairAddress, userAddress });
+  }>(query, { pairAddress: chainPairId, userAddress: chainUserId });
 }
 
 // User Fees Analytics Query
 export async function getUserFeesAnalytics(pairAddress: string, userAddress: string) {
+  const chainPairId = toChainPairId(pairAddress);
+  const chainUserId = toChainUserId(userAddress);
   const query = `
     query GetUserFeesAnalytics($pairAddress: String!, $userAddress: String!) {
       UserFeesHourData(
@@ -700,11 +742,12 @@ export async function getUserFeesAnalytics(pairAddress: string, userAddress: str
       accruedFeesX: string;
       accruedFeesY: string;
     }>;
-  }>(query, { pairAddress, userAddress });
+  }>(query, { pairAddress: chainPairId, userAddress: chainUserId });
 }
 
 // Portfolio Query
 export async function getPortfolio(userAddress: string) {
+  const chainUserId = toChainUserId(userAddress);
   const query = `
     query GetPortfolio($userAddress: String!) {
       UserBinLiquidity(where: { user_id: { _eq: $userAddress } }) {
@@ -769,7 +812,7 @@ export async function getPortfolio(userAddress: string) {
       accruedFeesX: string;
       accruedFeesY: string;
     }>;
-  }>(query, { userAddress });
+  }>(query, { userAddress: chainUserId });
 
   // Envio 코드의 데이터 가공 로직 적용
   const userFees = result.UserFeesPerBinData.reduce(
@@ -790,7 +833,7 @@ export async function getPortfolio(userAddress: string) {
   );
 
   const objectUserFees = Object.values(userFees).map((item) => ({
-    lbPairId: item.lbPairId,
+    lbPairId: fromChainId(item.lbPairId),
     totalAccruedFeesX: item.totalAccruedFeesX.toString(),
     totalAccruedFeesY: item.totalAccruedFeesY.toString(),
   }));
@@ -816,9 +859,9 @@ export async function getPortfolio(userAddress: string) {
     ) => {
       if (!acc[item.lbPair.id]) {
         acc[item.lbPair.id] = {
-          lbPairId: item.lbPair.id,
-          tokenXId: item.lbPair.tokenX.id,
-          tokenYId: item.lbPair.tokenY.id,
+          lbPairId: fromChainId(item.lbPair.id),
+          tokenXId: fromChainId(item.lbPair.tokenX.id),
+          tokenYId: fromChainId(item.lbPair.tokenY.id),
           name: `${item.lbPair.tokenX.symbol}-${item.lbPair.tokenY.symbol}-${item.lbPair.binStep}`,
           baseFeePct: Number(item.lbPair.baseFeePct),
           binStep: Number(item.lbPair.binStep),

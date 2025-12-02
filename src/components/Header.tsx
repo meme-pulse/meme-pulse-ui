@@ -123,6 +123,16 @@ export function Header() {
                     >
                       Portfolio
                     </div>
+                    <div
+                      className={`text-lg cursor-pointer ${pathname.pathname === '/faucet' ? 'text-[#cfbaff]' : 'text-white'}`}
+                      style={{ fontFamily: '"Press Start 2P", cursive' }}
+                      onClick={() => {
+                        navigate('/faucet');
+                        setDrawerOpen(false);
+                      }}
+                    >
+                      Faucet
+                    </div>
                   </nav>
                 </DrawerContent>
               </Drawer>
@@ -148,6 +158,15 @@ export function Header() {
               style={{ fontFamily: '"Press Start 2P", cursive', lineHeight: '16px' }}
             >
               Pool
+            </span>
+            <span
+              onClick={(e) => handleMouseDown(e, '/faucet')}
+              className={`text-[12px] cursor-pointer transition-colors ${
+                pathname.pathname === '/faucet' ? 'text-[#cfbaff]' : 'text-white hover:text-[#cfbaff]'
+              }`}
+              style={{ fontFamily: '"Press Start 2P", cursive', lineHeight: '16px' }}
+            >
+              Faucet
             </span>
           </nav>
 

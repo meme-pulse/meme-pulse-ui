@@ -24,9 +24,9 @@ export default function SwapComponent() {
   const { address } = useAccount();
   const { watchAsset } = useWatchAsset();
   const { data: tokenList } = useTokenList();
-  const initialFromTokenHYPE = new Token(DEFAULT_CHAINID, zeroAddress, 18, 'HYPE', 'HYPE');
+  const initialFromTokenM = new Token(DEFAULT_CHAINID, zeroAddress, 18, 'M', 'Memecore');
 
-  const [fromToken, setFromToken] = useState<Token>(initialFromTokenHYPE);
+  const [fromToken, setFromToken] = useState<Token>(initialFromTokenM);
   const [toToken, setToToken] = useState<Token | null>(null);
 
   const { data: fromTokenData, refetch: refetchFromTokenData } = useTokenData({

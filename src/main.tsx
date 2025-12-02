@@ -13,52 +13,35 @@ import { TooltipProvider } from './components/ui/tooltip';
 import { createPublicClient, defineChain, fallback } from 'viem';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 
-export const hyperEVM = /*#__PURE__*/ defineChain({
-  id: 999,
-  name: 'HyperEVM',
-  nativeCurrency: { name: 'HyperEVM', symbol: 'HYPE', decimals: 18 },
+export const memecoreTestnet = /*#__PURE__*/ defineChain({
+  id: 43522,
+  name: 'Memecore Testnet',
+  nativeCurrency: { name: 'Memecore', symbol: 'M', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://rpc.hyperliquid.xyz/evm'] },
+    default: { http: ['https://rpc.insectarium.memecore.net'] },
   },
   blockExplorers: {
     default: {
-      name: 'HyperEVM Explorer',
-      url: 'https://hyperevmscan.io/',
+      name: 'Memecore Explorer',
+      url: 'https://insectarium.blockscout.memecore.com',
     },
   },
   contracts: {
     multicall3: {
-      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
-    },
-  },
-});
-
-export const hyperEVMTestnet = /*#__PURE__*/ defineChain({
-  id: 998,
-  name: 'HyperEVM Testnet',
-  nativeCurrency: { name: 'HyperEVM', symbol: 'HYPE', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://rpc.hyperliquid-testnet.xyz/evm'] },
-  },
-  contracts: {
-    multicall3: {
-      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
+      address: '0x709bf66fb11942da03a1f7bf59bfa99293f68db9',
     },
   },
 });
 
 export const customReadClient = createPublicClient({
-  chain: hyperEVM,
-  transport: fallback([
-    http('https://hyperliquid-mainnet.g.alchemy.com/v2/HCCeCX1QHPnlyp3bB5nLz'),
-    http('https://rpc.hyperliquid.xyz/evm'),
-  ]),
+  chain: memecoreTestnet,
+  transport: fallback([http('https://rpc.insectarium.memecore.net')]),
 });
 
 const config = getDefaultConfig({
   appName: 'MemePulse',
   projectId: 'aedf2dab89e0558539df651afcb1baa7',
-  chains: [hyperEVM, hyperEVMTestnet],
+  chains: [memecoreTestnet],
   ssr: false,
   wallets: [
     {

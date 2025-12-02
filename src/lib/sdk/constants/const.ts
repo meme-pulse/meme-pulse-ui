@@ -1,6 +1,6 @@
 import JSBI from 'jsbi';
 export enum ChainId {
-  HYPEREVM = 999,
+  MEMECORE_TESTNET = 43522,
 }
 
 export type BigintIsh = JSBI | bigint | string;

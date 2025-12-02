@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Pool from './Pool';
 import PoolDetail from './PoolDetail';
+import AIPoolDetail from './AIPoolDetail';
 import Swap from './Swap';
 import { Header } from './components/Header';
 import { CreatePool } from './CreatePool';
 import { Toaster } from 'sonner';
 import Portfolio from './Portfolio';
+import Faucet from './Faucet';
 import { Footer } from './components/ui/footer';
 import NotFound from './components/not-found';
 
@@ -18,8 +20,10 @@ function App() {
         <Route path="/swap" element={<Swap />} />
         <Route path="/pool" element={<Pool />} />
         <Route path="/pool/v22/:tokenAAddress/:tokenBAddress/:lbBinStep" element={<PoolDetail />} />
+        <Route path="/pool/ai/:tokenAAddress/:tokenBAddress" element={<AIPoolDetail />} />
         <Route path="/pool/v22/create" element={<CreatePool />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/faucet" element={<Faucet />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />

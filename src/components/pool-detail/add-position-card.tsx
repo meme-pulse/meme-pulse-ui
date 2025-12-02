@@ -10,8 +10,10 @@ import {
   getBidAskDistributionFromBinRange,
   getCurveDistributionFromBinRange,
   getUniformDistributionFromBinRange,
+  LB_ROUTER_V22_ADDRESS,
 } from '../../lib/sdk';
-import { Token, TokenAmount, WNATIVE } from '../../lib/sdk';
+import { Token, TokenAmount, WNATIVE, NATIVE_SYMBOL } from '../../lib/sdk';
+import ApproveButton from '../approve-button';
 import type { PoolData } from '@/PoolDetail';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -23,6 +25,7 @@ import { formatNumber, formatStringOnlyLocale, formatUSDWithLocale, getNumberStr
 import { useLocalStorage } from 'usehooks-ts';
 import { useActiveId } from '@/hooks/use-active-id';
 import { useTokensData, NATIVE_TOKEN_ADDRESS } from '@/hooks/use-token-data';
+import { useAllowance } from '@/hooks/use-allowance';
 import { useAccount } from 'wagmi';
 import { parseUnits, zeroAddress } from 'viem';
 import AddLiquidityButton from '../add-liquidity-button';
@@ -94,15 +97,17 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
   const [maxPriceBinId, setMaxPriceBinId] = useState(activeId + (DEFAULT_BIN_COUNT - 1) / 2);
 
   const poolData = useMemo(() => {
-    if (originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address && isNativeIn) {
+    const wnativeAddress = WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
+    const nativeSymbol = NATIVE_SYMBOL[DEFAULT_CHAINID];
+    if (originalPoolData.tokenX.address.toLowerCase() === wnativeAddress && isNativeIn) {
       return {
         ...originalPoolData,
-        tokenX: { ...originalPoolData.tokenX, symbol: 'HYPE', address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
+        tokenX: { ...originalPoolData.tokenX, symbol: nativeSymbol, address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
       };
-    } else if (originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address && isNativeIn) {
+    } else if (originalPoolData.tokenY.address.toLowerCase() === wnativeAddress && isNativeIn) {
       return {
         ...originalPoolData,
-        tokenY: { ...originalPoolData.tokenY, symbol: 'HYPE', address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
+        tokenY: { ...originalPoolData.tokenY, symbol: nativeSymbol, address: NATIVE_TOKEN_ADDRESS as `0x${string}` },
       };
     } else {
       return originalPoolData;
@@ -1172,6 +1177,40 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
     return tokenBalanceData?.[poolData.tokenY.address as keyof typeof tokenBalanceData]?.formattedBalance ?? '0';
   }, [poolData.tokenY.address, tokenBalanceData]);
 
+  // Check allowance for both tokens
+  const allowanceX = useAllowance(originalPoolData.tokenX.address, LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]);
+  const allowanceY = useAllowance(originalPoolData.tokenY.address, LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]);
+
+  // Calculate if approval is needed for each token
+  const needsApprovalX = useMemo(() => {
+    // Native token doesn't need approval
+    const isNativeX = isNativeIn && originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
+    if (isNativeX) return false;
+
+    // Check if amount is available and greater than 0
+    if (!inputAmountXAvailable || !Number(debouncedAmountX)) return false;
+
+    // Compare allowance with required amount
+    const requiredAmount = parseUnits(debouncedAmountX || '0', originalPoolData.tokenX.decimals);
+    return allowanceX < requiredAmount;
+  }, [isNativeIn, originalPoolData.tokenX.address, originalPoolData.tokenX.decimals, inputAmountXAvailable, debouncedAmountX, allowanceX]);
+
+  const needsApprovalY = useMemo(() => {
+    // Native token doesn't need approval
+    const isNativeY = isNativeIn && originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
+    if (isNativeY) return false;
+
+    // Check if amount is available and greater than 0
+    if (!inputAmountYAvailable || !Number(debouncedAmountY)) return false;
+
+    // Compare allowance with required amount
+    const requiredAmount = parseUnits(debouncedAmountY || '0', originalPoolData.tokenY.decimals);
+    return allowanceY < requiredAmount;
+  }, [isNativeIn, originalPoolData.tokenY.address, originalPoolData.tokenY.decimals, inputAmountYAvailable, debouncedAmountY, allowanceY]);
+
+  // Disable add liquidity button if any approval is needed
+  const needsApproval = needsApprovalX || needsApprovalY;
+
   return (
     <div className="space-y-4">
       {/* Header with Auto Fill */}
@@ -1218,15 +1257,18 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                 logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
                 className="w-6 h-6"
               />
-              <span className="text-sm font-medium text-[#030303] font-roboto">
+              <span className="text-sm font-medium text-[#030303] font-roboto flex items-center">
                 {poolData.tokenX.symbol}
-                {originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address && (
-                  <>
-                    <ArrowLeftRight
-                      className="w-4 h-4 ml-1 hover:cursor-pointer text-figma-text-gray"
-                      onClick={() => setIsNativeIn(!isNativeIn)}
-                    />
-                  </>
+                {originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
+                  <button
+                    type="button"
+                    className="ml-1 px-1.5 py-0.5 text-[10px] bg-figma-purple/10 text-figma-purple hover:bg-figma-purple/20 transition-colors rounded flex items-center gap-0.5"
+                    onClick={() => setIsNativeIn(!isNativeIn)}
+                    title={isNativeIn ? 'Switch to WNATIVE deposit' : 'Switch to Native deposit'}
+                  >
+                    <ArrowLeftRight className="w-3 h-3" />
+                    {isNativeIn ? 'Native' : 'WNATIVE'}
+                  </button>
                 )}
               </span>
             </div>
@@ -1328,15 +1370,18 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                 logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
                 className="w-6 h-6"
               />
-              <span className="text-sm font-medium text-[#030303] font-roboto">
+              <span className="text-sm font-medium text-[#030303] font-roboto flex items-center">
                 {poolData.tokenY.symbol}
-                {originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address && (
-                  <>
-                    <ArrowLeftRight
-                      className="w-4 h-4 ml-1 hover:cursor-pointer text-figma-text-gray"
-                      onClick={() => setIsNativeIn(!isNativeIn)}
-                    />
-                  </>
+                {originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
+                  <button
+                    type="button"
+                    className="ml-1 px-1.5 py-0.5 text-[10px] bg-figma-purple/10 text-figma-purple hover:bg-figma-purple/20 transition-colors rounded flex items-center gap-0.5"
+                    onClick={() => setIsNativeIn(!isNativeIn)}
+                    title={isNativeIn ? 'Switch to WNATIVE deposit' : 'Switch to Native deposit'}
+                  >
+                    <ArrowLeftRight className="w-3 h-3" />
+                    {isNativeIn ? 'Native' : 'WNATIVE'}
+                  </button>
                 )}
               </span>
             </div>
@@ -1694,8 +1739,36 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
         </div>
       </div>
 
-      {/* Add Liquidity Button */}
+      {/* Approve & Add Liquidity Button */}
       <div className="space-y-4">
+        {/* Approve Token X - Skip if native deposit for WNATIVE token */}
+        {inputAmountXAvailable && Number(debouncedAmountX) > 0 && (
+          <ApproveButton
+            tokenAddress={
+              isNativeIn && originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()
+                ? zeroAddress // Native token doesn't need approve
+                : (originalPoolData.tokenX.address as `0x${string}`)
+            }
+            spenderAddress={LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]}
+            amountInBigInt={parseUnits(debouncedAmountX || '0', originalPoolData.tokenX.decimals)}
+            symbol={originalPoolData.tokenX.symbol}
+          />
+        )}
+
+        {/* Approve Token Y - Skip if native deposit for WNATIVE token */}
+        {inputAmountYAvailable && Number(debouncedAmountY) > 0 && (
+          <ApproveButton
+            tokenAddress={
+              isNativeIn && originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()
+                ? zeroAddress // Native token doesn't need approve
+                : (originalPoolData.tokenY.address as `0x${string}`)
+            }
+            spenderAddress={LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]}
+            amountInBigInt={parseUnits(debouncedAmountY || '0', originalPoolData.tokenY.decimals)}
+            symbol={originalPoolData.tokenY.symbol}
+          />
+        )}
+
         <AddLiquidityButton
           inputAmountXAvailable={inputAmountXAvailable}
           inputAmountYAvailable={inputAmountYAvailable}
@@ -1707,6 +1780,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
           tokenXSymbol={poolData.tokenX.symbol}
           tokenYSymbol={poolData.tokenY.symbol}
           isNativeIn={isNativeIn}
+          needsApproval={needsApproval}
           onSuccess={() => {
             setTypedAmountX('0');
             setTypedAmountY('0');
