@@ -1,9 +1,48 @@
-// Vercel Serverless Function - DLMM Suggestion API
+// Vercel Serverless Function - DLMM AI Suggestion API
+// 클라이언트에서 데이터를 받아 메트릭 계산 + AI 전략 생성
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { DLMMSuggestionRequest, DLMMSuggestionResponse } from './types';
+import { calculateMetrics } from './metrics-calculator';
+import { generateAIStrategy } from './ai-strategy';
 
 export const config = {
-  maxDuration: 30,
+  maxDuration: 30, // AI 호출 시간 고려
 };
+
+/**
+ * 요청 데이터 검증
+ */
+function validateRequest(body: unknown): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object') {
+    return { valid: false, error: 'Request body is required' };
+  }
+
+  const req = body as Partial<DLMMSuggestionRequest>;
+
+  // 필수 필드 검증
+  if (!req.tokenX?.address || !req.tokenY?.address) {
+    return { valid: false, error: 'tokenX and tokenY with addresses are required' };
+  }
+
+  if (!req.riskProfile) {
+    return { valid: false, error: 'riskProfile is required (aggressive | defensive | auto)' };
+  }
+
+  if (!['aggressive', 'defensive', 'auto'].includes(req.riskProfile)) {
+    return { valid: false, error: 'Invalid riskProfile. Must be: aggressive, defensive, or auto' };
+  }
+
+  if (!req.availablePools || req.availablePools.length === 0) {
+    return { valid: false, error: 'availablePools array is required with at least one pool' };
+  }
+
+  if (typeof req.currentActiveId !== 'number') {
+    return { valid: false, error: 'currentActiveId is required' };
+  }
+
+  return { valid: true };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -15,68 +54,81 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
+  // GET - API 정보
   if (req.method === 'GET') {
     return res.json({
       success: true,
-      message: 'DLMM Suggestion API is running',
+      message: 'DLMM AI Suggestion API',
+      version: '2.0.0',
       endpoint: '/api/dlmm-suggest',
       method: 'POST',
-      example: {
-        tokenX: '0x...',
-        tokenY: '0x...',
-        priceHistory: [],
-        riskTolerance: 'conservative',
+      description: 'Analyzes market data and generates optimal LP strategy recommendations',
+      requiredFields: {
+        riskProfile: 'aggressive | defensive | auto',
+        tokenX: '{ address, symbol, decimals }',
+        tokenY: '{ address, symbol, decimals }',
+        availablePools: 'Array of PoolInfo objects',
+        currentActiveId: 'Current active bin ID',
+      },
+      optionalFields: {
+        tokenXPriceHistory: 'Array of TokenPriceData (7 days)',
+        tokenYPriceHistory: 'Array of TokenPriceData (7 days)',
+        pairHistory: 'Array of PairHistoryData (7 days)',
+        binDistribution: 'Array of BinData (±50 bins from activeId)',
       },
     });
   }
 
+  // POST - AI 추천 생성
   if (req.method === 'POST') {
-    try {
-      const body = req.body;
+    const startTime = Date.now();
 
-      // 간단한 검증
-      if (!body.tokenX || !body.tokenY) {
-        return res.status(400).json({ success: false, error: 'tokenX and tokenY are required' });
+    try {
+      // 요청 검증
+      const validation = validateRequest(req.body);
+      if (!validation.valid) {
+        return res.status(400).json({
+          success: false,
+          error: validation.error,
+        } as DLMMSuggestionResponse);
       }
 
-      // 테스트 응답
-      const response = {
+      const request = req.body as DLMMSuggestionRequest;
+
+      // 1. 메트릭 계산
+      const calculatedMetrics = calculateMetrics(request);
+
+      // 2. AI 전략 생성
+      const recommendation = await generateAIStrategy(request, calculatedMetrics);
+
+      // 3. 응답 구성
+      const response: DLMMSuggestionResponse = {
         success: true,
         data: {
-          message: 'API is working on Vercel Serverless!',
-          received: {
-            tokenX: body.tokenX,
-            tokenY: body.tokenY,
-            riskTolerance: body.riskTolerance || 'not provided',
+          recommendation,
+          calculatedMetrics,
+          metadata: {
+            tokenPair: `${request.tokenX.symbol}-${request.tokenY.symbol}`,
+            riskProfile: request.riskProfile,
             timestamp: new Date().toISOString(),
-          },
-          test: {
-            recommendedPool: {
-              pairAddress: '0x0000000000000000000000000000000000000000',
-              lbBinStep: 1,
-              activeBinId: 8388608,
-              score: 85,
-              reasoning: 'This is a test response',
-            },
-            dlmmSuggestion: {
-              minBinId: 8388600,
-              maxBinId: 8388616,
-              binCount: 17,
-              distributionShape: 'SPOT',
-              reasoning: 'Test suggestion',
-            },
+            poolsAnalyzed: request.availablePools.length,
           },
         },
       };
 
+      // 캐싱 (60초)
       res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+
+      console.log(`DLMM Suggestion generated in ${Date.now() - startTime}ms`);
+
       return res.json(response);
     } catch (error) {
-      console.error('API Error:', error);
+      console.error('DLMM Suggestion API Error:', error);
+
       return res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      } as DLMMSuggestionResponse);
     }
   }
 

@@ -1,14 +1,7 @@
 // DLMM Metrics Calculator
 // 클라이언트에서 받은 데이터로 AI 입력용 메트릭 계산
 
-import type {
-  DLMMSuggestionRequest,
-  CalculatedMetrics,
-  TokenPriceData,
-  PairHistoryData,
-  BinData,
-  PoolInfo,
-} from './types';
+import type { DLMMSuggestionRequest, CalculatedMetrics, TokenPriceData, PairHistoryData, BinData, PoolInfo } from './types';
 
 /**
  * 가격 변동성 계산 (OHLC 데이터 기반)
@@ -34,9 +27,7 @@ function calculateVolatility(priceHistory: TokenPriceData[]): number {
  * 볼륨 트렌드 분석
  * 최근 3일 vs 이전 4일 비교
  */
-function analyzeVolumeTrend(
-  pairHistory: PairHistoryData[]
-): 'increasing' | 'stable' | 'decreasing' {
+function analyzeVolumeTrend(pairHistory: PairHistoryData[]): 'increasing' | 'stable' | 'decreasing' {
   if (pairHistory.length < 7) return 'stable';
 
   // 날짜순 정렬 (오래된 것 먼저)
@@ -45,10 +36,8 @@ function analyzeVolumeTrend(
   const recent3Days = sorted.slice(-3);
   const previous4Days = sorted.slice(0, 4);
 
-  const recentAvg =
-    recent3Days.reduce((sum, d) => sum + d.volumeUSD, 0) / recent3Days.length;
-  const previousAvg =
-    previous4Days.reduce((sum, d) => sum + d.volumeUSD, 0) / previous4Days.length;
+  const recentAvg = recent3Days.reduce((sum, d) => sum + d.volumeUSD, 0) / recent3Days.length;
+  const previousAvg = previous4Days.reduce((sum, d) => sum + d.volumeUSD, 0) / previous4Days.length;
 
   if (previousAvg === 0) return 'stable';
 
@@ -108,10 +97,7 @@ function calculatePriceChange7d(priceHistory: TokenPriceData[]): number {
  * 중앙 ±10 bin에 얼마나 유동성이 집중되어 있는지
  * @returns 0-100 (100 = 완전 집중)
  */
-function calculateLiquidityConcentration(
-  binDistribution: BinData[],
-  activeId: number
-): number {
+function calculateLiquidityConcentration(binDistribution: BinData[], activeId: number): number {
   if (binDistribution.length === 0) return 50;
 
   // 각 bin의 USD 가치 계산 (reserveX * priceX + reserveY * priceY)
@@ -124,9 +110,7 @@ function calculateLiquidityConcentration(
   if (totalValue === 0) return 50;
 
   // 중앙 ±10 bin의 가치
-  const centralBins = binsWithValue.filter(
-    (bin) => bin.binId >= activeId - 10 && bin.binId <= activeId + 10
-  );
+  const centralBins = binsWithValue.filter((bin) => bin.binId >= activeId - 10 && bin.binId <= activeId + 10);
   const centralValue = centralBins.reduce((sum, bin) => sum + bin.valueUSD, 0);
 
   return (centralValue / totalValue) * 100;
@@ -136,9 +120,7 @@ function calculateLiquidityConcentration(
  * 활성 bin 수 계산 (유동성이 있는 bin)
  */
 function countActiveBins(binDistribution: BinData[]): number {
-  return binDistribution.filter(
-    (bin) => bin.reserveX > 0 || bin.reserveY > 0
-  ).length;
+  return binDistribution.filter((bin) => bin.reserveX > 0 || bin.reserveY > 0).length;
 }
 
 /**
@@ -166,14 +148,7 @@ function calculateFeeAPRByPool(pools: PoolInfo[]): Record<string, number> {
  * 클라이언트 데이터 → 계산된 메트릭
  */
 export function calculateMetrics(request: DLMMSuggestionRequest): CalculatedMetrics {
-  const {
-    tokenXPriceHistory,
-    tokenYPriceHistory,
-    pairHistory,
-    binDistribution,
-    availablePools,
-    currentActiveId,
-  } = request;
+  const { tokenXPriceHistory, tokenYPriceHistory, pairHistory, binDistribution, availablePools, currentActiveId } = request;
 
   // 변동성 계산
   const tokenXVolatility = calculateVolatility(tokenXPriceHistory);
@@ -186,10 +161,7 @@ export function calculateMetrics(request: DLMMSuggestionRequest): CalculatedMetr
   const volumeTrend = analyzeVolumeTrend(pairHistory);
 
   // TVL 대비 볼륨 비율 (최고 TVL 풀 기준)
-  const bestPool = availablePools.reduce(
-    (best, pool) => (pool.tvlUSD > best.tvlUSD ? pool : best),
-    availablePools[0] || { tvlUSD: 0 }
-  );
+  const bestPool = availablePools.reduce((best, pool) => (pool.tvlUSD > best.tvlUSD ? pool : best), availablePools[0] || { tvlUSD: 0 });
   const volumeToTvlRatio = bestPool.tvlUSD > 0 ? avgDailyVolumeUSD / bestPool.tvlUSD : 0;
 
   // 수수료 분석
@@ -198,10 +170,7 @@ export function calculateMetrics(request: DLMMSuggestionRequest): CalculatedMetr
   const feeAPRByPool = calculateFeeAPRByPool(availablePools);
 
   // 유동성 분포 분석
-  const liquidityConcentration = calculateLiquidityConcentration(
-    binDistribution,
-    currentActiveId
-  );
+  const liquidityConcentration = calculateLiquidityConcentration(binDistribution, currentActiveId);
   const activeBinsCount = countActiveBins(binDistribution);
 
   // 시장 상태 분석 (TokenX 기준, 보통 base token)
@@ -228,10 +197,7 @@ export function calculateMetrics(request: DLMMSuggestionRequest): CalculatedMetr
  * 메트릭 기반 전략 힌트 생성
  * AI에게 전달할 추가 컨텍스트
  */
-export function generateStrategyHints(
-  metrics: CalculatedMetrics,
-  riskProfile: string
-): string[] {
+export function generateStrategyHints(metrics: CalculatedMetrics, riskProfile: string): string[] {
   const hints: string[] = [];
 
   // 변동성 기반 힌트
@@ -272,4 +238,3 @@ export function generateStrategyHints(
 
   return hints;
 }
-

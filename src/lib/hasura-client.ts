@@ -1,9 +1,13 @@
 // Hasura GraphQL Client
 // Envio API를 대체하여 Hasura GraphQL을 직접 호출합니다
 
+// 프로덕션 환경에서는 Vercel 프록시 사용 (HTTPS), 개발 환경에서는 직접 HTTP 사용 가능
 const HASURA_ENDPOINT = import.meta.env.VITE_HASURA_ENDPOINT || 'http://localhost:8080/v1/graphql';
+
 const HASURA_SECRET = import.meta.env.VITE_HASURA_SECRET || '';
 
+console.log('HASURA_ENDPOINT', HASURA_ENDPOINT);
+console.log('HASURA_SECRET', HASURA_SECRET);
 // Chain ID for entity ID prefixes
 const CHAIN_ID = 43522;
 
@@ -19,6 +23,10 @@ function toChainUserId(userAddress: string): string {
 
 function toBundleId(): string {
   return `${CHAIN_ID}:1`;
+}
+
+function toChainTokenId(tokenAddress: string): string {
+  return `${CHAIN_ID}:${tokenAddress.toLowerCase()}`;
 }
 
 // Helper function to extract address from chainId-prefixed ID
@@ -886,5 +894,253 @@ export async function getPortfolio(userAddress: string) {
         totalVolumeUSD: '0',
       },
     ],
+  };
+}
+
+// ========================================
+// AI DLMM Suggestion Data Queries
+// ========================================
+
+// Token Price History Query (OHLC data for volatility analysis)
+export async function getTokenPriceHistory(tokenAddress: string, days: number = 7) {
+  const chainTokenId = toChainTokenId(tokenAddress);
+  const startTime = Math.floor(Date.now() / 1000 - days * 24 * 60 * 60);
+
+  const query = `
+    query GetTokenPriceHistory($tokenId: String!, $startTime: Int!) {
+      TokenDayData(
+        where: {
+          token_id: { _eq: $tokenId }
+          date: { _gte: $startTime }
+        }
+        order_by: { date: asc }
+        limit: 30
+      ) {
+        date
+        openPriceUSD
+        highPriceUSD
+        lowPriceUSD
+        closePriceUSD
+        volumeUSD
+      }
+    }
+  `;
+
+  const result = await graphqlRequest<{
+    TokenDayData: Array<{
+      date: number;
+      openPriceUSD: string;
+      highPriceUSD: string;
+      lowPriceUSD: string;
+      closePriceUSD: string;
+      volumeUSD: string;
+    }>;
+  }>(query, { tokenId: chainTokenId, startTime });
+
+  return result.TokenDayData.map((item) => ({
+    date: item.date,
+    openPriceUSD: Number(item.openPriceUSD),
+    highPriceUSD: Number(item.highPriceUSD),
+    lowPriceUSD: Number(item.lowPriceUSD),
+    closePriceUSD: Number(item.closePriceUSD),
+    volumeUSD: Number(item.volumeUSD),
+  }));
+}
+
+// Pair Volume History Query (for volume/fees analysis)
+export async function getPairVolumeHistory(pairAddress: string, days: number = 7) {
+  const chainPairId = toChainPairId(pairAddress);
+  const startTime = Math.floor(Date.now() / 1000 - days * 24 * 60 * 60);
+
+  const query = `
+    query GetPairVolumeHistory($pairId: String!, $startTime: Int!) {
+      LBPairDayData(
+        where: {
+          lbPair_id: { _eq: $pairId }
+          date: { _gte: $startTime }
+        }
+        order_by: { date: asc }
+        limit: 30
+      ) {
+        date
+        volumeUSD
+        feesUSD
+        txCount
+        totalValueLockedUSD
+      }
+    }
+  `;
+
+  const result = await graphqlRequest<{
+    LBPairDayData: Array<{
+      date: number;
+      volumeUSD: string;
+      feesUSD: string;
+      txCount: number;
+      totalValueLockedUSD: string;
+    }>;
+  }>(query, { pairId: chainPairId, startTime });
+
+  return result.LBPairDayData.map((item) => ({
+    date: item.date,
+    volumeUSD: Number(item.volumeUSD),
+    feesUSD: Number(item.feesUSD),
+    txCount: Number(item.txCount),
+    tvlUSD: Number(item.totalValueLockedUSD),
+  }));
+}
+
+// Bin Distribution Query for AI (extended range)
+export async function getBinDistributionForAI(pairAddress: string, activeId: number, range: number = 50) {
+  const chainPairId = toChainPairId(pairAddress);
+  const fromId = activeId - range;
+  const toId = activeId + range;
+
+  const query = `
+    query GetBinDistributionAI($pairAddress: String!, $fromId: Int!, $toId: Int!) {
+      Bin(
+        where: {
+          lbPair_id: { _eq: $pairAddress }
+          binId: { _gte: $fromId, _lte: $toId }
+        }
+        order_by: { binId: asc }
+      ) {
+        binId
+        priceX
+        priceY
+        reserveX
+        reserveY
+        liquidityProviderCount
+      }
+    }
+  `;
+
+  const result = await graphqlRequest<{
+    Bin: Array<{
+      binId: number;
+      priceX: string;
+      priceY: string;
+      reserveX: string;
+      reserveY: string;
+      liquidityProviderCount: string;
+    }>;
+  }>(query, { pairAddress: chainPairId, fromId, toId });
+
+  return result.Bin.map((bin) => ({
+    binId: bin.binId,
+    priceX: Number(bin.priceX),
+    priceY: Number(bin.priceY),
+    reserveX: Number(bin.reserveX),
+    reserveY: Number(bin.reserveY),
+    lpCount: Number(bin.liquidityProviderCount),
+  }));
+}
+
+// Get all pools for a token pair (for AI pool selection)
+export async function getPoolsForTokenPair(tokenXAddress: string, tokenYAddress: string) {
+  const twentyFourHoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
+  const bundleId = toBundleId();
+
+  // Token IDs with chain prefix
+  const tokenXId = toChainTokenId(tokenXAddress);
+  const tokenYId = toChainTokenId(tokenYAddress);
+
+  const query = `
+    query GetPoolsForTokenPair($tokenXId: String!, $tokenYId: String!, $twentyFourHoursAgo: Int!, $bundleId: String!) {
+      LBPair(
+        where: {
+          _or: [
+            { tokenX_id: { _eq: $tokenXId }, tokenY_id: { _eq: $tokenYId } },
+            { tokenX_id: { _eq: $tokenYId }, tokenY_id: { _eq: $tokenXId } }
+          ]
+        }
+        order_by: { totalValueLockedUSD: desc }
+      ) {
+        id
+        binStep
+        baseFeePct
+        activeId
+        totalValueLockedUSD
+        liquidityProviderCount
+        tokenX {
+          id
+          symbol
+          decimals
+        }
+        tokenY {
+          id
+          symbol
+          decimals
+        }
+      }
+      LBPairHourData(where: { date: { _gte: $twentyFourHoursAgo } }) {
+        lbPair_id
+        volumeUSD
+        feesUSD
+        txCount
+      }
+      Bundle(where: { id: { _eq: $bundleId } }) {
+        nativePriceUSD
+      }
+    }
+  `;
+
+  const result = await graphqlRequest<{
+    LBPair: Array<{
+      id: string;
+      binStep: number;
+      baseFeePct: string;
+      activeId: number;
+      totalValueLockedUSD: string;
+      liquidityProviderCount: string;
+      tokenX: { id: string; symbol: string; decimals: number };
+      tokenY: { id: string; symbol: string; decimals: number };
+    }>;
+    LBPairHourData: Array<{
+      lbPair_id: string;
+      volumeUSD: string;
+      feesUSD: string;
+      txCount: number;
+    }>;
+    Bundle: Array<{ nativePriceUSD: string }>;
+  }>(query, { tokenXId, tokenYId, twentyFourHoursAgo, bundleId });
+
+  return result.LBPair.map((pool) => {
+    const hourData = result.LBPairHourData.filter((h) => h.lbPair_id === pool.id);
+    const volume24h = hourData.reduce((sum, h) => sum + Number(h.volumeUSD), 0);
+    const fees24h = hourData.reduce((sum, h) => sum + Number(h.feesUSD), 0);
+    const txCount24h = hourData.reduce((sum, h) => sum + h.txCount, 0);
+
+    return {
+      pairAddress: fromChainId(pool.id),
+      binStep: pool.binStep,
+      activeId: pool.activeId,
+      tvlUSD: Number(pool.totalValueLockedUSD),
+      volume24hUSD: volume24h,
+      fees24hUSD: fees24h,
+      txCount24h,
+      baseFeePct: Number(pool.baseFeePct),
+      lpCount: Number(pool.liquidityProviderCount),
+    };
+  });
+}
+
+// Combined query for AI suggestion (all data in one call)
+export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: string, pairAddress: string, activeId: number) {
+  // Fetch all data in parallel
+  const [pools, tokenXHistory, tokenYHistory, pairHistory, binDistribution] = await Promise.all([
+    getPoolsForTokenPair(tokenXAddress, tokenYAddress),
+    getTokenPriceHistory(tokenXAddress, 7),
+    getTokenPriceHistory(tokenYAddress, 7),
+    getPairVolumeHistory(pairAddress, 7),
+    getBinDistributionForAI(pairAddress, activeId, 50),
+  ]);
+
+  return {
+    availablePools: pools,
+    tokenXPriceHistory: tokenXHistory,
+    tokenYPriceHistory: tokenYHistory,
+    pairHistory,
+    binDistribution,
   };
 }
