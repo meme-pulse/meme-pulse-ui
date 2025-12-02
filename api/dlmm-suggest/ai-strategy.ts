@@ -1,5 +1,5 @@
 // DLMM AI Strategy Generator
-// OpenAI를 사용하여 최적의 LP 전략 생성
+// Claude (Anthropic)를 사용하여 최적의 LP 전략 생성
 
 import type {
   DLMMSuggestionRequest,
@@ -11,19 +11,14 @@ import type {
 } from './types';
 import { generateStrategyHints } from './metrics-calculator';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-interface OpenAIMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-interface OpenAIResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
+interface ClaudeResponse {
+  content: Array<{
+    type: 'text';
+    text: string;
   }>;
+  stop_reason: string;
 }
 
 /**
@@ -52,16 +47,14 @@ Your task is to recommend optimal LP (Liquidity Provider) strategies based on ma
 4. **Aggressive Profile** → Concentrated liquidity, accept IL risk for higher fees
 5. **Defensive Profile** → Wide range, minimize IL risk
 
-You must respond with valid JSON only.`;
+## IMPORTANT: Response Format
+You MUST respond with ONLY valid JSON. Do NOT include any markdown code blocks, explanations, or additional text.
+Return ONLY the JSON object matching the required format below.`;
 
 /**
  * AI 입력 데이터 포맷팅
  */
-function formatAIInput(
-  request: DLMMSuggestionRequest,
-  metrics: CalculatedMetrics,
-  hints: string[]
-): string {
+function formatAIInput(request: DLMMSuggestionRequest, metrics: CalculatedMetrics, hints: string[]): string {
   const poolSummary = request.availablePools.map((pool) => ({
     pairAddress: pool.pairAddress,
     binStep: pool.binStep,
@@ -99,7 +92,8 @@ ${JSON.stringify(poolSummary, null, 2)}
 ${hints.map((h) => `- ${h}`).join('\n')}
 
 ## Required Output Format
-Respond with JSON only:
+CRITICAL: Respond with ONLY valid JSON. No markdown, no code blocks, no explanations. Just the raw JSON object.
+
 {
   "recommendedPool": {
     "pairAddress": "0x...",
@@ -126,99 +120,136 @@ Respond with JSON only:
 }
 
 /**
- * OpenAI API 호출
+ * Claude (Anthropic) API 호출
  */
-async function callOpenAI(messages: OpenAIMessage[]): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not configured');
+async function callClaude(systemPrompt: string, userMessage: string): Promise<string> {
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY is not configured');
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages,
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
       temperature: 0.3, // Lower for more consistent outputs
-      max_tokens: 1500,
-      response_format: { type: 'json_object' },
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+    throw new Error(`Claude API error: ${response.status} - ${error}`);
   }
 
-  const data = (await response.json()) as OpenAIResponse;
-  return data.choices[0]?.message?.content || '';
+  const data = (await response.json()) as ClaudeResponse;
+
+  // Claude 응답에서 텍스트 추출
+  const textContent = data.content.find((block) => block.type === 'text');
+  return textContent?.text || '';
+}
+
+/**
+ * Claude 응답에서 JSON 추출
+ * 마크다운 코드 블록이나 추가 텍스트 제거
+ */
+function extractJSONFromResponse(responseText: string): string {
+  let cleaned = responseText.trim();
+
+  // 마크다운 코드 블록에서 JSON 추출 (```json ... ``` 또는 ``` ... ```)
+  const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch && codeBlockMatch[1]) {
+    cleaned = codeBlockMatch[1].trim();
+  }
+
+  // 중괄호로 시작하는 첫 번째 위치 찾기
+  const firstBrace = cleaned.indexOf('{');
+  if (firstBrace === -1) {
+    return cleaned;
+  }
+
+  // 중괄호 매칭을 통한 JSON 객체 추출
+  let braceCount = 0;
+  const startIdx = firstBrace;
+  let endIdx = -1;
+
+  for (let i = startIdx; i < cleaned.length; i++) {
+    if (cleaned[i] === '{') {
+      braceCount++;
+    } else if (cleaned[i] === '}') {
+      braceCount--;
+      if (braceCount === 0) {
+        endIdx = i;
+        break;
+      }
+    }
+  }
+
+  if (endIdx !== -1) {
+    return cleaned.substring(startIdx, endIdx + 1);
+  }
+
+  // 매칭 실패 시 첫 번째 중괄호부터 끝까지 시도
+  const fallbackMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (fallbackMatch) {
+    return fallbackMatch[0];
+  }
+
+  return cleaned;
 }
 
 /**
  * AI 응답 파싱 및 검증
  */
-function parseAIResponse(
-  responseText: string,
-  request: DLMMSuggestionRequest
-): AIStrategyRecommendation {
+function parseAIResponse(responseText: string, request: DLMMSuggestionRequest): AIStrategyRecommendation {
   let parsed: AIStrategyRecommendation;
 
   try {
-    parsed = JSON.parse(responseText);
-  } catch {
-    throw new Error('Failed to parse AI response as JSON');
+    // JSON 추출 시도
+    const jsonText = extractJSONFromResponse(responseText);
+    parsed = JSON.parse(jsonText);
+  } catch (error) {
+    console.error('Failed to parse AI response:', error);
+    console.error('Response text:', responseText.substring(0, 500));
+    throw new Error(`Failed to parse AI response as JSON: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
   // 기본값으로 폴백
-  const defaultPool = request.availablePools.reduce(
-    (best, pool) => (pool.tvlUSD > best.tvlUSD ? pool : best),
-    request.availablePools[0]
-  );
+  const defaultPool = request.availablePools.reduce((best, pool) => (pool.tvlUSD > best.tvlUSD ? pool : best), request.availablePools[0]);
 
   // Validation and defaults
   const result: AIStrategyRecommendation = {
     recommendedPool: {
-      pairAddress:
-        parsed.recommendedPool?.pairAddress || defaultPool?.pairAddress || '',
+      pairAddress: parsed.recommendedPool?.pairAddress || defaultPool?.pairAddress || '',
       binStep: parsed.recommendedPool?.binStep || defaultPool?.binStep || 10,
-      reasoning:
-        parsed.recommendedPool?.reasoning || 'Selected based on highest TVL',
+      reasoning: parsed.recommendedPool?.reasoning || 'Selected based on highest TVL',
     },
     strategy: {
-      minBinId:
-        parsed.strategy?.minBinId || request.currentActiveId - 25,
-      maxBinId:
-        parsed.strategy?.maxBinId || request.currentActiveId + 25,
+      minBinId: parsed.strategy?.minBinId || request.currentActiveId - 25,
+      maxBinId: parsed.strategy?.maxBinId || request.currentActiveId + 25,
       binCount: parsed.strategy?.binCount || 51,
-      distributionShape: validateDistributionShape(
-        parsed.strategy?.distributionShape
-      ),
+      distributionShape: validateDistributionShape(parsed.strategy?.distributionShape),
     },
     riskAssessment: {
       expectedAPR: parsed.riskAssessment?.expectedAPR || '10-20%',
-      impermanentLossRisk: validateILRisk(
-        parsed.riskAssessment?.impermanentLossRisk
-      ),
-      rebalanceFrequency: validateRebalanceFreq(
-        parsed.riskAssessment?.rebalanceFrequency
-      ),
+      impermanentLossRisk: validateILRisk(parsed.riskAssessment?.impermanentLossRisk),
+      rebalanceFrequency: validateRebalanceFreq(parsed.riskAssessment?.rebalanceFrequency),
     },
     analysis: {
-      marketCondition:
-        parsed.analysis?.marketCondition || 'Market analysis unavailable',
+      marketCondition: parsed.analysis?.marketCondition || 'Market analysis unavailable',
       keyFactors: parsed.analysis?.keyFactors || ['Data insufficient'],
-      reasoning:
-        parsed.analysis?.reasoning ||
-        'AI analysis completed with limited data',
+      reasoning: parsed.analysis?.reasoning || 'AI analysis completed with limited data',
     },
   };
 
   // binCount 계산 보정
-  result.strategy.binCount =
-    result.strategy.maxBinId - result.strategy.minBinId + 1;
+  result.strategy.binCount = result.strategy.maxBinId - result.strategy.minBinId + 1;
 
   return result;
 }
@@ -238,12 +269,7 @@ function validateILRisk(risk?: string): ImpermanentLossRisk {
 }
 
 function validateRebalanceFreq(freq?: string): RebalanceFrequency {
-  if (
-    freq === 'hourly' ||
-    freq === 'daily' ||
-    freq === 'weekly' ||
-    freq === 'rarely'
-  ) {
+  if (freq === 'hourly' || freq === 'daily' || freq === 'weekly' || freq === 'rarely') {
     return freq;
   }
   return 'daily';
@@ -252,15 +278,9 @@ function validateRebalanceFreq(freq?: string): RebalanceFrequency {
 /**
  * Fallback 전략 생성 (API 실패시)
  */
-function generateFallbackStrategy(
-  request: DLMMSuggestionRequest,
-  metrics: CalculatedMetrics
-): AIStrategyRecommendation {
+function generateFallbackStrategy(request: DLMMSuggestionRequest, metrics: CalculatedMetrics): AIStrategyRecommendation {
   // 최고 TVL 풀 선택
-  const bestPool = request.availablePools.reduce(
-    (best, pool) => (pool.tvlUSD > best.tvlUSD ? pool : best),
-    request.availablePools[0]
-  );
+  const bestPool = request.availablePools.reduce((best, pool) => (pool.tvlUSD > best.tvlUSD ? pool : best), request.availablePools[0]);
 
   // 변동성 기반 bin range 결정
   let binRange: number;
@@ -301,23 +321,11 @@ function generateFallbackStrategy(
       distributionShape: shape,
     },
     riskAssessment: {
-      expectedAPR: `${Math.round(
-        (metrics.feeAPRByPool[bestPool?.pairAddress || ''] || 15) * 0.8
-      )}-${Math.round(
+      expectedAPR: `${Math.round((metrics.feeAPRByPool[bestPool?.pairAddress || ''] || 15) * 0.8)}-${Math.round(
         (metrics.feeAPRByPool[bestPool?.pairAddress || ''] || 15) * 1.2
       )}%`,
-      impermanentLossRisk:
-        metrics.combinedVolatility > 60
-          ? 'high'
-          : metrics.combinedVolatility > 30
-          ? 'medium'
-          : 'low',
-      rebalanceFrequency:
-        metrics.combinedVolatility > 60
-          ? 'daily'
-          : metrics.combinedVolatility > 30
-          ? 'weekly'
-          : 'rarely',
+      impermanentLossRisk: metrics.combinedVolatility > 60 ? 'high' : metrics.combinedVolatility > 30 ? 'medium' : 'low',
+      rebalanceFrequency: metrics.combinedVolatility > 60 ? 'daily' : metrics.combinedVolatility > 30 ? 'weekly' : 'rarely',
     },
     analysis: {
       marketCondition: metrics.marketCondition,
@@ -326,8 +334,7 @@ function generateFallbackStrategy(
         `Volume trend: ${metrics.volumeTrend}`,
         `Market: ${metrics.marketCondition}`,
       ],
-      reasoning:
-        'Fallback strategy generated based on calculated metrics. AI service temporarily unavailable.',
+      reasoning: 'Fallback strategy generated based on calculated metrics. AI service temporarily unavailable.',
     },
   };
 }
@@ -335,10 +342,7 @@ function generateFallbackStrategy(
 /**
  * 메인 AI 전략 생성 함수
  */
-export async function generateAIStrategy(
-  request: DLMMSuggestionRequest,
-  metrics: CalculatedMetrics
-): Promise<AIStrategyRecommendation> {
+export async function generateAIStrategy(request: DLMMSuggestionRequest, metrics: CalculatedMetrics): Promise<AIStrategyRecommendation> {
   // 전략 힌트 생성
   const hints = generateStrategyHints(metrics, request.riskProfile);
 
@@ -346,11 +350,8 @@ export async function generateAIStrategy(
   const userMessage = formatAIInput(request, metrics, hints);
 
   try {
-    // OpenAI 호출
-    const aiResponse = await callOpenAI([
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: userMessage },
-    ]);
+    // Claude 호출
+    const aiResponse = await callClaude(SYSTEM_PROMPT, userMessage);
 
     // 응답 파싱
     return parseAIResponse(aiResponse, request);
@@ -360,4 +361,3 @@ export async function generateAIStrategy(
     return generateFallbackStrategy(request, metrics);
   }
 }
-

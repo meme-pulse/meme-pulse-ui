@@ -10,6 +10,13 @@ import { useTokenList } from './hooks/use-token-list';
 import { customReadClient } from './main';
 import { mockPoolData } from './mock/api-data';
 import { useGroupedPools } from './hooks/use-grouped-pools';
+import {
+  useDLMMSuggestion,
+  mapDistributionShape,
+  extractAnalysisDisplay,
+  type AIAnalysisDisplay,
+  type PoolInfo,
+} from './hooks/use-dlmm-suggestion';
 
 import { AIStrategySelection, type RiskPreference } from './components/pool-detail/ai-strategy-selection';
 import { AIAnalysisProgress } from './components/pool-detail/ai-analysis-progress';
@@ -90,9 +97,13 @@ export default function AIPoolDetail() {
   // AI Flow state
   const [aiFlowStep, setAiFlowStep] = useState<AIFlowStep>('selection');
   const [strategyData, setStrategyData] = useState<StrategyData | undefined>(undefined);
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisDisplay | undefined>(undefined);
   const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
 
   const { data: tokenListData } = useTokenList();
+
+  // AI Suggestion mutation
+  const { mutateAsync: generateAISuggestion } = useDLMMSuggestion();
 
   // Fetch all grouped pools to get aggregated data
   const { data: groupedPoolsData } = useGroupedPools();
@@ -120,6 +131,23 @@ export default function AIPoolDetail() {
       totalFeesUsd: matchingGroup.totalFees24h,
       poolCount: matchingGroup.groups.length,
     };
+  }, [matchingGroup]);
+
+  // Convert matchingGroup.groups to PoolInfo[] for API
+  const availablePools = useMemo<PoolInfo[]>(() => {
+    if (!matchingGroup) return [];
+
+    return matchingGroup.groups.map((pool) => ({
+      pairAddress: pool.pairAddress,
+      binStep: pool.lbBinStep,
+      activeId: pool.activeBinId,
+      tvlUSD: pool.liquidityUsd,
+      volume24hUSD: pool.volume24h,
+      fees24hUSD: pool.fees24h,
+      txCount24h: 0, // Not available in grouped data, will be estimated
+      baseFeePct: pool.lbBaseFeePct,
+      lpCount: 0, // Not available in grouped data
+    }));
   }, [matchingGroup]);
 
   // Find the pool with highest liquidity for default strategy
@@ -208,59 +236,56 @@ export default function AIPoolDetail() {
       const defaultStrategy = getDefaultStrategy();
 
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const response = await fetch('/api/dlmm-suggest', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            tokenX: poolData?.tokenX.address,
-            tokenY: poolData?.tokenY.address,
-            riskTolerance: preference,
-            activeBinId: activeId,
-            binStep: poolData?.lbBinStep,
-          }),
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          console.warn('AI API returned non-ok response, using default SPOT strategy');
+        // Validate required data
+        if (!poolData || !matchingGroup || !bestPoolInfo || availablePools.length === 0) {
+          console.warn('Missing required data, using default strategy');
           setStrategyData(defaultStrategy);
+          setAiAnalysis(undefined);
           return;
         }
 
-        const result = await response.json();
+        // Call AI suggestion API via hook
+        const result = await generateAISuggestion({
+          tokenX: {
+            address: matchingGroup.tokenX.address,
+            symbol: matchingGroup.tokenX.symbol,
+            decimals: matchingGroup.tokenX.decimals,
+          },
+          tokenY: {
+            address: matchingGroup.tokenY.address,
+            symbol: matchingGroup.tokenY.symbol,
+            decimals: matchingGroup.tokenY.decimals,
+          },
+          riskProfile: preference,
+          availablePools,
+          bestPoolAddress: bestPoolInfo.pairAddress,
+          bestPoolActiveId: bestPoolInfo.activeBinId,
+        });
 
-        if (result.success && result.data?.test?.dlmmSuggestion) {
-          const suggestion = result.data.test.dlmmSuggestion;
-          // Map string to LiquidityDistribution enum
-          let shape = LiquidityDistribution.SPOT;
-          if (suggestion.distributionShape === 'CURVE') shape = LiquidityDistribution.CURVE;
-          else if (suggestion.distributionShape === 'BID_ASK') shape = LiquidityDistribution.BID_ASK;
+        // Parse AI response
+        const { recommendation } = result;
 
-          setStrategyData({
-            minBinId: suggestion.minBinId,
-            maxBinId: suggestion.maxBinId,
-            binCount: suggestion.binCount,
-            distributionShape: shape,
-          });
-        } else {
-          console.warn('AI API response missing data, using default SPOT strategy');
-          setStrategyData(defaultStrategy);
-        }
-      } catch {
-        console.warn('AI API error, using default SPOT strategy with highest liquidity pool');
+        // Map distribution shape string to LiquidityDistribution enum
+        const distributionShape = mapDistributionShape(recommendation.strategy.distributionShape);
+
+        setStrategyData({
+          minBinId: recommendation.strategy.minBinId,
+          maxBinId: recommendation.strategy.maxBinId,
+          binCount: recommendation.strategy.binCount,
+          distributionShape,
+        });
+
+        // Extract analysis display data
+        setAiAnalysis(extractAnalysisDisplay(recommendation));
+      } catch (error) {
+        console.warn('AI API error, using default SPOT strategy:', error);
         setStrategyData(defaultStrategy);
+        setAiAnalysis(undefined);
       } finally {
         setIsGeneratingStrategy(false);
       }
     },
-    [poolData, activeId, getDefaultStrategy]
+    [poolData, matchingGroup, bestPoolInfo, availablePools, activeId, getDefaultStrategy, generateAISuggestion]
   );
 
   const handleAnalysisComplete = useCallback(() => {
@@ -330,7 +355,9 @@ export default function AIPoolDetail() {
 
         {aiFlowStep === 'analysis' && <AIAnalysisProgress poolData={poolData} onAnalysisComplete={handleAnalysisComplete} />}
 
-        {aiFlowStep === 'result' && <AIStrategyResult poolData={poolData} tokenListData={tokenListData} strategyData={strategyData} />}
+        {aiFlowStep === 'result' && (
+          <AIStrategyResult poolData={poolData} tokenListData={tokenListData} strategyData={strategyData} aiAnalysis={aiAnalysis} />
+        )}
       </div>
     </div>
   );

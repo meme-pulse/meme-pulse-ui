@@ -1,7 +1,45 @@
 // Local Bun API Server for development
 // Run with: bun run api/server.ts
 
+import type { DLMMSuggestionRequest, DLMMSuggestionResponse } from './dlmm-suggest/types';
+import { calculateMetrics } from './dlmm-suggest/metrics-calculator';
+import { generateAIStrategy } from './dlmm-suggest/ai-strategy';
+
 const PORT = 3002;
+
+/**
+ * 요청 데이터 검증
+ */
+function validateRequest(body: unknown): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object') {
+    return { valid: false, error: 'Request body is required' };
+  }
+
+  const req = body as Partial<DLMMSuggestionRequest>;
+
+  // 필수 필드 검증
+  if (!req.tokenX?.address || !req.tokenY?.address) {
+    return { valid: false, error: 'tokenX and tokenY with addresses are required' };
+  }
+
+  if (!req.riskProfile) {
+    return { valid: false, error: 'riskProfile is required (aggressive | defensive | auto)' };
+  }
+
+  if (!['aggressive', 'defensive', 'auto'].includes(req.riskProfile)) {
+    return { valid: false, error: 'Invalid riskProfile. Must be: aggressive, defensive, or auto' };
+  }
+
+  if (!req.availablePools || req.availablePools.length === 0) {
+    return { valid: false, error: 'availablePools array is required with at least one pool' };
+  }
+
+  if (typeof req.currentActiveId !== 'number') {
+    return { valid: false, error: 'currentActiveId is required' };
+  }
+
+  return { valid: true };
+}
 
 Bun.serve({
   port: PORT,
@@ -26,14 +64,23 @@ Bun.serve({
         return Response.json(
           {
             success: true,
-            message: 'DLMM Suggestion API is running (Bun local)',
+            message: 'DLMM AI Suggestion API (Bun local)',
+            version: '2.0.0',
             endpoint: '/api/dlmm-suggest',
             method: 'POST',
-            example: {
-              tokenX: '0x...',
-              tokenY: '0x...',
-              priceHistory: [],
-              riskTolerance: 'conservative',
+            description: 'Analyzes market data and generates optimal LP strategy recommendations',
+            requiredFields: {
+              riskProfile: 'aggressive | defensive | auto',
+              tokenX: '{ address, symbol, decimals }',
+              tokenY: '{ address, symbol, decimals }',
+              availablePools: 'Array of PoolInfo objects',
+              currentActiveId: 'Current active bin ID',
+            },
+            optionalFields: {
+              tokenXPriceHistory: 'Array of TokenPriceData (7 days)',
+              tokenYPriceHistory: 'Array of TokenPriceData (7 days)',
+              pairHistory: 'Array of PairHistoryData (7 days)',
+              binDistribution: 'Array of BinData (±50 bins from activeId)',
             },
           },
           { headers: corsHeaders }
@@ -41,41 +88,47 @@ Bun.serve({
       }
 
       if (req.method === 'POST') {
+        const startTime = Date.now();
+
         try {
           const body = await req.json();
 
-          if (!body.tokenX || !body.tokenY) {
-            return Response.json({ success: false, error: 'tokenX and tokenY are required' }, { status: 400, headers: corsHeaders });
+          // 요청 검증
+          const validation = validateRequest(body);
+          if (!validation.valid) {
+            return Response.json(
+              {
+                success: false,
+                error: validation.error,
+              } as DLMMSuggestionResponse,
+              { status: 400, headers: corsHeaders }
+            );
           }
 
-          const response = {
+          const request = body as DLMMSuggestionRequest;
+
+          // 1. 메트릭 계산
+          const calculatedMetrics = calculateMetrics(request);
+
+          // 2. AI 전략 생성
+          const recommendation = await generateAIStrategy(request, calculatedMetrics);
+
+          // 3. 응답 구성
+          const response: DLMMSuggestionResponse = {
             success: true,
             data: {
-              message: `API is working on Bun ${Bun.version}!`,
-              received: {
-                tokenX: body.tokenX,
-                tokenY: body.tokenY,
-                riskTolerance: body.riskTolerance || 'not provided',
+              recommendation,
+              calculatedMetrics,
+              metadata: {
+                tokenPair: `${request.tokenX.symbol}-${request.tokenY.symbol}`,
+                riskProfile: request.riskProfile,
                 timestamp: new Date().toISOString(),
-              },
-              test: {
-                recommendedPool: {
-                  pairAddress: '0x0000000000000000000000000000000000000000',
-                  lbBinStep: 1,
-                  activeBinId: 8388608,
-                  score: 85,
-                  reasoning: 'This is a test response',
-                },
-                dlmmSuggestion: {
-                  minBinId: 8388600,
-                  maxBinId: 8388616,
-                  binCount: 17,
-                  distributionShape: 'SPOT',
-                  reasoning: 'Test suggestion',
-                },
+                poolsAnalyzed: request.availablePools.length,
               },
             },
           };
+
+          console.log(`DLMM Suggestion generated in ${Date.now() - startTime}ms`);
 
           return Response.json(response, {
             headers: {
@@ -84,8 +137,13 @@ Bun.serve({
             },
           });
         } catch (error) {
+          console.error('DLMM Suggestion API Error:', error);
+
           return Response.json(
-            { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
+            {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error occurred',
+            } as DLMMSuggestionResponse,
             { status: 500, headers: corsHeaders }
           );
         }

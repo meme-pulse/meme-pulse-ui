@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { CardWithHeader } from '@/components/ui/card-with-header';
 import type { PoolData, StrategyData } from '@/AIPoolDetail';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { useActiveId } from '@/hooks/use-active-id';
 import { getPriceFromId } from '@/lib/bin';
-import { formatNumber, formatStringOnlyLocale, getNumberStringValue } from '@/lib/format';
+import { formatNumber, formatStringOnlyLocale, getNumberStringValue, getNumberValue } from '@/lib/format';
 import { useLocalStorage } from 'usehooks-ts';
 import { useTokensData, NATIVE_TOKEN_ADDRESS } from '@/hooks/use-token-data';
 import { useAccount } from 'wagmi';
@@ -25,8 +25,12 @@ import { DEFAULT_CHAINID } from '@/constants';
 import { useDebounce } from '@/hooks/use-debounce';
 import AutoFillSwitch from '../auto-fill-switch';
 import AddLiquidityButton from '../add-liquidity-button';
+import ApproveButton from '../approve-button';
 import { useTokenPrices } from '@/hooks/use-token-price';
-import { ArrowLeftRight } from 'lucide-react';
+import { useAllowance } from '@/hooks/use-allowance';
+import { LB_ROUTER_V22_ADDRESS } from '../../lib/sdk';
+import { ArrowLeftRight, TrendingUp, Shield, RefreshCw, Lightbulb, AlertTriangle, CheckCircle } from 'lucide-react';
+import type { AIAnalysisDisplay } from '@/hooks/use-dlmm-suggestion';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -35,11 +39,40 @@ interface AIStrategyResultProps {
   poolData: PoolData;
   tokenListData?: Array<{ address: string; logoURI?: string }>;
   strategyData?: StrategyData;
+  aiAnalysis?: AIAnalysisDisplay;
 }
 
 const DEFAULT_BIN_COUNT = 51;
 
-export function AIStrategyResult({ poolData: originalPoolData, strategyData }: AIStrategyResultProps) {
+// IL Risk 색상 매핑
+function getILRiskColor(risk: 'low' | 'medium' | 'high'): string {
+  switch (risk) {
+    case 'low':
+      return 'text-green-600';
+    case 'medium':
+      return 'text-yellow-600';
+    case 'high':
+      return 'text-red-600';
+    default:
+      return 'text-gray-600';
+  }
+}
+
+// IL Risk 아이콘
+function ILRiskIcon({ risk }: { risk: 'low' | 'medium' | 'high' }) {
+  switch (risk) {
+    case 'low':
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
+    case 'medium':
+      return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
+    case 'high':
+      return <AlertTriangle className="w-4 h-4 text-red-600" />;
+    default:
+      return null;
+  }
+}
+
+export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiAnalysis }: AIStrategyResultProps) {
   const { address } = useAccount();
   const { data: tokenList } = useTokenList();
   const [numberLocale] = useLocalStorage('number-locale', navigator.language);
@@ -141,6 +174,18 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
     [activeId, poolData.lbBinStep, poolData.tokenX.decimals, poolData.tokenY.decimals]
   );
 
+  // Price X in Y (for auto-fill: when X changes, calculate Y)
+  const currentPriceXInYWithDecimals = useMemo(
+    () => getPriceFromId(activeId, poolData.lbBinStep) * 10 ** (poolData.tokenX.decimals - poolData.tokenY.decimals),
+    [activeId, poolData.lbBinStep, poolData.tokenX.decimals, poolData.tokenY.decimals]
+  );
+
+  // Price Y in X (for auto-fill: when Y changes, calculate X)
+  const currentPriceYInXWithDecimals = useMemo(
+    () => (1 / getPriceFromId(activeId, poolData.lbBinStep)) * 10 ** (poolData.tokenY.decimals - poolData.tokenX.decimals),
+    [activeId, poolData.lbBinStep, poolData.tokenX.decimals, poolData.tokenY.decimals]
+  );
+
   const minPriceWithDecimals = useMemo(
     () => getPriceFromId(minPriceBinId, poolData.lbBinStep) * 10 ** (poolData.tokenX.decimals - poolData.tokenY.decimals),
     [minPriceBinId, poolData.lbBinStep, poolData.tokenX.decimals, poolData.tokenY.decimals]
@@ -170,23 +215,39 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
   const inputAmountXAvailable = useMemo(() => maxPriceBinId >= activeId, [maxPriceBinId, activeId]);
   const inputAmountYAvailable = useMemo(() => minPriceBinId <= activeId, [minPriceBinId, activeId]);
 
-  // Auto-fill logic
-  useEffect(() => {
-    if (!autoFill || !tokenPrices) return;
+  // Check allowance for both tokens
+  const allowanceX = useAllowance(originalPoolData.tokenX.address, LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]);
+  const allowanceY = useAllowance(originalPoolData.tokenY.address, LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]);
 
-    const tokenXPrice = tokenPrices.find((t) => t.id.toLowerCase() === poolData.tokenX.address.toLowerCase())?.priceUsd ?? 0;
-    const tokenYPrice = tokenPrices.find((t) => t.id.toLowerCase() === poolData.tokenY.address.toLowerCase())?.priceUsd ?? 0;
+  // Calculate if approval is needed for each token
+  const needsApprovalX = useMemo(() => {
+    // Native token doesn't need approval
+    const isNativeX = isNativeIn && originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
+    if (isNativeX) return false;
 
-    if (tokenXAmount && !tokenYAmount && inputAmountYAvailable && tokenXPrice > 0 && tokenYPrice > 0) {
-      const xValue = Number(getNumberStringValue(tokenXAmount, numberLocale)) * Number(tokenXPrice);
-      const yAmount = xValue / Number(tokenYPrice);
-      setTokenYAmount(formatStringOnlyLocale(yAmount.toFixed(poolData.tokenY.decimals), numberLocale));
-    } else if (tokenYAmount && !tokenXAmount && inputAmountXAvailable && tokenXPrice > 0 && tokenYPrice > 0) {
-      const yValue = Number(getNumberStringValue(tokenYAmount, numberLocale)) * Number(tokenYPrice);
-      const xAmount = yValue / Number(tokenXPrice);
-      setTokenXAmount(formatStringOnlyLocale(xAmount.toFixed(poolData.tokenX.decimals), numberLocale));
-    }
-  }, [autoFill, tokenXAmount, tokenYAmount, tokenPrices, poolData, inputAmountXAvailable, inputAmountYAvailable, numberLocale]);
+    // Check if amount is available and greater than 0
+    if (!inputAmountXAvailable || !Number(debouncedAmountX)) return false;
+
+    // Compare allowance with required amount
+    const requiredAmount = parseUnits(debouncedAmountX || '0', originalPoolData.tokenX.decimals);
+    return allowanceX < requiredAmount;
+  }, [isNativeIn, originalPoolData.tokenX.address, originalPoolData.tokenX.decimals, inputAmountXAvailable, debouncedAmountX, allowanceX]);
+
+  const needsApprovalY = useMemo(() => {
+    // Native token doesn't need approval
+    const isNativeY = isNativeIn && originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase();
+    if (isNativeY) return false;
+
+    // Check if amount is available and greater than 0
+    if (!inputAmountYAvailable || !Number(debouncedAmountY)) return false;
+
+    // Compare allowance with required amount
+    const requiredAmount = parseUnits(debouncedAmountY || '0', originalPoolData.tokenY.decimals);
+    return allowanceY < requiredAmount;
+  }, [isNativeIn, originalPoolData.tokenY.address, originalPoolData.tokenY.decimals, inputAmountYAvailable, debouncedAmountY, allowanceY]);
+
+  // Disable add liquidity button if any approval is needed
+  const needsApproval = needsApprovalX || needsApprovalY;
 
   // Liquidity input state - use originalPoolData for token addresses since liquidity router needs actual wrapped addresses
   const [addLiquidityInput, setAddLiquidityInput] = useState({
@@ -505,22 +566,109 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
             </div>
           </div>
 
-          {/* Strategy Explanation with bin count and shape */}
-          <div
-            className="bg-[#eaf4ff] p-4"
-            style={{
-              boxShadow:
-                'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-[14px]">💡</span>
-              <p className="font-roboto text-[14px] text-[#0f06aa] leading-[18.75px]">
-                This strategy uses a <strong>{shapeName}</strong> distribution with <strong>{recommendedBinCount} bins</strong>. The{' '}
-                {poolData.lbBinStep} basis points bin step provides balanced trading frequency and fee collection.
-              </p>
+          {/* AI Analysis Results */}
+          {aiAnalysis ? (
+            <div className="space-y-3">
+              {/* Key Metrics */}
+              <div
+                className="bg-white p-4"
+                style={{
+                  boxShadow: 'inset 1px 1px 0px 0px #808088, inset -1px -1px 0px 0px #f9f9fa',
+                }}
+              >
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Expected APR */}
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                      <span className="font-inter text-[12px] text-[#666666]">Expected APR</span>
+                    </div>
+                    <span className="font-tahoma font-bold text-[18px] text-green-600">{aiAnalysis.expectedAPR}</span>
+                  </div>
+
+                  {/* IL Risk */}
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Shield className="w-4 h-4 text-[#666666]" />
+                      <span className="font-inter text-[12px] text-[#666666]">IL Risk</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1">
+                      <ILRiskIcon risk={aiAnalysis.impermanentLossRisk} />
+                      <span className={`font-tahoma font-bold text-[16px] capitalize ${getILRiskColor(aiAnalysis.impermanentLossRisk)}`}>
+                        {aiAnalysis.impermanentLossRisk}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Rebalance */}
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <RefreshCw className="w-4 h-4 text-[#666666]" />
+                      <span className="font-inter text-[12px] text-[#666666]">Rebalance</span>
+                    </div>
+                    <span className="font-tahoma font-bold text-[16px] text-[#1a1a1a] capitalize">{aiAnalysis.rebalanceFrequency}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Market Condition & Key Factors */}
+              <div
+                className="bg-[#f8f8f8] p-4"
+                style={{
+                  boxShadow: 'inset 1px 1px 0px 0px #808088, inset -1px -1px 0px 0px #f9f9fa',
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-inter font-bold text-[13px] text-[#1a1a1a]">Market:</span>
+                  <span className="font-roboto text-[13px] text-[#666666]">{aiAnalysis.marketCondition}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {aiAnalysis.keyFactors.map((factor, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-white text-[11px] font-inter text-[#666666]"
+                      style={{
+                        boxShadow: 'inset 1px 1px 0px 0px #e0e0e0, inset -1px -1px 0px 0px #f9f9fa',
+                      }}
+                    >
+                      {factor}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Reasoning */}
+              <div
+                className="bg-[#eaf4ff] p-4"
+                style={{
+                  boxShadow:
+                    'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-[#0f06aa] flex-shrink-0 mt-0.5" />
+                  <p className="font-roboto text-[14px] text-[#0f06aa] leading-[18.75px]">{aiAnalysis.reasoning}</p>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Fallback: Default strategy explanation */
+            <div
+              className="bg-[#eaf4ff] p-4"
+              style={{
+                boxShadow:
+                  'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <Lightbulb className="w-5 h-5 text-[#0f06aa] flex-shrink-0 mt-0.5" />
+                <p className="font-roboto text-[14px] text-[#0f06aa] leading-[18.75px]">
+                  This strategy uses a <strong>{shapeName}</strong> distribution with <strong>{recommendedBinCount} bins</strong>. The{' '}
+                  {poolData.lbBinStep} basis points bin step provides balanced trading frequency and fee collection.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Deposit Section */}
@@ -548,7 +696,23 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
                 <input
                   type="text"
                   value={tokenXAmount}
-                  onChange={(e) => setTokenXAmount(e.target.value)}
+                  onChange={(e) => {
+                    setTokenXAmount(e.target.value);
+                    // Auto-fill Y based on price ratio
+                    if (autoFill && inputAmountYAvailable) {
+                      try {
+                        const price = currentPriceYInXWithDecimals;
+                        const amountY = getNumberValue(e.target.value, numberLocale) / price;
+                        if (!isNaN(amountY)) {
+                          setTokenYAmount(formatNumber(amountY, poolData.tokenY.decimals, 0, numberLocale));
+                        } else if (e.target.value === '') {
+                          setTokenYAmount('');
+                        }
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }
+                  }}
                   placeholder="0.0"
                   disabled={!inputAmountXAvailable}
                   className="font-press-start text-[24px] text-[#22222a] bg-transparent outline-none w-full disabled:cursor-not-allowed"
@@ -582,9 +746,22 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
               <span className="font-press-start text-[10px] text-[rgba(34,34,42,0.7)]">
                 Balance: {formatNumber(tokenXBalance, 4, 0, numberLocale)} |{' '}
                 <button
-                  onClick={() =>
-                    setTokenXAmount(formatStringOnlyLocale((tokenXBalance * 0.5).toFixed(originalPoolData.tokenX.decimals), numberLocale))
-                  }
+                  onClick={() => {
+                    const halfBalance = tokenXBalance * 0.5;
+                    setTokenXAmount(formatStringOnlyLocale(halfBalance.toFixed(originalPoolData.tokenX.decimals), numberLocale));
+                    // Auto-fill Y based on price ratio
+                    if (autoFill && inputAmountYAvailable) {
+                      try {
+                        const price = currentPriceXInYWithDecimals;
+                        const amountY = halfBalance * price;
+                        if (!isNaN(amountY)) {
+                          setTokenYAmount(formatNumber(amountY, poolData.tokenY.decimals, 0, numberLocale));
+                        }
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }
+                  }}
                   className="hover:underline"
                   disabled={!inputAmountXAvailable}
                 >
@@ -593,11 +770,22 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
                 <button
                   onClick={() => {
                     // Reserve gas fee when using native token
+                    let maxBalance = tokenXBalance;
                     if (isNativeIn && originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address) {
-                      const availableBalance = tokenXBalance - 0.01 > 0 ? tokenXBalance - 0.01 : 0;
-                      setTokenXAmount(formatStringOnlyLocale(availableBalance.toFixed(originalPoolData.tokenX.decimals), numberLocale));
-                    } else {
-                      setTokenXAmount(formatStringOnlyLocale(tokenXBalance.toFixed(originalPoolData.tokenX.decimals), numberLocale));
+                      maxBalance = tokenXBalance - 0.01 > 0 ? tokenXBalance - 0.01 : 0;
+                    }
+                    setTokenXAmount(formatStringOnlyLocale(maxBalance.toFixed(originalPoolData.tokenX.decimals), numberLocale));
+                    // Auto-fill Y based on price ratio
+                    if (autoFill && inputAmountYAvailable) {
+                      try {
+                        const price = currentPriceXInYWithDecimals;
+                        const amountY = maxBalance * price;
+                        if (!isNaN(amountY)) {
+                          setTokenYAmount(formatNumber(amountY, poolData.tokenY.decimals, 0, numberLocale));
+                        }
+                      } catch (error) {
+                        console.error(error);
+                      }
                     }
                   }}
                   className="hover:underline"
@@ -621,7 +809,23 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
                 <input
                   type="text"
                   value={tokenYAmount}
-                  onChange={(e) => setTokenYAmount(e.target.value)}
+                  onChange={(e) => {
+                    setTokenYAmount(e.target.value);
+                    // Auto-fill X based on price ratio
+                    if (autoFill && inputAmountXAvailable) {
+                      try {
+                        const price = currentPriceXInYWithDecimals;
+                        const amountX = getNumberValue(e.target.value, numberLocale) / price;
+                        if (!isNaN(amountX)) {
+                          setTokenXAmount(formatNumber(amountX, poolData.tokenX.decimals, 0, numberLocale));
+                        } else if (e.target.value === '') {
+                          setTokenXAmount('');
+                        }
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }
+                  }}
                   placeholder="0.0"
                   disabled={!inputAmountYAvailable}
                   className="font-press-start text-[24px] text-[#22222a] bg-transparent outline-none w-full disabled:cursor-not-allowed"
@@ -655,9 +859,22 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
               <span className="font-press-start text-[10px] text-[rgba(34,34,42,0.7)]">
                 Balance: {formatNumber(tokenYBalance, 4, 0, numberLocale)} |{' '}
                 <button
-                  onClick={() =>
-                    setTokenYAmount(formatStringOnlyLocale((tokenYBalance * 0.5).toFixed(originalPoolData.tokenY.decimals), numberLocale))
-                  }
+                  onClick={() => {
+                    const halfBalance = tokenYBalance * 0.5;
+                    setTokenYAmount(formatStringOnlyLocale(halfBalance.toFixed(originalPoolData.tokenY.decimals), numberLocale));
+                    // Auto-fill X based on price ratio
+                    if (autoFill && inputAmountXAvailable) {
+                      try {
+                        const price = currentPriceYInXWithDecimals;
+                        const amountX = halfBalance * price;
+                        if (!isNaN(amountX)) {
+                          setTokenXAmount(formatNumber(amountX, poolData.tokenX.decimals, 0, numberLocale));
+                        }
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }
+                  }}
                   className="hover:underline"
                   disabled={!inputAmountYAvailable}
                 >
@@ -666,11 +883,22 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
                 <button
                   onClick={() => {
                     // Reserve gas fee when using native token
+                    let maxBalance = tokenYBalance;
                     if (isNativeIn && originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address) {
-                      const availableBalance = tokenYBalance - 0.01 > 0 ? tokenYBalance - 0.01 : 0;
-                      setTokenYAmount(formatStringOnlyLocale(availableBalance.toFixed(originalPoolData.tokenY.decimals), numberLocale));
-                    } else {
-                      setTokenYAmount(formatStringOnlyLocale(tokenYBalance.toFixed(originalPoolData.tokenY.decimals), numberLocale));
+                      maxBalance = tokenYBalance - 0.01 > 0 ? tokenYBalance - 0.01 : 0;
+                    }
+                    setTokenYAmount(formatStringOnlyLocale(maxBalance.toFixed(originalPoolData.tokenY.decimals), numberLocale));
+                    // Auto-fill X based on price ratio
+                    if (autoFill && inputAmountXAvailable) {
+                      try {
+                        const price = currentPriceYInXWithDecimals;
+                        const amountX = maxBalance * price;
+                        if (!isNaN(amountX)) {
+                          setTokenXAmount(formatNumber(amountX, poolData.tokenX.decimals, 0, numberLocale));
+                        }
+                      } catch (error) {
+                        console.error(error);
+                      }
                     }
                   }}
                   className="hover:underline"
@@ -683,8 +911,36 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
           </div>
         </div>
 
-        {/* Add Liquidity Button */}
-        <div className="px-[14px] py-4">
+        {/* Approve & Add Liquidity Button */}
+        <div className="px-[14px] py-4 space-y-4">
+          {/* Approve Token X - Skip if native deposit for WNATIVE token */}
+          {inputAmountXAvailable && Number(debouncedAmountX) > 0 && (
+            <ApproveButton
+              tokenAddress={
+                isNativeIn && originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()
+                  ? zeroAddress // Native token doesn't need approve
+                  : (originalPoolData.tokenX.address as `0x${string}`)
+              }
+              spenderAddress={LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]}
+              amountInBigInt={parseUnits(debouncedAmountX || '0', originalPoolData.tokenX.decimals)}
+              symbol={originalPoolData.tokenX.symbol}
+            />
+          )}
+
+          {/* Approve Token Y - Skip if native deposit for WNATIVE token */}
+          {inputAmountYAvailable && Number(debouncedAmountY) > 0 && (
+            <ApproveButton
+              tokenAddress={
+                isNativeIn && originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()
+                  ? zeroAddress // Native token doesn't need approve
+                  : (originalPoolData.tokenY.address as `0x${string}`)
+              }
+              spenderAddress={LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID]}
+              amountInBigInt={parseUnits(debouncedAmountY || '0', originalPoolData.tokenY.decimals)}
+              symbol={originalPoolData.tokenY.symbol}
+            />
+          )}
+
           <AddLiquidityButton
             inputAmountXAvailable={inputAmountXAvailable}
             inputAmountYAvailable={inputAmountYAvailable}
@@ -701,6 +957,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData }: A
             tokenXSymbol={poolData.tokenX.symbol}
             tokenYSymbol={poolData.tokenY.symbol}
             isNativeIn={isNativeIn}
+            needsApproval={needsApproval}
           />
         </div>
       </div>

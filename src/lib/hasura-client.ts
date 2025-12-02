@@ -7,7 +7,7 @@ const HASURA_ENDPOINT = import.meta.env.VITE_HASURA_ENDPOINT || 'http://localhos
 const HASURA_SECRET = import.meta.env.VITE_HASURA_SECRET || '';
 
 console.log('HASURA_ENDPOINT', HASURA_ENDPOINT);
-console.log('HASURA_SECRET', HASURA_SECRET);
+// console.log('HASURA_SECRET', HASURA_SECRET);
 // Chain ID for entity ID prefixes
 const CHAIN_ID = 43522;
 
@@ -1125,22 +1125,157 @@ export async function getPoolsForTokenPair(tokenXAddress: string, tokenYAddress:
   });
 }
 
-// Combined query for AI suggestion (all data in one call)
-export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: string, pairAddress: string, activeId: number) {
-  // Fetch all data in parallel
-  const [pools, tokenXHistory, tokenYHistory, pairHistory, binDistribution] = await Promise.all([
-    getPoolsForTokenPair(tokenXAddress, tokenYAddress),
-    getTokenPriceHistory(tokenXAddress, 7),
-    getTokenPriceHistory(tokenYAddress, 7),
-    getPairVolumeHistory(pairAddress, 7),
-    getBinDistributionForAI(pairAddress, activeId, 50),
-  ]);
+// Combined query for AI suggestion - 추가 데이터만 조회 (pools는 이미 useGroupedPools에서 가져옴)
+export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: string, bestPairAddress: string, bestPoolActiveId: number) {
+  const chainTokenXId = toChainTokenId(tokenXAddress);
+  const chainTokenYId = toChainTokenId(tokenYAddress);
+  const chainPairId = toChainPairId(bestPairAddress);
+  const startTime = Math.floor(Date.now() / 1000 - 7 * 24 * 60 * 60); // 7일 전
+  const fromBinId = bestPoolActiveId - 50;
+  const toBinId = bestPoolActiveId + 50;
 
+  // 단일 GraphQL 쿼리로 모든 추가 데이터 조회
+  const query = `
+    query GetAISuggestionData(
+      $tokenXId: String!,
+      $tokenYId: String!,
+      $pairId: String!,
+      $startTime: Int!,
+      $fromBinId: Int!,
+      $toBinId: Int!
+    ) {
+      # Token X 가격 히스토리 (OHLC - 변동성 분석용)
+      tokenXPriceHistory: TokenDayData(
+        where: { token_id: { _eq: $tokenXId }, date: { _gte: $startTime } }
+        order_by: { date: asc }
+        limit: 30
+      ) {
+        date
+        openPriceUSD
+        highPriceUSD
+        lowPriceUSD
+        closePriceUSD
+        volumeUSD
+      }
+
+      # Token Y 가격 히스토리 (OHLC - 변동성 분석용)
+      tokenYPriceHistory: TokenDayData(
+        where: { token_id: { _eq: $tokenYId }, date: { _gte: $startTime } }
+        order_by: { date: asc }
+        limit: 30
+      ) {
+        date
+        openPriceUSD
+        highPriceUSD
+        lowPriceUSD
+        closePriceUSD
+        volumeUSD
+      }
+
+      # 최고 TVL 풀의 7일 볼륨/수수료 히스토리
+      pairHistory: LBPairDayData(
+        where: { lbPair_id: { _eq: $pairId }, date: { _gte: $startTime } }
+        order_by: { date: asc }
+        limit: 30
+      ) {
+        date
+        volumeUSD
+        feesUSD
+        txCount
+        totalValueLockedUSD
+      }
+
+      # 최고 TVL 풀의 Bin 분포 (activeId 기준 ±50)
+      binDistribution: Bin(
+        where: {
+          lbPair_id: { _eq: $pairId }
+          binId: { _gte: $fromBinId, _lte: $toBinId }
+        }
+        order_by: { binId: asc }
+      ) {
+        binId
+        priceX
+        priceY
+        reserveX
+        reserveY
+        liquidityProviderCount
+      }
+    }
+  `;
+
+  const result = await graphqlRequest<{
+    tokenXPriceHistory: Array<{
+      date: number;
+      openPriceUSD: string;
+      highPriceUSD: string;
+      lowPriceUSD: string;
+      closePriceUSD: string;
+      volumeUSD: string;
+    }>;
+    tokenYPriceHistory: Array<{
+      date: number;
+      openPriceUSD: string;
+      highPriceUSD: string;
+      lowPriceUSD: string;
+      closePriceUSD: string;
+      volumeUSD: string;
+    }>;
+    pairHistory: Array<{
+      date: number;
+      volumeUSD: string;
+      feesUSD: string;
+      txCount: number;
+      totalValueLockedUSD: string;
+    }>;
+    binDistribution: Array<{
+      binId: number;
+      priceX: string;
+      priceY: string;
+      reserveX: string;
+      reserveY: string;
+      liquidityProviderCount: string;
+    }>;
+  }>(query, {
+    tokenXId: chainTokenXId,
+    tokenYId: chainTokenYId,
+    pairId: chainPairId,
+    startTime,
+    fromBinId,
+    toBinId,
+  });
+
+  // 데이터 변환
   return {
-    availablePools: pools,
-    tokenXPriceHistory: tokenXHistory,
-    tokenYPriceHistory: tokenYHistory,
-    pairHistory,
-    binDistribution,
+    tokenXPriceHistory: result.tokenXPriceHistory.map((item) => ({
+      date: item.date,
+      openPriceUSD: Number(item.openPriceUSD),
+      highPriceUSD: Number(item.highPriceUSD),
+      lowPriceUSD: Number(item.lowPriceUSD),
+      closePriceUSD: Number(item.closePriceUSD),
+      volumeUSD: Number(item.volumeUSD),
+    })),
+    tokenYPriceHistory: result.tokenYPriceHistory.map((item) => ({
+      date: item.date,
+      openPriceUSD: Number(item.openPriceUSD),
+      highPriceUSD: Number(item.highPriceUSD),
+      lowPriceUSD: Number(item.lowPriceUSD),
+      closePriceUSD: Number(item.closePriceUSD),
+      volumeUSD: Number(item.volumeUSD),
+    })),
+    pairHistory: result.pairHistory.map((item) => ({
+      date: item.date,
+      volumeUSD: Number(item.volumeUSD),
+      feesUSD: Number(item.feesUSD),
+      txCount: Number(item.txCount),
+      tvlUSD: Number(item.totalValueLockedUSD),
+    })),
+    binDistribution: result.binDistribution.map((bin) => ({
+      binId: bin.binId,
+      priceX: Number(bin.priceX),
+      priceY: Number(bin.priceY),
+      reserveX: Number(bin.reserveX),
+      reserveY: Number(bin.reserveY),
+      lpCount: Number(bin.liquidityProviderCount),
+    })),
   };
 }
