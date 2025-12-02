@@ -8,6 +8,7 @@ import { CreatePool } from './CreatePool';
 import { Toaster } from 'sonner';
 import Portfolio from './Portfolio';
 import Faucet from './Faucet';
+import Leaderboard from './Leaderboard';
 import { Footer } from './components/ui/footer';
 import NotFound from './components/not-found';
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/pool/v22/create" element={<CreatePool />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/faucet" element={<Faucet />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />

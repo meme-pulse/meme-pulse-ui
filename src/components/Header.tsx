@@ -124,6 +124,16 @@ export function Header() {
                       Portfolio
                     </div>
                     <div
+                      className={`text-lg cursor-pointer ${pathname.pathname === '/leaderboard' ? 'text-[#cfbaff]' : 'text-white'}`}
+                      style={{ fontFamily: '"Press Start 2P", cursive' }}
+                      onClick={() => {
+                        navigate('/leaderboard');
+                        setDrawerOpen(false);
+                      }}
+                    >
+                      Leaderboard
+                    </div>
+                    <div
                       className={`text-lg cursor-pointer ${pathname.pathname === '/faucet' ? 'text-[#cfbaff]' : 'text-white'}`}
                       style={{ fontFamily: '"Press Start 2P", cursive' }}
                       onClick={() => {
@@ -167,6 +177,15 @@ export function Header() {
               style={{ fontFamily: '"Press Start 2P", cursive', lineHeight: '16px' }}
             >
               Portfolio
+            </span>
+            <span
+              onClick={(e) => handleMouseDown(e, '/leaderboard')}
+              className={`text-[12px] cursor-pointer transition-colors ${
+                pathname.pathname === '/leaderboard' ? 'text-[#cfbaff]' : 'text-white hover:text-[#cfbaff]'
+              }`}
+              style={{ fontFamily: '"Press Start 2P", cursive', lineHeight: '16px' }}
+            >
+              Leaderboard
             </span>
             <span
               onClick={(e) => handleMouseDown(e, '/faucet')}
