@@ -299,8 +299,8 @@ function AddLiquidityButton({
               Why Send Multiple Transactions?
             </Button>
           </TooltipTrigger>
-          <TooltipContent asChild>
-            <div className="text-center text-body-sm   bg-surface-muted text-text-primary">
+          <TooltipContent>
+            <div className="text-center text-body-sm text-figma-text-dark">
               <span className="font-bold">If you want to send 1 transactions, please select a smaller(15 bins) range.</span>
             </div>
           </TooltipContent>

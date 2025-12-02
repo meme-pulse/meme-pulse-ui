@@ -15,12 +15,18 @@ const CustomTvlTooltip = ({ active, payload }: { active?: boolean; payload?: { p
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-popover p-3 border border-border rounded-lg shadow-lg pointer-events-none" style={{ zIndex: 1000 }}>
+      <div
+        className="bg-figma-gray-bg p-3 border-2 border-white pointer-events-none"
+        style={{
+          zIndex: 1000,
+          boxShadow: '2px 2px 0px 0px #000, inset -1px -1px 0px 0px #808088, inset 1px 1px 0px 0px #f9f9fa',
+        }}
+      >
         <div className="space-y-1">
-          <p className="text-sm">
+          <p className="text-sm text-figma-text-dark">
             <span className="font-medium">{new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </p>
-          <p className="text-sm">
+          <p className="text-sm text-figma-text-dark">
             <span>TVL:</span> <span className="font-medium">{formatUSDWithLocale(data.totalValueLockedUSD || 0, 0, 0, numberLocale)}</span>
           </p>
         </div>

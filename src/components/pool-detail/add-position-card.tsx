@@ -929,12 +929,13 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
       },
       tooltip: {
         enabled: true,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#ffffff',
-        bodyColor: '#ffffff',
-        borderColor: '#374151',
-        borderWidth: 1,
-        cornerRadius: 8,
+        backgroundColor: '#dbdae0',
+        titleColor: '#121213',
+        bodyColor: '#121213',
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        cornerRadius: 0,
+        boxPadding: 4,
         displayColors: true,
         callbacks: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1093,12 +1094,13 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
       },
       tooltip: {
         enabled: true,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#ffffff',
-        bodyColor: '#ffffff',
-        borderColor: '#374151',
-        borderWidth: 1,
-        cornerRadius: 8,
+        backgroundColor: '#dbdae0',
+        titleColor: '#121213',
+        bodyColor: '#121213',
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        cornerRadius: 0,
+        boxPadding: 4,
         displayColors: true,
         callbacks: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

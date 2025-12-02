@@ -5,7 +5,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useBalance,
 import { CardWithHeader } from '@/components/ui/card-with-header';
 import { TOKEN_LIST } from './constants/tokens';
 import { retroToast } from '@/components/ui/retro-toast';
-import { TypingAnimation } from './components/magicui/typing-animation';
+import { PageHeader } from '@/components/ui/page-header';
 import TokenTicker from './components/token-ticker';
 import { formatUnits } from 'viem';
 import { formatNumber } from './lib/format';
@@ -334,31 +334,17 @@ export default function Faucet() {
       </div>
 
       <main className="relative z-10 max-w-screen-2xl mx-auto px-2 sm:px-6 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="min-h-[42px] flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <TypingAnimation
-                as="h1"
-                className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
-                style={{ fontFamily: '"Press Start 2P", cursive' }}
-                duration={50}
-              >
-                TESTNET FAUCET
-              </TypingAnimation>
-              {/* Water droplet animation */}
-              <div className="flex-shrink-0 opacity-80">
-                <Droplets className="w-12 h-12 text-cyan-400 animate-pulse" />
-              </div>
-            </div>
-          </div>
-          <div className="min-h-[48px] mt-[38px]">
-            <p className="font-roboto text-zinc-400 text-[16px] leading-normal max-w-[854px]">
-              Claim testnet tokens for free to experiment with MemePulse on Memecore Testnet. Each token has a cooldown period between
-              claims.
-            </p>
-          </div>
+        {/* Spacer to match Pool/Leaderboard header alignment */}
+        <div className="mb-8 w-fit">
+          <div className="h-[29px]" />
         </div>
+
+        {/* Header Section */}
+        <PageHeader
+          title="TESTNET FAUCET"
+          description="Claim testnet tokens for free to experiment with MemePulse on Memecore Testnet. Each token has a cooldown period between claims."
+          icon={<Droplets className="w-12 h-12 sm:w-16 sm:h-16 text-cyan-400 animate-pulse" />}
+        />
 
         {/* Faucet Card */}
         <CardWithHeader title="Token Faucet" contentClassName="p-4">
@@ -402,4 +388,3 @@ export default function Faucet() {
     </div>
   );
 }
-

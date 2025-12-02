@@ -1,16 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import { CardWithHeader } from '@/components/ui/card-with-header';
 import { useLeaderboard } from './hooks/use-leaderboard';
 import { formatNumber } from './lib/format';
 import { useLocalStorage } from 'usehooks-ts';
 import { Tooltip, TooltipContent, TooltipTrigger } from './components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+
+type TimePeriod = '1h' | '1d' | '7d';
+
+const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
+  '1h': '1H',
+  '1d': '24H',
+  '7d': '7D',
+};
 
 function PulseScoreBar({ score }: { score: number }) {
   // Score is 0-100, gradient from orange to green
   const percentage = Math.min(100, Math.max(0, score));
-  
+
   return (
     <div className="flex flex-col gap-1">
       <span className="text-[9px] text-black/70">
@@ -58,18 +68,14 @@ function RankDisplay({ rank }: { rank: number }) {
       </div>
     );
   }
-  return (
-    <div className="flex items-center justify-center font-roboto text-[16px] text-black">
-      {rank}
-    </div>
-  );
+  return <div className="flex items-center justify-center font-roboto text-[16px] text-black">{rank}</div>;
 }
 
 function BoostBadge({ rank }: { rank: number }) {
   if (rank > 3) return null;
-  
+
   const boostPercentage = rank === 1 ? 80 : rank === 2 ? 60 : 20;
-  
+
   return (
     <div className="flex items-center gap-1">
       <img src="/leaderboard/fire-icon.png" alt="boost" className="w-3 h-3 object-contain" />
@@ -80,16 +86,82 @@ function BoostBadge({ rank }: { rank: number }) {
   );
 }
 
-function LeaderboardTable() {
+function TimePeriodSelector({ selected, onChange }: { selected: TimePeriod; onChange: (period: TimePeriod) => void }) {
+  const periods: TimePeriod[] = ['1h', '1d', '7d'];
+
+  return (
+    <div className="flex items-center gap-1">
+      {periods.map((period) => (
+        <button
+          key={period}
+          onClick={() => onChange(period)}
+          className={`
+            px-3 py-1.5 font-roboto text-[13px] font-medium transition-all
+            ${selected === period ? 'bg-figma-purple text-white' : 'bg-figma-gray-bg text-figma-text-dark hover:bg-gray-300'}
+          `}
+          style={{
+            boxShadow:
+              selected === period
+                ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa'
+                : 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+          }}
+        >
+          {TIME_PERIOD_LABELS[period]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function LeaderboardCard() {
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1d');
+
+  return (
+    <CardWithHeader title="Leaderboard" contentClassName="p-0">
+      {/* Title and Description */}
+      <div className="p-3 pb-0">
+        <div className="flex items-start justify-between mb-2">
+          <h2 className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px]">
+            Virality Leaderboard
+          </h2>
+          {/* Pulse Score Explanation Box */}
+          <div
+            className="hidden lg:block w-[260px] p-3 bg-figma-gray-bg"
+            style={{
+              boxShadow:
+                'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+            }}
+          >
+            <p className="font-roboto text-[12px] leading-normal text-black">
+              Pulse Score combines recent <span className="font-bold">posts, views, likes, reposts, replies and unique users</span> with
+              stronger weight for fresh activity and a bonus for image posts, bonded tokens and active price moves.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between mb-4">
+          <p className="font-roboto text-figma-text-gray text-[14px] leading-normal">
+            Track the most viral meme pools from MemeX. Higher virality earns boosted rewards for LPs.
+          </p>
+          {/* Time Period Selector */}
+          <div className="flex items-center gap-2 ml-4">
+            <span className="font-roboto text-[12px] text-figma-text-gray">Time:</span>
+            <TimePeriodSelector selected={timePeriod} onChange={setTimePeriod} />
+          </div>
+        </div>
+      </div>
+
+      {/* Leaderboard Table */}
+      <LeaderboardTable timePeriod={timePeriod} />
+    </CardWithHeader>
+  );
+}
+
+function LeaderboardTable({ timePeriod }: { timePeriod: TimePeriod }) {
   const { data, isLoading, error } = useLeaderboard(20);
   const [numberLocale] = useLocalStorage('number-locale', navigator.language);
 
   if (error) {
-    return (
-      <div className="flex items-center justify-center h-[280px] text-red-500 font-roboto">
-        Failed to load leaderboard data
-      </div>
-    );
+    return <div className="flex items-center justify-center h-[280px] text-red-500 font-roboto">Failed to load leaderboard data</div>;
   }
 
   if (isLoading) {
@@ -185,13 +257,11 @@ function LeaderboardTable() {
                     <TooltipTrigger asChild>
                       <Info className="w-[14px] h-[14px] text-figma-text-gray cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-[260px] p-3 bg-figma-gray-bg text-black border-0"
-                      style={{
-                        boxShadow: 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
-                      }}
-                    >
-                      <p className="font-roboto text-[12px] leading-normal">
-                        Pulse Score combines recent <span className="font-bold">posts, views, likes, reposts, replies and unique users</span> with stronger weight for fresh activity and a bonus for image posts, bonded tokens and active price moves.
+                    <TooltipContent side="bottom" className="max-w-[260px] p-3">
+                      <p className="font-roboto text-[12px] leading-normal text-figma-text-dark">
+                        Pulse Score combines recent{' '}
+                        <span className="font-bold">posts, views, likes, reposts, replies and unique users</span> with stronger weight for
+                        fresh activity and a bonus for image posts, bonded tokens and active price moves.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -201,10 +271,7 @@ function LeaderboardTable() {
           </thead>
           <tbody>
             {data?.leaderboard.map((token, index) => (
-              <tr
-                key={token.tokenSymbol}
-                className={`font-roboto ${index % 2 === 0 ? 'bg-[#f9f9f9]' : 'bg-[#f4f4f4]'}`}
-              >
+              <tr key={token.tokenSymbol} className={`font-roboto ${index % 2 === 0 ? 'bg-[#f9f9f9]' : 'bg-[#f4f4f4]'}`}>
                 <td className="h-[60px] text-center">
                   <RankDisplay rank={token.rank} />
                 </td>
@@ -216,15 +283,9 @@ function LeaderboardTable() {
                     <span className="text-[16px] text-black">{token.tokenSymbol}</span>
                   </div>
                 </td>
-                <td className="h-[60px] pl-2 text-[16px] text-black">
-                  {formatNumber(token.posts['1d'], 0, 0, numberLocale)}
-                </td>
-                <td className="h-[60px] pl-2 text-[16px] text-black">
-                  {formatNumber(token.views['1d'], 0, 0, numberLocale)}
-                </td>
-                <td className="h-[60px] pl-2 text-[16px] text-black">
-                  {formatNumber(token.likes['1d'], 0, 0, numberLocale)}
-                </td>
+                <td className="h-[60px] pl-2 text-[16px] text-black">{formatNumber(token.posts[timePeriod], 0, 0, numberLocale)}</td>
+                <td className="h-[60px] pl-2 text-[16px] text-black">{formatNumber(token.views[timePeriod], 0, 0, numberLocale)}</td>
+                <td className="h-[60px] pl-2 text-[16px] text-black">{formatNumber(token.likes[timePeriod], 0, 0, numberLocale)}</td>
                 <td className="h-[60px] px-3">
                   <div className="flex flex-col gap-1">
                     <BoostBadge rank={token.rank} />
@@ -321,11 +382,10 @@ export default function Leaderboard() {
       </div>
 
       <main className="relative z-10 max-w-screen-2xl mx-auto px-2 sm:px-6 py-8">
-        {/* Header Section with Colosseum */}
-        <div className="mb-8 relative">
-          {/* Real-time Update Badge */}
+        {/* Real-time Update Badge - matches Pool's AiModeSwitch structure */}
+        <div className="mb-8 w-fit">
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-[6px] mb-4"
+            className="inline-flex items-center gap-2 px-3 h-[29px] rounded-[6px]"
             style={{
               background: 'rgba(0,0,0,0.4)',
               border: '1px solid #ccff99',
@@ -334,61 +394,22 @@ export default function Leaderboard() {
             <div className="w-[7px] h-[7px] rounded-full bg-[#39ff14] animate-pulse" />
             <span className="font-roboto text-[14px] text-[#39ff14]">REAL TIME UPDATE</span>
           </div>
-
-          {/* Title and Colosseum Container */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1
-                className="text-white text-[32px] sm:text-[42px] leading-[1.2] tracking-[-2.1px] mb-4"
-                style={{ fontFamily: '"Press Start 2P", cursive' }}
-              >
-                MEMEPULSE COLOSSEUM
-              </h1>
-              <p className="font-roboto text-zinc-400 text-[16px] leading-normal max-w-[844px]">
-                Powered by MemeX. MemePulse tracks meme mentions, likes and interactions across the social feed to build a virality score and reward LPs in the most active communities.
-              </p>
-            </div>
-            {/* Colosseum Image */}
-            <div className="hidden lg:block flex-shrink-0 ml-8">
-              <img
-                src="/leaderboard/colosseum.png"
-                alt="Colosseum"
-                className="w-[320px] h-auto object-contain"
-              />
-            </div>
-          </div>
         </div>
 
-        {/* Leaderboard Card */}
-        <CardWithHeader title="Leaderboard" contentClassName="p-0">
-          {/* Title and Description */}
-          <div className="p-3 pb-0">
-            <div className="flex items-start justify-between mb-2">
-              <h2 className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px]">
-                Virality Leaderboard
-              </h2>
-              {/* Pulse Score Explanation Box */}
-              <div
-                className="hidden lg:block w-[260px] p-3 bg-figma-gray-bg"
-                style={{
-                  boxShadow: 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
-                }}
-              >
-                <p className="font-roboto text-[12px] leading-normal text-black">
-                  Pulse Score combines recent <span className="font-bold">posts, views, likes, reposts, replies and unique users</span> with stronger weight for fresh activity and a bonus for image posts, bonded tokens and active price moves.
-                </p>
-              </div>
+        {/* Header Section with Colosseum */}
+        <PageHeader
+          title="MEMEPULSE COLOSSEUM"
+          description="Powered by MemeX. MemePulse tracks meme mentions, likes and interactions across the social feed to build a virality score and reward LPs in the most active communities."
+          rightContent={
+            <div className="hidden lg:block flex-shrink-0 ml-8">
+              <img src="/leaderboard/colosseum.png" alt="Colosseum" className="w-[240px] xl:w-[320px] h-auto object-contain" />
             </div>
-            <p className="font-roboto text-figma-text-gray text-[14px] leading-normal mb-4">
-              Track the most viral meme pools from MemeX. Higher virality earns boosted rewards for LPs.
-            </p>
-          </div>
+          }
+        />
 
-          {/* Leaderboard Table */}
-          <LeaderboardTable />
-        </CardWithHeader>
+        {/* Leaderboard Card */}
+        <LeaderboardCard />
       </main>
     </div>
   );
 }
-

@@ -441,6 +441,13 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
       legend: { display: false },
       tooltip: {
         enabled: true,
+        backgroundColor: '#dbdae0',
+        titleColor: '#121213',
+        bodyColor: '#121213',
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        cornerRadius: 0,
+        boxPadding: 4,
         callbacks: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           title: function (context: any[]) {

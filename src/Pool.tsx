@@ -19,9 +19,9 @@ import TvlCard from './components/pool/tvl-card';
 import { GroupPoolRow } from './components/pool/group-pool-row';
 import { AiModeSwitch } from './components/pool/ai-mode-switch';
 import { useAiMode } from './hooks/use-ai-mode';
-import { TypingAnimation } from './components/magicui/typing-animation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 
 export interface PoolRowProps {
   pairAddress: string;
@@ -368,25 +368,10 @@ export default function Component() {
         </div>
 
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="min-h-[42px] flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <TypingAnimation
-                as="h1"
-                className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
-                style={{ fontFamily: '"Press Start 2P", cursive' }}
-                duration={50}
-                key={aiMode ? 'ai-mode-title' : 'normal-mode-title'}
-              >
-                {aiMode ? 'MEMEPULSE AI DLMM' : 'MEMEPULSE DLMM'}
-              </TypingAnimation>
-              {/* Ant Animation - Title Right */}
-              <div className="flex-shrink-0 opacity-80">
-                <img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-16 h-16 object-contain" />
-              </div>
-            </div>
-          </div>
-          <div className="min-h-[48px] mt-[38px]">
+        <PageHeader
+          title={aiMode ? 'MEMEPULSE AI DLMM' : 'MEMEPULSE DLMM'}
+          titleKey={aiMode ? 'ai-mode-title' : 'normal-mode-title'}
+          description={
             <AnimatePresence mode="wait">
               <motion.p
                 key={aiMode ? 'ai-desc' : 'normal-desc'}
@@ -394,15 +379,16 @@ export default function Component() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="font-roboto text-zinc-400 text-[16px] leading-normal max-w-[854px]"
+                className="font-roboto text-zinc-400 text-[14px] sm:text-[16px] leading-normal max-w-[854px]"
               >
                 {aiMode
                   ? 'AI analyzes market conditions, volatility, and pool dynamics to recommend optimized DLMM presets. Get AI-powered liquidity strategies tailored to current market conditions.'
                   : 'Explore and manage DLMM pools. Select pools to add liquidity and earn fees from trading activity.'}
               </motion.p>
             </AnimatePresence>
-          </div>
-        </div>
+          }
+          icon={<img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-12 h-12 sm:w-16 sm:h-16 object-contain" />}
+        />
         {/* Analytics Container */}
         <CardWithHeader title="MemePulse Analytics" className="mb-8">
           {/* Cards Container */}

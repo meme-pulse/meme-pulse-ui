@@ -31,20 +31,23 @@ const CustomPoolDistributionTooltip = ({ active, payload }: { active?: boolean; 
     const data = payload[0].payload;
     return (
       <div
-        className="bg-card p-3 border border-border rounded-lg shadow-lg pointer-events-none"
-        // style={{ position: 'fixed', zIndex: 1000 }}
+        className="bg-figma-gray-bg p-3 border-2 border-white pointer-events-none"
+        style={{ 
+          zIndex: 1000,
+          boxShadow: '2px 2px 0px 0px #000, inset -1px -1px 0px 0px #808088, inset 1px 1px 0px 0px #f9f9fa'
+        }}
       >
         <div className="space-y-1">
-          <p className="text-sm">
-            <span className="">Price:</span> <span className="font-medium ">{formatNumber(data.priceY, 18, 0, numberLocale)}</span>
+          <p className="text-sm text-figma-text-dark">
+            <span>Price:</span> <span className="font-medium">{formatNumber(data.priceY, 18, 0, numberLocale)}</span>
           </p>
-          <p className="text-sm">
-            <span className="">{data.tokenXSymbol}:</span>{' '}
-            <span className="font-medium ">{formatNumber(data.reserveX, 18, 0, numberLocale)}</span>
+          <p className="text-sm text-figma-text-dark">
+            <span>{data.tokenXSymbol}:</span>{' '}
+            <span className="font-medium">{formatNumber(data.reserveX, 18, 0, numberLocale)}</span>
           </p>
-          <p className="text-sm">
-            <span className="">{data.tokenYSymbol}:</span>{' '}
-            <span className="font-medium ">{formatNumber(data.reserveY, 18, 0, numberLocale)}</span>
+          <p className="text-sm text-figma-text-dark">
+            <span>{data.tokenYSymbol}:</span>{' '}
+            <span className="font-medium">{formatNumber(data.reserveY, 18, 0, numberLocale)}</span>
           </p>
         </div>
       </div>

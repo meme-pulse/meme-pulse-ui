@@ -13,7 +13,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { formatNumber, formatUSDWithLocale } from '@/lib/format';
 import { customReadClient } from './main';
 import { LIQUIDITY_HELPER_V2_ADDRESS, LiquidityHelperV2ABI } from './lib/sdk';
-import { TypingAnimation } from './components/magicui/typing-animation';
+import { PageHeader } from '@/components/ui/page-header';
 import { CardWithHeader } from './components/ui/card-with-header';
 
 const Portfolio = () => {
@@ -251,28 +251,17 @@ const Portfolio = () => {
       </div>
 
       <main className="relative z-10 max-w-screen-2xl mx-auto px-2 sm:px-6 py-8">
-        {/* Page Header with Pixel Font */}
-        <div className="mb-8">
-          <div className="min-h-[42px] flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <TypingAnimation
-                as="h1"
-                className="text-white text-[42px] leading-[15.668px] tracking-[-1.68px] mb-0"
-                style={{ fontFamily: '"Press Start 2P", cursive' }}
-                duration={50}
-              >
-                MY PORTFOLIO
-              </TypingAnimation>
-              {/* Ant Animation */}
-              <div className="flex-shrink-0 opacity-80">
-                <img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-16 h-16 object-contain" />
-              </div>
-            </div>
-          </div>
-          <p className="font-roboto text-zinc-400 text-[16px] leading-normal max-w-[854px] mt-[38px]">
-            Manage your liquidity positions in one place. Track your deposits, fees earned, and liquidity efficiency across all pools.
-          </p>
+        {/* Spacer to match Pool/Leaderboard header alignment */}
+        <div className="mb-8 w-fit">
+          <div className="h-[29px]" />
         </div>
+
+        {/* Page Header with Pixel Font */}
+        <PageHeader
+          title="MY PORTFOLIO"
+          description="Manage your liquidity positions in one place. Track your deposits, fees earned, and liquidity efficiency across all pools."
+          icon={<img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-12 h-12 sm:w-16 sm:h-16 object-contain" />}
+        />
 
         {/* Stats Cards - Retro Windows 95 Style */}
         <CardWithHeader title="Portfolio Overview" className="mb-8">
@@ -520,11 +509,11 @@ const Portfolio = () => {
                           <TooltipTrigger asChild>
                             <HelpCircle className="w-4 h-4 text-figma-text-gray cursor-help" />
                           </TooltipTrigger>
-                          <TooltipContent className="max-w-xs bg-white border border-gray-200 shadow-lg">
-                            <div className="text-sm text-gray-800">
-                              <p className="font-semibold mb-2 text-gray-900">Liquidity Efficiency</p>
-                              <p className="mb-2 text-gray-700">Shows how much of your deposited liquidity is actively earning fees.</p>
-                              <p className="text-xs text-gray-600">Formula: (Active Liquidity / Total Deposits) x 100%</p>
+                          <TooltipContent className="max-w-xs">
+                            <div className="text-sm text-figma-text-dark">
+                              <p className="font-semibold mb-2">Liquidity Efficiency</p>
+                              <p className="mb-2">Shows how much of your deposited liquidity is actively earning fees.</p>
+                              <p className="text-xs text-figma-text-gray">Formula: (Active Liquidity / Total Deposits) x 100%</p>
                             </div>
                           </TooltipContent>
                         </Tooltip>
@@ -692,10 +681,10 @@ const Portfolio = () => {
                               <TooltipTrigger asChild>
                                 <HelpCircle className="w-3 h-3 text-figma-text-gray cursor-help" />
                               </TooltipTrigger>
-                              <TooltipContent className="max-w-xs bg-white border border-gray-200 shadow-lg">
-                                <div className="text-sm text-gray-800">
-                                  <p className="font-semibold mb-2 text-gray-900">Liquidity Efficiency</p>
-                                  <p className="mb-2 text-gray-700">Shows how much of your deposited liquidity is actively earning fees.</p>
+                              <TooltipContent className="max-w-xs">
+                                <div className="text-sm text-figma-text-dark">
+                                  <p className="font-semibold mb-2">Liquidity Efficiency</p>
+                                  <p className="mb-2">Shows how much of your deposited liquidity is actively earning fees.</p>
                                 </div>
                               </TooltipContent>
                             </Tooltip>

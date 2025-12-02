@@ -40,17 +40,27 @@ const DualRangeSlider = React.forwardRef<React.ElementRef<typeof SliderPrimitive
         className={cn('relative flex w-full touch-none select-none items-center', className)}
         {...sliderProps}
       >
-        <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-gray-200">
-          <SliderPrimitive.Range className="absolute h-full bg-gray-500" />
+        <SliderPrimitive.Track 
+          className="relative h-[6px] w-full grow overflow-hidden bg-figma-gray-table"
+          style={{
+            boxShadow: 'inset 1px 1px 0px 0px #808088, inset -1px -1px 0px 0px #f9f9fa'
+          }}
+        >
+          <SliderPrimitive.Range className="absolute h-full bg-figma-purple" />
         </SliderPrimitive.Track>
 
         {sliderProps.value?.map((value, index) => (
           <React.Fragment key={index}>
-            <SliderPrimitive.Thumb className="relative block h-3 w-3 rounded-full border-2 border-gray-500 bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+            <SliderPrimitive.Thumb 
+              className="relative block h-[14px] w-[10px] border-2 border-white bg-figma-gray-bg ring-offset-background transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+              style={{
+                boxShadow: 'inset -1px -1px 0px 0px #808088, inset 1px 1px 0px 0px #f9f9fa, 1px 1px 0px 0px #000'
+              }}
+            >
               {labelProps.label && (
                 <span
                   className={cn(
-                    'absolute flex w-full justify-center',
+                    'absolute flex w-full justify-center text-figma-text-dark',
                     labelProps.labelPosition === 'top' && '-top-7',
                     labelProps.labelPosition === 'bottom' && 'top-4'
                   )}

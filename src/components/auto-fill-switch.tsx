@@ -14,7 +14,8 @@ const AutoFillSwitch = React.forwardRef<
     <div className="flex items-center gap-2">
       <SwitchPrimitives.Root
         className={cn(
-          'peer inline-flex h-5 w-[54px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-accent-primary data-[state=unchecked]:bg-muted',
+          'peer inline-flex h-[18px] w-[36px] shrink-0 cursor-pointer items-center border-2 border-white transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-figma-purple data-[state=unchecked]:bg-figma-gray-bg',
+          'shadow-[inset_1px_1px_0px_0px_#808088,inset_-1px_-1px_0px_0px_#f9f9fa]',
           className
         )}
         {...props}
@@ -24,11 +25,12 @@ const AutoFillSwitch = React.forwardRef<
       >
         <SwitchPrimitives.Thumb
           className={cn(
-            'pointer-events-none block h-4 w-4 rounded-full bg-text-primary shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-[34px] data-[state=unchecked]:translate-x-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.25)]'
+            'pointer-events-none block h-[12px] w-[12px] bg-figma-gray-bg border border-white ring-0 transition-transform data-[state=checked]:translate-x-[18px] data-[state=unchecked]:translate-x-[2px]',
+            'shadow-[inset_-1px_-1px_0px_0px_#808088,inset_1px_1px_0px_0px_#f9f9fa]'
           )}
         />
       </SwitchPrimitives.Root>
-      <span>Auto-Fill</span>
+      <span className="text-figma-text-dark font-roboto text-[12px]">Auto-Fill</span>
     </div>
   );
 });
