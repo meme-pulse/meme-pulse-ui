@@ -1,7 +1,7 @@
 // DLMM Metrics Calculator
 // 클라이언트에서 받은 데이터로 AI 입력용 메트릭 계산
 
-import type { DLMMSuggestionRequest, CalculatedMetrics, TokenPriceData, PairHistoryData, BinData, PoolInfo } from './types';
+import type { DLMMSuggestionRequest, CalculatedMetrics, TokenPriceData, PairHistoryData, BinData, PoolInfo } from './types.js';
 
 /**
  * 가격 변동성 계산 (OHLC 데이터 기반)

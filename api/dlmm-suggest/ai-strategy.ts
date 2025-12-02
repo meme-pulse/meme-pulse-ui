@@ -8,8 +8,8 @@ import type {
   DistributionShape,
   ImpermanentLossRisk,
   RebalanceFrequency,
-} from './types';
-import { generateStrategyHints } from './metrics-calculator';
+} from './types.js';
+import { generateStrategyHints } from './metrics-calculator.js';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 

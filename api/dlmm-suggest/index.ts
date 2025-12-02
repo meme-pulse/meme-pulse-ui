@@ -2,9 +2,9 @@
 // 클라이언트에서 데이터를 받아 메트릭 계산 + AI 전략 생성
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { DLMMSuggestionRequest, DLMMSuggestionResponse } from './types';
-import { calculateMetrics } from './metrics-calculator';
-import { generateAIStrategy } from './ai-strategy';
+import type { DLMMSuggestionRequest, DLMMSuggestionResponse } from './types.js';
+import { calculateMetrics } from './metrics-calculator.js';
+import { generateAIStrategy } from './ai-strategy.js';
 
 export const config = {
   maxDuration: 30, // AI 호출 시간 고려
