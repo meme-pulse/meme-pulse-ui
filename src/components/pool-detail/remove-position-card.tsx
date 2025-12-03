@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { useLocalStorage } from 'usehooks-ts';
-import { toast } from 'sonner';
+import { retroToast } from '@/components/ui/retro-toast';
 
 import type { PoolData } from '@/PoolDetail';
 import { useUserLiquidityBinIds } from '@/hooks/use-user-liquidity-bin-ids';
@@ -42,7 +42,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
 
   const [numberLocale] = useLocalStorage('number-locale', navigator.language);
   const [liquidityTolerance] = useLocalStorage('liquidity-tolerance', 0.1);
-  const [binCountLimit] = useLocalStorage('bin-count-limit', '21');
+  const [binCountLimit] = useLocalStorage('bin-count-limit', '0');
 
   const { data: tokenListData } = useTokenList();
   const activeId = useActiveId(poolData.pairAddress as `0x${string}`, poolData.activeBinId);
@@ -295,25 +295,55 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
   // Bin approval
   const { allowance: binApproved, refetchAllowance: refetchBinApproved } = useBinAllowance(poolData.pairAddress);
   const [isApproveBinLoading, setIsApproveBinLoading] = useState(false);
+  const [approveBinTxHash, setApproveBinTxHash] = useState<`0x${string}` | null>(null);
 
   const handleApproveBinCall = async () => {
     try {
       setIsApproveBinLoading(true);
-      await writeContractAsync({
+      const hash = await writeContractAsync({
         address: poolData.pairAddress as `0x${string}`,
         abi: LBPairV21ABI,
         functionName: 'approveForAll',
         args: [LB_ROUTER_V22_ADDRESS[DEFAULT_CHAINID], true],
       });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      refetchBinApproved();
+      retroToast.success('Approval transaction sent', {
+        action: {
+          label: 'View on Explorer',
+          onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
+        },
+      });
+      setApproveBinTxHash(hash);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to approve');
-    } finally {
+      retroToast.error('Failed to approve');
       setIsApproveBinLoading(false);
     }
   };
+
+  // Wait for approve transaction receipt
+  const { isSuccess: isApproveConfirmed, isError: isApproveConfirmationError } = useWaitForTransactionReceipt({
+    hash: approveBinTxHash as `0x${string}`,
+    query: {
+      enabled: !!approveBinTxHash,
+    },
+  });
+
+  useEffect(() => {
+    if (isApproveConfirmed && approveBinTxHash) {
+      retroToast.success('Approval confirmed');
+      refetchBinApproved();
+      setIsApproveBinLoading(false);
+      setApproveBinTxHash(null);
+    }
+  }, [isApproveConfirmed, approveBinTxHash, refetchBinApproved]);
+
+  useEffect(() => {
+    if (isApproveConfirmationError && approveBinTxHash) {
+      retroToast.error('Approval transaction failed');
+      setIsApproveBinLoading(false);
+      setApproveBinTxHash(null);
+    }
+  }, [isApproveConfirmationError, approveBinTxHash]);
 
   // Remove liquidity state
   const [isRemoveLiquidityLoading, setIsRemoveLiquidityLoading] = useState<
@@ -366,7 +396,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
         totalRemoveLiquidityBatches > 1
           ? `Remove Liquidity completed (${totalRemoveLiquidityBatches} batches)`
           : 'Remove Liquidity transaction confirmed';
-      toast.success(message);
+      retroToast.success(message);
       setIsRemoveLiquidityLoading('idle');
       setCurrentRemoveLiquidityBatch(0);
       setTotalRemoveLiquidityBatches(0);
@@ -423,7 +453,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
         gas: simulatedGas ? (simulatedGas * 120n) / 100n : undefined,
       });
 
-      toast.success(`Remove Liquidity transaction ${index + 1} of ${removeLiquidityChunks.length} sent`, {
+      retroToast.success(`Remove Liquidity transaction ${index + 1} of ${removeLiquidityChunks.length} sent`, {
         action: {
           label: 'View on Explorer',
           onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
@@ -435,7 +465,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
       setIsRemoveLiquidityLoading('waitingForRemoveLiquidityConfirmation');
     } catch (error) {
       console.error(error);
-      toast.error('Failed to remove liquidity', {
+      retroToast.error('Failed to remove liquidity', {
         description: `Transaction ${index + 1} failed. Please try again.`,
       });
       setIsRemoveLiquidityLoading('idle');
@@ -453,7 +483,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
   // Handle remove liquidity button click
   const handleRemoveLiquidityContractCall = async () => {
     if (!removeLiquidityInput || removeLiquidityInput.ids.length === 0) {
-      toast.error('No liquidity to remove');
+      retroToast.error('No liquidity to remove');
       return;
     }
 
@@ -487,7 +517,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
 
   useEffect(() => {
     if (isRemoveLiquidityConfirmationError) {
-      toast.error('Failed to remove liquidity', {
+      retroToast.error('Failed to remove liquidity', {
         description: 'Please try again',
       });
       setIsRemoveLiquidityLoading('idle');
@@ -531,7 +561,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
   // Handle "Exit All" button click (simple mode)
   const handleExitAll = async () => {
     if (!removeAllInput || removeAllInput.ids.length === 0) {
-      toast.error('No liquidity to remove');
+      retroToast.error('No liquidity to remove');
       return;
     }
 
@@ -544,7 +574,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
     const sendExitAllTransaction = async (index: number) => {
       if (index >= removeAllChunks.length) {
         const message = removeAllChunks.length > 1 ? `Exit completed (${removeAllChunks.length} batches)` : 'Exit completed';
-        toast.success(message);
+        retroToast.success(message);
         setIsRemoveLiquidityLoading('idle');
         setCurrentRemoveLiquidityBatch(0);
         setTotalRemoveLiquidityBatches(0);
@@ -601,7 +631,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
           gas: simulatedGas ? (simulatedGas * 120n) / 100n : undefined,
         });
 
-        toast.success(`Transaction ${index + 1} of ${removeAllChunks.length} sent`, {
+        retroToast.success(`Transaction ${index + 1} of ${removeAllChunks.length} sent`, {
           action: {
             label: 'View on Explorer',
             onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
@@ -613,7 +643,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
         setIsRemoveLiquidityLoading('waitingForRemoveLiquidityConfirmation');
       } catch (error) {
         console.error(error);
-        toast.error('Failed to exit position', {
+        retroToast.error('Failed to exit position', {
           description: `Transaction ${index + 1} failed. Please try again.`,
         });
         setIsRemoveLiquidityLoading('idle');

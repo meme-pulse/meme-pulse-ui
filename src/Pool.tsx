@@ -20,7 +20,7 @@ import { GroupPoolRow } from './components/pool/group-pool-row';
 import { AiModeSwitch } from './components/pool/ai-mode-switch';
 import { useAiMode } from './hooks/use-ai-mode';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 
 export interface PoolRowProps {
@@ -211,9 +211,145 @@ export function PoolRow({
   );
 }
 
+// Mobile Card Component for Grouped Pools
+interface GroupPoolMobileCardProps {
+  pool: GroupPoolRowProps & { apr: number };
+  tokenList: { address: string; logoURI?: string; symbol: string }[] | undefined;
+  numberLocale: string;
+  aiMode: boolean;
+  navigate: (path: string) => void;
+}
+
+function GroupPoolMobileCard({ pool, tokenList, numberLocale, aiMode, navigate }: GroupPoolMobileCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const tokenXLogo = tokenList?.find((token) => token.address.toLowerCase() === pool.tokenX.address.toLowerCase())?.logoURI;
+  const tokenYLogo = tokenList?.find((token) => token.address.toLowerCase() === pool.tokenY.address.toLowerCase())?.logoURI;
+
+  const handleCardClick = () => {
+    if (aiMode) {
+      navigate(`/pool/ai/${pool.tokenX.address}/${pool.tokenY.address}`);
+    } else {
+      // In non-AI mode, toggle expansion if multiple pools, otherwise navigate
+      if (pool.groups.length > 1) {
+        setIsExpanded(!isExpanded);
+      } else {
+        navigate(`/pool/v22/${pool.tokenX.address}/${pool.tokenY.address}/${pool.groups[0]?.lbBinStep || 1}`);
+      }
+    }
+  };
+
+  const handleSubPoolClick = (e: React.MouseEvent, binStep: number) => {
+    e.stopPropagation();
+    navigate(`/pool/v22/${pool.tokenX.address}/${pool.tokenY.address}/${binStep}`);
+  };
+
+  return (
+    <div
+      className="bg-figma-gray-light"
+      style={{
+        boxShadow:
+          'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc, inset -2px -2px 0px 0px #9c9c9c, inset 2px 2px 0px 0px #e8e8e8',
+      }}
+    >
+      {/* Main Card */}
+      <div className="p-4 cursor-pointer hover:bg-figma-purple/5 transition-colors" onClick={handleCardClick}>
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex -space-x-2">
+            <TokenTicker logoURI={tokenXLogo} symbol={pool.tokenX.symbol} className="w-8 h-8 rounded-full bg-green-dark-600" />
+            <TokenTicker logoURI={tokenYLogo} symbol={pool.tokenY.symbol} className="w-8 h-8 rounded-full bg-green-dark-600" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <span className="font-roboto font-medium text-figma-text-dark">{pool.name}</span>
+              <div className="flex items-center gap-2">
+                {!aiMode && pool.groups.length > 1 && (
+                  <span className="bg-figma-gray-table text-figma-text-gray text-[11px] font-roboto px-2 py-0.5 rounded">
+                    {pool.groups.length} pools
+                  </span>
+                )}
+                {!aiMode &&
+                  pool.groups.length > 1 &&
+                  (isExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-figma-text-gray" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-figma-text-gray" />
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3 font-roboto">
+          <div>
+            <div className="text-xs text-figma-text-gray">Liquidity</div>
+            <div className="font-medium text-figma-text-dark">{formatUSDWithLocale(pool.totalLiquidityUsd, 0, 0, numberLocale)}</div>
+          </div>
+          <div>
+            <div className="text-xs text-figma-text-gray">Volume (24H)</div>
+            <div className="font-medium text-figma-text-dark">{formatUSDWithLocale(pool.totalVolume24h, 0, 0, numberLocale)}</div>
+          </div>
+          <div>
+            <div className="text-xs text-figma-text-gray">Max APR</div>
+            <div className="font-medium text-figma-purple">{formatNumber(pool.apr, 2, 0, numberLocale)}%</div>
+          </div>
+          <div>
+            <div className="text-xs text-figma-text-gray">Fees (24H)</div>
+            <div className="font-medium text-figma-text-dark">{formatUSDWithLocale(pool.totalFees24h, 0, 0, numberLocale)}</div>
+          </div>
+        </div>
+
+        {/* Action Button for AI Mode */}
+        {aiMode && (
+          <button
+            className="w-full mt-4 bg-figma-gray-table h-[36px] font-roboto text-figma-text-dark text-[14px]"
+            style={{
+              boxShadow:
+                'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+            }}
+          >
+            Deposit
+          </button>
+        )}
+      </div>
+
+      {/* Expanded Sub-Pools (non-AI mode only) */}
+      {!aiMode && isExpanded && (
+        <div className="border-t border-figma-gray-table">
+          {pool.groups.map((group) => (
+            <div
+              key={group.pairAddress}
+              className="p-3 bg-figma-gray-light border-b border-figma-gray-table last:border-b-0 cursor-pointer hover:bg-figma-gray-table transition-colors flex items-center justify-between"
+              onClick={(e) => handleSubPoolClick(e, group.lbBinStep)}
+            >
+              <div className="flex items-center gap-4 font-roboto text-sm">
+                <span className="text-figma-text-dark">
+                  Bin Step <span className="font-semibold">{group.lbBinStep}</span>
+                </span>
+                <span className="text-figma-text-dark">
+                  Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 2, 0, numberLocale)}%</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-3 font-roboto text-sm">
+                <span className="text-figma-text-gray">{formatUSDWithLocale(group.liquidityUsd, 0, 0, numberLocale)}</span>
+                <span className="text-figma-purple font-medium">{formatNumber(group.apr || 0, 2, 0, numberLocale)}%</span>
+                <ChevronRight className="w-4 h-4 text-figma-text-gray" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Component() {
   const navigate = useNavigate();
   const [aiMode] = useAiMode();
+  const { data: tokenList } = useTokenList();
+  const [numberLocale] = useLocalStorage('number-locale', navigator.language);
 
   const { data: groupedPools } = useGroupedPools();
   const { data: populatedBinsReserves } = usePopulatedBinsReservesMultiple(
@@ -459,7 +595,8 @@ export default function Component() {
               padding: '4px',
             }}
           >
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
                   <col style={{ width: '20%' }} />
@@ -568,6 +705,32 @@ export default function Component() {
                     ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="block md:hidden p-2 space-y-3">
+              {filteredPoolList
+                ?.sort((a, b) => {
+                  if (sortOption === 'volumeDesc') return b.totalVolume24h - a.totalVolume24h;
+                  if (sortOption === 'volumeAsc') return a.totalVolume24h - b.totalVolume24h;
+                  if (sortOption === 'liquidityDesc') return b.totalLiquidityUsd - a.totalLiquidityUsd;
+                  if (sortOption === 'liquidityAsc') return a.totalLiquidityUsd - b.totalLiquidityUsd;
+                  if (sortOption === 'feesDesc') return b.totalFees24h - a.totalFees24h;
+                  if (sortOption === 'feesAsc') return a.totalFees24h - b.totalFees24h;
+                  if (sortOption === 'aprDesc') return b.apr - a.apr;
+                  if (sortOption === 'aprAsc') return a.apr - b.apr;
+                  return 0;
+                })
+                .map((pool) => (
+                  <GroupPoolMobileCard
+                    key={pool.name}
+                    pool={pool}
+                    tokenList={tokenList}
+                    numberLocale={numberLocale}
+                    aiMode={aiMode}
+                    navigate={navigate}
+                  />
+                ))}
             </div>
           </div>
         </CardWithHeader>

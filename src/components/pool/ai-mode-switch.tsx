@@ -13,10 +13,10 @@ export function AiModeSwitch() {
         paddingRight: '11px',
       }}
     >
-      <div className="rounded-full size-[7px] flex-shrink-0 transition-colors" style={{ backgroundColor: aiMode ? '#facb25' : '#666' }} />
+      <div className="rounded-full size-[7px] flex-shrink-0 transition-colors" style={{ backgroundColor: aiMode ? '#facb25' : '#808088' }} />
       <span
         className="ml-[9px] text-[14px] font-roboto font-normal leading-normal whitespace-nowrap transition-colors select-none"
-        style={{ color: aiMode ? '#facb25' : '#888' }}
+        style={{ color: aiMode ? '#facb25' : '#3d3d43' }}
       >
         AI {aiMode ? 'ACTIVATED' : 'DISABLED'}
       </span>

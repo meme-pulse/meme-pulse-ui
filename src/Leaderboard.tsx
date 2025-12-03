@@ -23,8 +23,8 @@ function PulseScoreBar({ score }: { score: number }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[9px] text-black/70">
-        Score: <span className="text-black font-semibold">{score}</span>
+      <span className="text-[9px] text-figma-text-gray">
+        Score: <span className="text-figma-text-dark font-semibold">{score}</span>
       </span>
       <div className="w-full h-[18px] bg-gray-200 relative overflow-hidden">
         <div
@@ -68,7 +68,7 @@ function RankDisplay({ rank }: { rank: number }) {
       </div>
     );
   }
-  return <div className="flex items-center justify-center font-roboto text-[16px] text-black">{rank}</div>;
+  return <div className="flex items-center justify-center font-roboto text-[16px] text-figma-text-dark">{rank}</div>;
 }
 
 function BoostBadge({ rank }: { rank: number }) {
@@ -79,8 +79,8 @@ function BoostBadge({ rank }: { rank: number }) {
   return (
     <div className="flex items-center gap-1">
       <img src="/leaderboard/fire-icon.png" alt="boost" className="w-3 h-3 object-contain" />
-      <span className="text-[9px] text-black/70">
-        Boost: <span className="text-black font-semibold">+{boostPercentage}%</span>
+      <span className="text-[9px] text-figma-text-gray">
+        Boost: <span className="text-figma-text-dark font-semibold">+{boostPercentage}%</span>
       </span>
     </div>
   );
@@ -132,7 +132,7 @@ function LeaderboardCard() {
                 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
             }}
           >
-            <p className="font-roboto text-[12px] leading-normal text-black">
+            <p className="font-roboto text-[12px] leading-normal text-figma-text-dark">
               Pulse Score combines recent <span className="font-bold">posts, views, likes, reposts, replies and unique users</span> with
               stronger weight for fresh activity and a bonus for image posts, bonded tokens and active price moves.
             </p>
@@ -181,7 +181,8 @@ function LeaderboardTable({ timePeriod }: { timePeriod: TimePeriod }) {
         padding: '4px',
       }}
     >
-      <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto max-h-[400px] overflow-y-auto">
         <table className="w-full" style={{ tableLayout: 'fixed' }}>
           <colgroup>
             <col style={{ width: '76px' }} />
@@ -271,7 +272,7 @@ function LeaderboardTable({ timePeriod }: { timePeriod: TimePeriod }) {
           </thead>
           <tbody>
             {data?.leaderboard.map((token, index) => (
-              <tr key={token.tokenSymbol} className={`font-roboto ${index % 2 === 0 ? 'bg-[#f9f9f9]' : 'bg-[#f4f4f4]'}`}>
+              <tr key={token.tokenSymbol} className={`font-roboto ${index % 2 === 0 ? 'bg-figma-gray-light' : 'bg-white'}`}>
                 <td className="h-[60px] text-center">
                   <RankDisplay rank={token.rank} />
                 </td>
@@ -290,21 +291,27 @@ function LeaderboardTable({ timePeriod }: { timePeriod: TimePeriod }) {
                       />
                     ) : null}
                     <div
-                      className={`w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold ${
+                      className={`w-6 h-6 rounded-full bg-gradient-to-br from-figma-purple to-figma-purple-light flex items-center justify-center text-white text-[10px] font-bold ${
                         token.imageSrc ? 'hidden' : ''
                       }`}
                     >
                       {token.tokenSymbol.charAt(0)}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[16px] text-black leading-tight">{token.tokenSymbol}</span>
+                      <span className="text-[16px] text-figma-text-dark leading-tight">{token.tokenSymbol}</span>
                       {token.tokenName && <span className="text-[11px] text-figma-text-gray leading-tight">{token.tokenName}</span>}
                     </div>
                   </div>
                 </td>
-                <td className="h-[60px] pl-2 text-[16px] text-black">{formatNumber(token.posts[timePeriod], 0, 0, numberLocale)}</td>
-                <td className="h-[60px] pl-2 text-[16px] text-black">{formatNumber(token.views[timePeriod], 0, 0, numberLocale)}</td>
-                <td className="h-[60px] pl-2 text-[16px] text-black">{formatNumber(token.likes[timePeriod], 0, 0, numberLocale)}</td>
+                <td className="h-[60px] pl-2 text-[16px] text-figma-text-dark">
+                  {formatNumber(token.posts[timePeriod], 0, 0, numberLocale)}
+                </td>
+                <td className="h-[60px] pl-2 text-[16px] text-figma-text-dark">
+                  {formatNumber(token.views[timePeriod], 0, 0, numberLocale)}
+                </td>
+                <td className="h-[60px] pl-2 text-[16px] text-figma-text-dark">
+                  {formatNumber(token.likes[timePeriod], 0, 0, numberLocale)}
+                </td>
                 <td className="h-[60px] px-3">
                   <div className="flex flex-col gap-1">
                     <BoostBadge rank={token.rank} />
@@ -315,6 +322,81 @@ function LeaderboardTable({ timePeriod }: { timePeriod: TimePeriod }) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="block md:hidden p-2 space-y-3 max-h-[500px] overflow-y-auto">
+        {data?.leaderboard.map((token) => (
+          <div
+            key={token.tokenSymbol}
+            className="bg-figma-gray-light"
+            style={{
+              boxShadow:
+                'inset -1px -1px 0px 0px #828282, inset 1px 1px 0px 0px #fcfcfc, inset -2px -2px 0px 0px #9c9c9c, inset 2px 2px 0px 0px #e8e8e8',
+            }}
+          >
+            <div className="p-4">
+              {/* Header with Rank and Token */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-shrink-0 w-10">
+                  <RankDisplay rank={token.rank} />
+                </div>
+                <div className="flex items-center gap-2 flex-1">
+                  {token.imageSrc ? (
+                    <img
+                      src={token.imageSrc}
+                      alt={token.tokenSymbol}
+                      className="w-8 h-8 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className={`w-8 h-8 rounded-full bg-gradient-to-br from-figma-purple to-figma-purple-light flex items-center justify-center text-white text-[12px] font-bold ${
+                      token.imageSrc ? 'hidden' : ''
+                    }`}
+                  >
+                    {token.tokenSymbol.charAt(0)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-roboto font-medium text-figma-text-dark">{token.tokenSymbol}</span>
+                    {token.tokenName && <span className="font-roboto text-[11px] text-figma-text-gray">{token.tokenName}</span>}
+                  </div>
+                </div>
+                <BoostBadge rank={token.rank} />
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-2 mb-3 font-roboto">
+                <div className="text-center">
+                  <div className="text-[10px] text-figma-text-gray">Posts</div>
+                  <div className="text-[14px] text-figma-text-dark font-medium">
+                    {formatNumber(token.posts[timePeriod], 0, 0, numberLocale)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-figma-text-gray">Views</div>
+                  <div className="text-[14px] text-figma-text-dark font-medium">
+                    {formatNumber(token.views[timePeriod], 0, 0, numberLocale)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-figma-text-gray">Likes</div>
+                  <div className="text-[14px] text-figma-text-dark font-medium">
+                    {formatNumber(token.likes[timePeriod], 0, 0, numberLocale)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Pulse Score Bar */}
+              <div className="mt-2">
+                <PulseScoreBar score={token.pulseScore} />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

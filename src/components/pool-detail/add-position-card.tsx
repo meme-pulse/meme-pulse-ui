@@ -1217,12 +1217,12 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
     <div className="space-y-4">
       {/* Header with Auto Fill */}
       <div className="flex items-center justify-between">
-        <Label className="font-roboto font-semibold text-[#030303] text-[16px]">Enter deposit amount:</Label>
+        <Label className="font-roboto font-semibold text-figma-text-dark text-[16px]">Enter deposit amount:</Label>
         <AutoFillSwitch />
       </div>
 
       {/* Token Input Fields */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Token X Input */}
         <div className="space-y-2">
           <div
@@ -1251,7 +1251,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                   }
                 }
               }}
-              className="pl-20 pr-4 h-16 !text-lg font-semibold bg-white border-0 text-[#030303] placeholder:text-figma-text-gray text-right font-roboto focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="pl-20 pr-4 h-16 !text-lg font-semibold bg-white border-0 text-figma-text-dark placeholder:text-figma-text-gray text-right font-roboto focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
               <TokenTicker
@@ -1259,7 +1259,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                 logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
                 className="w-6 h-6"
               />
-              <span className="text-sm font-medium text-[#030303] font-roboto flex items-center">
+              <span className="text-sm font-medium text-figma-text-dark font-roboto flex items-center">
                 {poolData.tokenX.symbol}
                 {originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
                   <button
@@ -1364,7 +1364,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                   }
                 }
               }}
-              className="pl-20 pr-4 h-16 !text-lg font-semibold bg-white border-0 text-[#030303] placeholder:text-figma-text-gray text-right font-roboto focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="pl-20 pr-4 h-16 !text-lg font-semibold bg-white border-0 text-figma-text-dark placeholder:text-figma-text-gray text-right font-roboto focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
               <TokenTicker
@@ -1372,7 +1372,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                 logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
                 className="w-6 h-6"
               />
-              <span className="text-sm font-medium text-[#030303] font-roboto flex items-center">
+              <span className="text-sm font-medium text-figma-text-dark font-roboto flex items-center">
                 {poolData.tokenY.symbol}
                 {originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
                   <button
@@ -1453,7 +1453,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
 
       {/* Liquidity Shape Selection */}
       <div className="space-y-3">
-        <Label className="font-roboto font-semibold text-[#030303] text-[16px]">Select Liquidity Shape</Label>
+        <Label className="font-roboto font-semibold text-figma-text-dark text-[16px]">Select Liquidity Shape</Label>
         <div className="grid grid-cols-3 gap-3">
           {liquidityShapes.map((shape) => (
             <div
@@ -1472,7 +1472,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
               <div className="text-2xl mb-2 flex items-center justify-center">
                 <img src={shape.icon} alt={shape.name} />
               </div>
-              <div className="font-roboto font-medium text-[13px] text-[#030303]">{shape.name}</div>
+              <div className="font-roboto font-medium text-[13px] text-figma-text-dark">{shape.name}</div>
             </div>
           ))}
         </div>
@@ -1485,7 +1485,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Label className="font-roboto font-semibold text-[#030303] text-[16px]">Set Price Range</Label>
+            <Label className="font-roboto font-semibold text-figma-text-dark text-[16px]">Set Price Range</Label>
             <button
               className="flex items-center gap-1 text-[11px] text-figma-text-gray cursor-pointer px-2 py-1 hover:bg-figma-gray-table/80"
               style={{
@@ -1617,7 +1617,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                     className="flex-1 text-sm sm:text-lg disabled:text-foreground disabled:opacity-100 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white font-roboto text-[#030303]"
                     onBlur={(e) => onAddLiquidityParamChange('maxPriceValueChange', e.target.value)}
                   />
-                  <div className="w-px bg-[#c0c0c0]"></div>
+                  <div className="w-px bg-figma-gray-table"></div>
                   <div className="relative">
                     <Input
                       value={maxPricePercent}
@@ -1645,7 +1645,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                     className="flex-1 text-sm sm:text-lg disabled:text-foreground disabled:opacity-100 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white font-roboto text-[#030303]"
                     onBlur={(e) => onAddLiquidityParamChange('minPriceValueChange', e.target.value)}
                   />
-                  <div className="w-px bg-[#c0c0c0]"></div>
+                  <div className="w-px bg-figma-gray-table"></div>
                   <div className="relative">
                     <Input
                       value={minPricePercent}
@@ -1676,7 +1676,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                     className="flex-1 text-sm sm:text-lg disabled:text-foreground disabled:opacity-100 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white font-roboto text-[#030303]"
                     onBlur={(e) => onAddLiquidityParamChange('minPriceValueChange', e.target.value)}
                   />
-                  <div className="w-px bg-[#c0c0c0]"></div>
+                  <div className="w-px bg-figma-gray-table"></div>
                   <div className="relative">
                     <Input
                       value={minPricePercent}
@@ -1704,7 +1704,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                     className="flex-1 text-sm sm:text-lg disabled:text-foreground disabled:opacity-100 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white font-roboto text-[#030303]"
                     onBlur={(e) => onAddLiquidityParamChange('maxPriceValueChange', e.target.value)}
                   />
-                  <div className="w-px bg-[#c0c0c0]"></div>
+                  <div className="w-px bg-figma-gray-table"></div>
                   <div className="relative">
                     <Input
                       value={maxPricePercent}

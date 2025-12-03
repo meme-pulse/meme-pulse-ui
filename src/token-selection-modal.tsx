@@ -280,14 +280,14 @@ export default function TokenSelectionModal({
               placeholder="Search by name, symbol or address"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-[35px] pl-10 pr-3 bg-white text-[#22222a] text-[14px] font-roboto placeholder:text-gray-400 outline-none"
+              className="w-full h-[35px] pl-10 pr-3 bg-white text-figma-text-dark text-[14px] font-roboto placeholder:text-gray-400 outline-none"
               style={{ boxShadow: retroInputShadow }}
             />
           </div>
 
           {isTokenListLoading ? (
             <div className="flex items-center justify-center h-[300px]">
-              <span className="text-[#22222a] text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+              <span className="text-figma-text-dark text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                 Loading...
               </span>
             </div>
@@ -298,7 +298,7 @@ export default function TokenSelectionModal({
                 <button
                   onClick={() => setSelectedCategory('All')}
                   className={`h-[28px] px-4 font-roboto text-[14px] ${
-                    selectedCategory === 'All' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-[#22222a]'
+                    selectedCategory === 'All' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-figma-text-dark'
                   }`}
                   style={{
                     boxShadow:
@@ -312,7 +312,7 @@ export default function TokenSelectionModal({
                     key={category}
                     onClick={() => setSelectedCategory(category)}
                     className={`h-[28px] px-4 font-roboto text-[14px] whitespace-nowrap ${
-                      selectedCategory === category ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-[#22222a]'
+                      selectedCategory === category ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-figma-text-dark'
                     }`}
                     style={{
                       boxShadow:
@@ -342,16 +342,16 @@ export default function TokenSelectionModal({
                             <img src="/token_m.svg" alt="M" className="w-[30px] h-[30px]" />
                           </div>
                           <div>
-                            <div className="font-roboto text-[#22222a] text-[14px] font-medium">M</div>
-                            <div className="font-roboto text-[#5a5a61] text-[12px]">Native Token</div>
+                            <div className="font-roboto text-figma-text-dark text-[14px] font-medium">M</div>
+                            <div className="font-roboto text-figma-text-gray text-[12px]">Native Token</div>
                           </div>
                         </div>
                         {tokenListData?.[NATIVE_TOKEN_ADDRESS]?.formattedBalance && (
                           <div className="text-right">
-                            <div className="text-[#22222a] text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                            <div className="text-figma-text-dark text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                               {formatBalance(tokenListData?.[NATIVE_TOKEN_ADDRESS]?.formattedBalance ?? '0')}
                             </div>
-                            <div className="text-[#5a5a61] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                            <div className="text-figma-text-gray text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                               {getUsdValue(
                                 tokenListData?.[NATIVE_TOKEN_ADDRESS]?.formattedBalance,
                                 tokenList?.find((token) => token.symbol === 'WM')?.address ?? ''
@@ -378,25 +378,25 @@ export default function TokenSelectionModal({
                           {token.logoURI ? (
                             <img src={token.logoURI} alt={token.symbol} className="w-[30px] h-[30px]" />
                           ) : (
-                            <span className="text-[#22222a] text-[16px] font-medium">{token.symbol?.charAt(0) ?? '?'}</span>
+                            <span className="text-figma-text-dark text-[16px] font-medium">{token.symbol?.charAt(0) ?? '?'}</span>
                           )}
                         </div>
                         <div>
-                          <div className="font-roboto text-[#22222a] text-[14px] font-medium flex items-center gap-2">
+                          <div className="font-roboto text-figma-text-dark text-[14px] font-medium flex items-center gap-2">
                             {token.symbol}
-                            {isCustomToken && <span className="text-[10px] text-[#5a5a61] bg-figma-gray-table px-1.5 py-0.5">Custom</span>}
+                            {isCustomToken && <span className="text-[10px] text-figma-text-gray bg-figma-gray-table px-1.5 py-0.5">Custom</span>}
                           </div>
-                          <div className="font-roboto text-[#5a5a61] text-[12px]">{token.name}</div>
+                          <div className="font-roboto text-figma-text-gray text-[12px]">{token.name}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="text-right">
-                          <div className="text-[#22222a] text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                          <div className="text-figma-text-dark text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                             {tokenListData?.[token.address]?.formattedBalance
                               ? formatBalance(tokenListData?.[token.address]?.formattedBalance ?? '0')
                               : '0'}
                           </div>
-                          <div className="text-[#5a5a61] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                          <div className="text-figma-text-gray text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                             {tokenListData?.[token.address]?.formattedBalance
                               ? getUsdValue(tokenListData?.[token.address]?.formattedBalance ?? '0', token.address)
                               : '$0'}
@@ -408,7 +408,7 @@ export default function TokenSelectionModal({
                               e.stopPropagation();
                               removeCustomToken(token.address);
                             }}
-                            className="p-1 hover:bg-red-100 text-[#5a5a61] hover:text-red-600 transition-colors"
+                            className="p-1 hover:bg-red-100 text-figma-text-gray hover:text-red-600 transition-colors"
                             title="Remove custom token"
                           >
                             <X className="w-4 h-4" />
@@ -422,8 +422,8 @@ export default function TokenSelectionModal({
                 {/* Empty State */}
                 {filteredTokens?.length === 0 && !searchedERC20Token && (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <Search className="w-8 h-8 text-[#5a5a61] mb-2" />
-                    <span className="font-roboto text-[#5a5a61] text-[14px]">No tokens found</span>
+                    <Search className="w-8 h-8 text-figma-text-gray mb-2" />
+                    <span className="font-roboto text-figma-text-gray text-[14px]">No tokens found</span>
                   </div>
                 )}
               </div>
@@ -433,11 +433,11 @@ export default function TokenSelectionModal({
                 <div className="bg-white flex items-center justify-between px-4 py-3" style={{ boxShadow: retroListShadow }}>
                   <div className="flex items-center gap-3">
                     <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-figma-gray-table flex items-center justify-center">
-                      <span className="text-[#22222a] text-[16px] font-medium">{searchedERC20Token.symbol?.charAt(0) ?? '?'}</span>
+                      <span className="text-figma-text-dark text-[16px] font-medium">{searchedERC20Token.symbol?.charAt(0) ?? '?'}</span>
                     </div>
                     <div>
-                      <div className="font-roboto text-[#22222a] text-[14px] font-medium">{searchedERC20Token.symbol}</div>
-                      <div className="font-roboto text-[#5a5a61] text-[12px]">{searchedERC20Token.name}</div>
+                      <div className="font-roboto text-figma-text-dark text-[14px] font-medium">{searchedERC20Token.symbol}</div>
+                      <div className="font-roboto text-figma-text-gray text-[12px]">{searchedERC20Token.name}</div>
                     </div>
                   </div>
                   <button

@@ -325,7 +325,7 @@ export default function SwapComponent() {
               {/* From Section */}
               <div className="bg-figma-gray-table p-4 mb-2" style={{ boxShadow: retroInsetShadow }}>
                 {/* Label */}
-                <span className="text-[#22222a] text-[10px] mb-3 block" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                <span className="text-figma-text-dark text-[10px] mb-3 block" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                   From
                 </span>
 
@@ -337,7 +337,7 @@ export default function SwapComponent() {
                     placeholder="0.0"
                     value={typedValueIn}
                     onChange={(e) => setTypedValueIn(e.target.value)}
-                    className="bg-transparent text-[#22222a] text-[24px] w-full outline-none"
+                    className="bg-transparent text-figma-text-dark text-[24px] w-full outline-none"
                     style={{ fontFamily: '"Press Start 2P", cursive' }}
                   />
 
@@ -348,33 +348,33 @@ export default function SwapComponent() {
                     style={{ boxShadow: retroRaisedShadow }}
                   >
                     {fromTokenLogoURI && <img src={fromTokenLogoURI} alt={fromToken.symbol} className="w-7 h-7 rounded-full" />}
-                    <span className="text-[#22222a] text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                    <span className="text-figma-text-dark text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                       {fromToken.symbol}
                     </span>
-                    <ChevronDown className="w-4 h-4 text-[#22222a]" />
+                    <ChevronDown className="w-4 h-4 text-figma-text-dark" />
                   </button>
                 </div>
 
                 {/* Balance Row */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[#22222a] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                  <span className="text-figma-text-dark text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                     {quote?.inputAmount ? getUsdValue(quote.inputAmount.toExact(), fromToken) : '$0.00'}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[rgba(34,34,42,0.7)] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                    <span className="text-figma-text-gray text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                       Balance: {address ? formatNumber(fromTokenData?.formattedBalance || 0, 6, 0, numberLocale) : '0'}
                     </span>
-                    <span className="text-[rgba(34,34,42,0.7)] text-[10px]">|</span>
+                    <span className="text-figma-text-gray text-[10px]">|</span>
                     <button
                       onClick={handleHalfClick}
-                      className="text-[rgba(34,34,42,0.7)] text-[10px] hover:text-[#22222a]"
+                      className="text-figma-text-gray text-[10px] hover:text-figma-text-dark"
                       style={{ fontFamily: '"Press Start 2P", cursive' }}
                     >
                       50%
                     </button>
                     <button
                       onClick={handleMaxClick}
-                      className="text-[rgba(34,34,42,0.7)] text-[10px] hover:text-[#22222a]"
+                      className="text-figma-text-gray text-[10px] hover:text-figma-text-dark"
                       style={{ fontFamily: '"Press Start 2P", cursive' }}
                     >
                       MAX
@@ -390,21 +390,21 @@ export default function SwapComponent() {
                   className="bg-figma-gray-table size-[38px] flex items-center justify-center"
                   style={{ boxShadow: retroRaisedShadow }}
                 >
-                  <ArrowUpDown className="w-[18px] h-[18px] text-[#22222a]" />
+                  <ArrowUpDown className="w-[18px] h-[18px] text-figma-text-dark" />
                 </button>
               </div>
 
               {/* To Section */}
               <div className="bg-figma-gray-table p-4 mb-4" style={{ boxShadow: retroInsetShadow }}>
                 {/* Label */}
-                <span className="text-[#22222a] text-[10px] mb-3 block" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                <span className="text-figma-text-dark text-[10px] mb-3 block" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                   To
                 </span>
 
                 {/* Output Box */}
                 <div className="bg-white h-[66px] flex items-center justify-between px-4 mb-3" style={{ boxShadow: retroInputShadow }}>
                   {/* Amount Display */}
-                  <span className="text-[#22222a] text-[24px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                  <span className="text-figma-text-dark text-[24px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                     {quote?.outputAmount ? formatNumber(quote.outputAmount.toExact(), 6, 0, numberLocale) : '0.0'}
                   </span>
 
@@ -417,26 +417,26 @@ export default function SwapComponent() {
                     {toToken ? (
                       <>
                         {toTokenLogoURI && <img src={toTokenLogoURI} alt={toToken.symbol} className="w-7 h-7 rounded-full" />}
-                        <span className="text-[#22222a] text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                        <span className="text-figma-text-dark text-[12px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                           {toToken.symbol}
                         </span>
                       </>
                     ) : (
-                      <span className="text-[#22222a] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                      <span className="text-figma-text-dark text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                         Select
                       </span>
                     )}
-                    <ChevronDown className="w-4 h-4 text-[#22222a]" />
+                    <ChevronDown className="w-4 h-4 text-figma-text-dark" />
                   </button>
                 </div>
 
                 {/* Balance Row */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[#22222a] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                  <span className="text-figma-text-dark text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                     {quote?.outputAmount && toToken ? getUsdValue(quote.outputAmount.toExact(), toToken) : '$0.00'}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[rgba(34,34,42,0.7)] text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
+                    <span className="text-figma-text-gray text-[10px]" style={{ fontFamily: '"Press Start 2P", cursive' }}>
                       Balance: {address ? formatNumber(toTokenData?.formattedBalance || 0, 6, 0, numberLocale) : '0'}
                     </span>
                   </div>
@@ -444,10 +444,10 @@ export default function SwapComponent() {
               </div>
 
               {/* Rate Info Section */}
-              <div className="bg-[#eaf4ff] p-4 mb-4 flex items-center justify-between" style={{ boxShadow: retroInsetShadow }}>
+              <div className="bg-figma-gray-light p-4 mb-4 flex items-center justify-between" style={{ boxShadow: retroInsetShadow }}>
                 <div className="flex items-center gap-2">
-                  <Info className="w-[14px] h-[14px] text-[#0f06aa]" />
-                  <span className="font-roboto text-[#0f06aa] text-[14px]">
+                  <Info className="w-[14px] h-[14px] text-figma-purple" />
+                  <span className="font-roboto text-figma-purple text-[14px]">
                     {quote?.executionPrice
                       ? `1 ${fromToken.symbol} = ${formatNumber(quote.executionPrice.toSignificant(6), 6, 0, numberLocale)} ${
                           toToken?.symbol
@@ -455,20 +455,20 @@ export default function SwapComponent() {
                       : `1 ${fromToken.symbol} = -- ${toToken?.symbol || 'Token'}`}
                   </span>
                 </div>
-                <ChevronDown className="w-4 h-4 text-[#0f06aa]" />
+                <ChevronDown className="w-4 h-4 text-figma-purple" />
               </div>
 
               {/* Slippage Tolerance Section */}
               <div className="bg-figma-gray-table p-4 mb-4 flex items-center justify-between" style={{ boxShadow: retroInsetShadow }}>
                 <div className="flex items-center gap-2">
-                  <Info className="w-[14px] h-[14px] text-black" />
-                  <span className="font-roboto text-black text-[14px]">Slippage Tolerance</span>
+                  <Info className="w-[14px] h-[14px] text-figma-text-dark" />
+                  <span className="font-roboto text-figma-text-dark text-[14px]">Slippage Tolerance</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSlippage('0.5')}
                     className={`h-[38px] w-[60px] font-roboto text-[14px] ${
-                      slippage === '0.5' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-black'
+                      slippage === '0.5' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-figma-text-dark'
                     }`}
                     style={{
                       boxShadow: slippage === '0.5' ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa' : retroRaisedShadow,
@@ -479,7 +479,7 @@ export default function SwapComponent() {
                   <button
                     onClick={() => setSlippage('1')}
                     className={`h-[38px] w-[60px] font-roboto text-[14px] ${
-                      slippage === '1' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-black'
+                      slippage === '1' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-figma-text-dark'
                     }`}
                     style={{
                       boxShadow: slippage === '1' ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa' : retroRaisedShadow,
@@ -490,7 +490,7 @@ export default function SwapComponent() {
                   <button
                     onClick={() => setSlippage('2')}
                     className={`h-[38px] w-[60px] font-roboto text-[14px] ${
-                      slippage === '2' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-black'
+                      slippage === '2' ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-figma-text-dark'
                     }`}
                     style={{
                       boxShadow: slippage === '2' ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa' : retroRaisedShadow,
@@ -552,7 +552,7 @@ export default function SwapComponent() {
                         },
                       });
                     }}
-                    className="text-figma-text-gray hover:text-[#22222a] font-roboto text-[14px] underline"
+                    className="text-figma-text-gray hover:text-figma-text-dark font-roboto text-[14px] underline"
                   >
                     Add {toToken.symbol} to Wallet
                   </button>

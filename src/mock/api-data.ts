@@ -33,6 +33,28 @@ export async function mockPoolData(poolAddress: string) {
     throw new Error('Pool not found');
   }
 
+  // 24시간 수수료 집계
+  const fees24h = result.LBPairHourData?.reduce((sum, item) => sum + Number(item.feesUSD || 0), 0) || 0;
+
+  // Fee 계산을 위한 파라미터
+  const binStep = Number(pool.binStep);
+  const baseFeePct = Number(pool.baseFeePct);
+  const maxVolatilityAccumulator = Number(lbPairParameterSet?.maxVolatilityAccumulator || 0);
+  const variableFeeControl = Number(lbPairParameterSet?.variableFeeControl || 0);
+  const protocolShare = Number(lbPairParameterSet?.protocolShare || 0);
+
+  // Max Fee = BaseFee + ((maxVolatilityAccumulator × binStep)² × variableFeeControl) / 10¹⁸
+  const maxFeePct = baseFeePct + ((maxVolatilityAccumulator * binStep) ** 2 * variableFeeControl) / 1e18;
+
+  // Dynamic Fee는 실시간 volatilityAccumulator 값이 필요하지만,
+  // GraphQL에서 제공하지 않으므로 스마트 컨트랙트에서 직접 읽어야 함
+  // 현재는 maxVolatilityAccumulator를 기준으로 최대값을 표시
+  const dynamicFeePct = ((maxVolatilityAccumulator * binStep) ** 2 * variableFeeControl) / 1e18;
+
+  // Protocol Fee = BaseFee × (protocolShare / 10000)
+  // protocolShare is in basis points (e.g., 2500 = 25%)
+  const protocolFeePct = baseFeePct * (protocolShare / 10000);
+
   return {
     pairAddress: fromChainId(pool.id),
     chain: 'memecore_testnet',
@@ -57,13 +79,11 @@ export async function mockPoolData(poolAddress: string) {
     },
     reserveX: Number(pool.reserveX),
     reserveY: Number(pool.reserveY),
-    lbBinStep: Number(pool.binStep),
-    lbBaseFeePct: Number(pool.baseFeePct),
-    lbMaxFeePct:
-      Number(pool.baseFeePct) +
-      ((Number(lbPairParameterSet?.maxVolatilityAccumulator || 0) * Number(pool.binStep)) ** 2 *
-        Number(lbPairParameterSet?.variableFeeControl || 0)) /
-        1e18,
+    lbBinStep: binStep,
+    lbBaseFeePct: baseFeePct,
+    lbMaxFeePct: maxFeePct,
+    dynamicFeePct: dynamicFeePct,
+    protocolFeePct: protocolFeePct,
     activeBinId: Number(pool.activeId),
     liquidityUsd: Number(pool.totalValueLockedUSD),
     liquidityNative: '0',
@@ -73,9 +93,9 @@ export async function mockPoolData(poolAddress: string) {
     liquidityDepthTokenY: 1,
     volumeUsd: Number(pool.volumeUSD),
     volumeNative: '0',
-    feesUsd: Number(pool.feesUSD),
+    feesUsd: fees24h,
     feesNative: '0',
-    protocolSharePct: Number(lbPairParameterSet?.protocolShare || 0) / 100,
+    protocolSharePct: protocolShare / 100,
   };
 }
 

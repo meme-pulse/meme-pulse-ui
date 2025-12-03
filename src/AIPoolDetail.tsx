@@ -49,6 +49,8 @@ export interface PoolData {
   lbBinStep: number;
   lbBaseFeePct: number;
   lbMaxFeePct: number;
+  dynamicFeePct: number;
+  protocolFeePct: number;
   activeBinId: number;
   liquidityUsd: number;
   liquidityNative: string;

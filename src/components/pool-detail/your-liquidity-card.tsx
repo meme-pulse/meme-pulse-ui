@@ -176,11 +176,11 @@ export function YourLiquidityCard({ poolData, yBaseCurrency, setYBaseCurrency, c
       <div className="flex items-center gap-2 text-sm mb-4">
         <span className="font-roboto text-figma-text-gray text-[12px]">Current Pool Price:</span>
         <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => setYBaseCurrency(!yBaseCurrency)}>
-          <span className="font-roboto text-[#facb25] text-[14px] font-medium">
+          <span className="font-roboto  text-[14px] font-medium">
             {formatNumber(currentPrice, 4, 0, numberLocale)}{' '}
             {yBaseCurrency ? poolData.tokenY.symbol + '/' + poolData.tokenX.symbol : poolData.tokenX.symbol + '/' + poolData.tokenY.symbol}
           </span>
-          <ArrowLeftRightIcon className="w-4 h-4 text-[#facb25]" />
+          <ArrowLeftRightIcon className="w-4 h-4 " />
         </div>
       </div>
 

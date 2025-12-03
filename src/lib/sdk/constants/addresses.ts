@@ -8,19 +8,19 @@ export const MULTICALL_ADDRESS: { [chainId in ChainId]: Hex } = {
 };
 
 export const LB_QUOTER_V22_ADDRESS: { [chainId in ChainId]: Hex } = {
-  [ChainId.MEMECORE_TESTNET]: '0x8d44834124a2b85c961231e2a5a3496b0adeb437',
+  [ChainId.MEMECORE_TESTNET]: '0x070c29cdf290c3681a25e3258cc1cdaa0a97300b',
 };
 
 export const LB_ROUTER_V22_ADDRESS: { [chainId in ChainId]: Hex } = {
-  [ChainId.MEMECORE_TESTNET]: '0x78b7d9236d2a3e0a1d176c7a4fc524c927cda1dd',
+  [ChainId.MEMECORE_TESTNET]: '0x467777edb64b83e3b883eb7ec8a2b291888ed67b',
 };
 
 export const LB_FACTORY_V22_ADDRESS: { [chainId in ChainId]: Hex } = {
-  [ChainId.MEMECORE_TESTNET]: '0xcc8721b893166a7d222c9e88d3d581fe37b94d81',
+  [ChainId.MEMECORE_TESTNET]: '0x1b279b36995a5afbb75d82187f0025ffef4572ed',
 };
 
 export const LIQUIDITY_HELPER_V2_ADDRESS: { [chainId in ChainId]: Hex } = {
-  [ChainId.MEMECORE_TESTNET]: '0x7f701264f99749b36b06ccdf5da4be6e8340211c',
+  [ChainId.MEMECORE_TESTNET]: '0xb4c4c4b4833e74fc60d74482ec729c60c1e65dc6',
 };
 
 export const WNATIVE = {

@@ -357,8 +357,9 @@ export async function getGroupedPoolsWithDetails() {
 export async function getPoolData(pairAddress: string) {
   const chainPairId = toChainPairId(pairAddress);
   const bundleId = toBundleId();
+  const twentyFourHoursAgo = Math.floor(Date.now() / 1000 - 24 * 60 * 60);
   const query = `
-    query GetPool($pairAddress: String!, $bundleId: String!) {
+    query GetPool($pairAddress: String!, $bundleId: String!, $twentyFourHoursAgo: Int!) {
       LBPair(where: { id: { _eq: $pairAddress } }) {
         id
         tokenX {
@@ -391,6 +392,10 @@ export async function getPoolData(pairAddress: string) {
         maxVolatilityAccumulator
         variableFeeControl
         protocolShare
+      }
+      LBPairHourData(where: { lbPair_id: { _eq: $pairAddress }, date: { _gte: $twentyFourHoursAgo } }) {
+        feesUSD
+        volumeUSD
       }
     }
   `;
@@ -427,7 +432,11 @@ export async function getPoolData(pairAddress: string) {
       variableFeeControl: string;
       protocolShare: string;
     }>;
-  }>(query, { pairAddress: chainPairId, bundleId });
+    LBPairHourData: Array<{
+      feesUSD: string;
+      volumeUSD: string;
+    }>;
+  }>(query, { pairAddress: chainPairId, bundleId, twentyFourHoursAgo });
 }
 
 // User Pool IDs Query
@@ -629,13 +638,53 @@ export async function getTokenPrices() {
   }>(query);
 }
 
-// DEX Analytics Query
-export async function getDexAnalytics(startTime: number) {
+// DEX Hourly Analytics Query (for 7-day period)
+export async function getDexHourlyAnalytics(startTime: number) {
   const query = `
-    query GetDexAnalytics($startTime: Int!) {
+    query GetDexHourlyAnalytics($startTime: Int!) {
+      LBHourData(
+        where: { date: { _gte: $startTime } }
+        limit: 168
+        order_by: { date: asc }
+      ) {
+        id
+        date
+        volumeUSD
+        feesUSD
+        totalValueLockedUSD
+        txCount
+      }
+    }
+  `;
+
+  const result = await graphqlRequest<{
+    LBHourData: Array<{
+      id: string;
+      date: number;
+      volumeUSD: string;
+      feesUSD: string;
+      totalValueLockedUSD: string;
+      txCount: number;
+    }>;
+  }>(query, { startTime });
+
+  return result.LBHourData.map((item) => ({
+    date: new Date(item.date * 1000).toISOString(),
+    timestamp: item.date,
+    volumeUSD: Number(item.volumeUSD),
+    feesUSD: Number(item.feesUSD),
+    totalValueLockedUSD: Number(item.totalValueLockedUSD),
+    txCount: Number(item.txCount),
+  }));
+}
+
+// DEX Analytics Query
+export async function getDexAnalytics(startTime: number, limit: number = 180) {
+  const query = `
+    query GetDexAnalytics($startTime: Int!, $limit: Int!) {
       LBDayData(
         where: { date: { _gte: $startTime } }
-        limit: 180
+        limit: $limit
         order_by: { date: asc }
       ) {
         id
@@ -657,7 +706,7 @@ export async function getDexAnalytics(startTime: number) {
       totalValueLockedUSD: string;
       txCount: number;
     }>;
-  }>(query, { startTime });
+  }>(query, { startTime, limit });
 
   return result.LBDayData.map((item) => ({
     date: new Date(item.date * 1000).toISOString(),

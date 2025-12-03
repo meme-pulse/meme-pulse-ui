@@ -10,10 +10,22 @@ type AnalyticsTooltipPayload = {
   totalValueLockedUSD?: number;
 };
 
-const CustomTvlTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: AnalyticsTooltipPayload }[] }) => {
+const CustomTvlTooltip = ({
+  active,
+  payload,
+  isHourly,
+}: {
+  active?: boolean;
+  payload?: { payload: AnalyticsTooltipPayload }[];
+  isHourly?: boolean;
+}) => {
   const [numberLocale] = useLocalStorage('number-locale', navigator.language);
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const dateOptions: Intl.DateTimeFormatOptions = isHourly
+      ? { month: 'short', day: 'numeric', hour: 'numeric' }
+      : { month: 'short', day: 'numeric' };
+
     return (
       <div
         className="bg-figma-gray-bg p-3 border-2 border-white pointer-events-none"
@@ -24,7 +36,7 @@ const CustomTvlTooltip = ({ active, payload }: { active?: boolean; payload?: { p
       >
         <div className="space-y-1">
           <p className="text-sm text-figma-text-dark">
-            <span className="font-medium">{new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            <span className="font-medium">{new Date(data.date).toLocaleDateString('en-US', dateOptions)}</span>
           </p>
           <p className="text-sm text-figma-text-dark">
             <span>TVL:</span> <span className="font-medium">{formatUSDWithLocale(data.totalValueLockedUSD || 0, 0, 0, numberLocale)}</span>
@@ -36,17 +48,21 @@ const CustomTvlTooltip = ({ active, payload }: { active?: boolean; payload?: { p
   return null;
 };
 
-const periods = [30, 90, 180];
+const periods = [7, 30, 90, 180];
 
 export default function TvlCard() {
-  const { data: tvlAnalytics, isLoading } = useProtocolAnalytics();
   const [numberLocale] = useLocalStorage('number-locale', navigator.language);
   const [selectedTVLPeriod, setSelectedTVLPeriod] = useState(30);
+  const { data: tvlAnalytics, isLoading } = useProtocolAnalytics(selectedTVLPeriod);
+
+  const isHourly = selectedTVLPeriod <= 7;
 
   const tvlData = useMemo(() => {
     if (!tvlAnalytics) return [];
-    return tvlAnalytics.slice(-selectedTVLPeriod);
-  }, [tvlAnalytics, selectedTVLPeriod]);
+    // 7일 이하일 때는 모든 데이터 사용 (이미 시간별로 필터링됨)
+    // 7일 초과일 때는 마지막 N일만 사용
+    return isHourly ? tvlAnalytics : tvlAnalytics.slice(-selectedTVLPeriod);
+  }, [tvlAnalytics, selectedTVLPeriod, isHourly]);
 
   return (
     <div
@@ -63,18 +79,28 @@ export default function TvlCard() {
 
       {/* Value and Period Buttons Row */}
       <div className="flex justify-between items-center px-4 pb-3">
-        <div className="font-roboto font-semibold text-[#030303] text-[18px] leading-[21px]">
+        <div className="font-roboto font-semibold text-figma-text-dark text-[18px] leading-[21px]">
           {formatUSDWithLocale(tvlData?.[tvlData.length - 1]?.totalValueLockedUSD || 0, 0, 0, numberLocale)}
         </div>
-        <div className="flex gap-[8px]">
+        <div className="flex items-center gap-1">
           {periods.map((period) => (
             <button
               key={period}
               onClick={() => setSelectedTVLPeriod(period)}
-              className={`h-[20.8px] w-[48px] font-press-start text-[8px] leading-[12.8px] ${
-                selectedTVLPeriod === period ? 'bg-figma-purple text-[#f2f0ff]' : 'text-zinc-900 hover:bg-zinc-300'
-              }`}
-              style={{ width: period === 180 ? '56px' : '48px' }}
+              className={`
+                px-3 py-1.5 font-roboto text-[13px] font-medium transition-all
+                ${
+                  selectedTVLPeriod === period
+                    ? 'bg-figma-purple text-white'
+                    : 'bg-figma-gray-bg text-figma-text-dark hover:bg-figma-gray-table'
+                }
+              `}
+              style={{
+                boxShadow:
+                  selectedTVLPeriod === period
+                    ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa'
+                    : 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+              }}
             >
               {period}D
             </button>
@@ -99,7 +125,7 @@ export default function TvlCard() {
               </defs>
               <YAxis tick={false} tickLine={false} axisLine={false} width={0} />
               <Area type="monotone" dataKey="totalValueLockedUSD" stroke="#895bf5" strokeWidth={2} fill="url(#tvlGradient)" />
-              <RechartsTooltip content={<CustomTvlTooltip />} />
+              <RechartsTooltip content={<CustomTvlTooltip isHourly={isHourly} />} />
             </AreaChart>
           </ResponsiveContainer>
         )}

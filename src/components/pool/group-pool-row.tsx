@@ -136,7 +136,7 @@ export function GroupPoolRow({
                     Bin Step <span className="font-semibold">{group.lbBinStep}</span>
                   </span>
                   <span className="font-roboto text-black text-[16px] leading-[19px] whitespace-nowrap">
-                    Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 2, 0, numberLocale)}%</span>
+                    Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 3, 0, numberLocale)}%</span>
                   </span>
                 </div>
               </div>

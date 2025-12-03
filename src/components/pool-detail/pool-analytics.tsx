@@ -115,9 +115,9 @@ export function PoolAnalytics({ poolData, activeId, yBaseCurrency }: PoolAnalyti
           {[
             { label: 'Bin Step', value: poolData.lbBinStep },
             { label: 'Base Fee', value: `${poolData.lbBaseFeePct}%` },
-            { label: 'Max Fee', value: `${poolData.lbMaxFeePct}%` },
-            { label: 'Protocol Fee', value: '0.00050167%' },
-            { label: 'Dynamic Fee', value: '0.0100334%' },
+            { label: 'Max Fee', value: `${poolData.lbMaxFeePct.toFixed(6)}%` },
+            { label: 'Protocol Fee', value: `${poolData.protocolFeePct?.toFixed(8) || '0'}%` },
+            { label: 'Variable Fee (Max)', value: `${poolData.dynamicFeePct?.toFixed(8) || '0'}%` },
             { label: '24h Fee', value: formatUSDWithLocale(poolData.feesUsd, 2, 0, numberLocale) },
           ].map((param, index) => (
             <div key={index} className="flex justify-between items-center px-3 py-2">
