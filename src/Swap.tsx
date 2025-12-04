@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowUpDown, ChevronDown, Info, Loader2 } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import TokenSelectionModal from '@/token-selection-modal';
 import { useTradeQuote } from './hooks/use-trade-quote';
 import { useAccount, useWaitForTransactionReceipt, useWatchAsset } from 'wagmi';
@@ -74,6 +75,7 @@ export default function SwapComponent() {
 
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [selectingTokenFor, setSelectingTokenFor] = useState<'from' | 'to'>('from');
+  const [isRouteDetailsOpen, setIsRouteDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (fromToken && toToken && debouncedValue) {
@@ -234,6 +236,51 @@ export default function SwapComponent() {
   };
 
   const swapButtonText = getSwapButtonText();
+
+  // Calculate minimum received based on slippage
+  const minimumReceived = useMemo(() => {
+    if (!quote?.outputAmount) return null;
+    const slippagePercent = Number(slippage) / 100;
+    const outputNum = Number(quote.outputAmount.toExact());
+    const minReceived = outputNum * (1 - slippagePercent);
+    return minReceived;
+  }, [quote?.outputAmount, slippage]);
+
+  // Get route path tokens for display
+  const routePathDisplay = useMemo(() => {
+    if (!quote?.quote?.route || quote.quote.route.length === 0) return null;
+    
+    const routeTokens = quote.quote.route.map((address) => {
+      // Check if it's WNATIVE
+      if (address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()) {
+        return { symbol: 'WM', address };
+      }
+      // Check if it matches fromToken or toToken
+      if (address.toLowerCase() === fromToken.address.toLowerCase()) {
+        return { symbol: fromToken.symbol, address };
+      }
+      if (toToken && address.toLowerCase() === toToken.address.toLowerCase()) {
+        return { symbol: toToken.symbol, address };
+      }
+      // Check in token list
+      const found = tokenList?.find((t) => t.address.toLowerCase() === address.toLowerCase());
+      if (found) {
+        return { symbol: found.symbol, address };
+      }
+      // Fallback: show truncated address
+      return { symbol: `${address.slice(0, 6)}...${address.slice(-4)}`, address };
+    });
+    
+    return routeTokens;
+  }, [quote?.quote?.route, fromToken, toToken, tokenList]);
+
+  // Calculate total fees percentage
+  const totalFeesPercent = useMemo(() => {
+    if (!quote?.quote?.fees || quote.quote.fees.length === 0) return null;
+    // fees are in 1e18 basis (e.g., 0.003e18 = 0.3%)
+    const totalFees = quote.quote.fees.reduce((acc, fee) => acc + Number(fee), 0);
+    return (totalFees / 1e18) * 100; // Convert to percentage
+  }, [quote?.quote?.fees]);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#060208]">
@@ -443,19 +490,95 @@ export default function SwapComponent() {
                 </div>
               </div>
 
-              {/* Rate Info Section */}
-              <div className="bg-figma-gray-light p-4 mb-4 flex items-center justify-between" style={{ boxShadow: retroInsetShadow }}>
-                <div className="flex items-center gap-2">
-                  <Info className="w-[14px] h-[14px] text-figma-purple" />
-                  <span className="font-roboto text-figma-purple text-[14px]">
-                    {quote?.executionPrice
-                      ? `1 ${fromToken.symbol} = ${formatNumber(quote.executionPrice.toSignificant(6), 6, 0, numberLocale)} ${
-                          toToken?.symbol
-                        }`
-                      : `1 ${fromToken.symbol} = -- ${toToken?.symbol || 'Token'}`}
-                  </span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-figma-purple" />
+              {/* Rate Info Section - Expandable */}
+              <div className="mb-4 overflow-hidden" style={{ boxShadow: retroInsetShadow }}>
+                <button
+                  onClick={() => setIsRouteDetailsOpen(!isRouteDetailsOpen)}
+                  className="w-full bg-figma-gray-light px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-figma-gray-light/80 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Info className="w-3.5 h-3.5 text-figma-purple flex-shrink-0" />
+                    <span className="font-roboto text-figma-purple text-[13px]">
+                      {quote?.executionPrice
+                        ? `1 ${fromToken.symbol} = ${formatNumber(quote.executionPrice.toSignificant(6), 6, 0, numberLocale)} ${toToken?.symbol}`
+                        : `1 ${fromToken.symbol} = -- ${toToken?.symbol || 'Token'}`}
+                    </span>
+                  </div>
+                  <motion.div
+                    animate={{ rotate: isRouteDetailsOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronDown className="w-4 h-4 text-figma-purple" />
+                  </motion.div>
+                </button>
+                
+                {/* Expandable Route Details */}
+                <AnimatePresence>
+                  {isRouteDetailsOpen && quote && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="bg-figma-gray-light/60 px-3 py-2 space-y-1.5 border-t border-figma-gray-table/50">
+                        {/* Route Path with binStep inline */}
+                        {routePathDisplay && routePathDisplay.length > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="font-roboto text-figma-text-gray text-[11px]">Route</span>
+                            <div className="flex items-center text-[11px] font-roboto overflow-x-auto max-w-[240px]">
+                              {routePathDisplay.map((token, idx) => (
+                                <span key={idx} className="flex items-center whitespace-nowrap">
+                                  <span className="text-figma-purple">{token.symbol}</span>
+                                  {idx < routePathDisplay.length - 1 && (
+                                    <span className="text-figma-text-gray mx-0.5">
+                                      →<span className="text-[9px] text-figma-text-dark/60">({quote.quote.binSteps?.[idx]?.toString() || '?'})</span>→
+                                    </span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Price Impact */}
+                        <div className="flex items-center justify-between">
+                          <span className="font-roboto text-figma-text-gray text-[11px]">Price Impact</span>
+                          <span className={`font-roboto text-[11px] ${
+                            Number(quote.priceImpact.toSignificant(2)) > 5 
+                              ? 'text-red-500' 
+                              : Number(quote.priceImpact.toSignificant(2)) > 1 
+                                ? 'text-amber-500' 
+                                : 'text-green-500'
+                          }`}>
+                            {quote.priceImpact.toSignificant(4)}%
+                          </span>
+                        </div>
+
+                        {/* Minimum Received */}
+                        {minimumReceived && toToken && (
+                          <div className="flex items-center justify-between">
+                            <span className="font-roboto text-figma-text-gray text-[11px]">Min. Received</span>
+                            <span className="font-roboto text-figma-text-dark text-[11px]">
+                              {formatNumber(minimumReceived, 6, 0, numberLocale)} {toToken.symbol}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Fees */}
+                        {totalFeesPercent !== null && (
+                          <div className="flex items-center justify-between">
+                            <span className="font-roboto text-figma-text-gray text-[11px]">Fee</span>
+                            <span className="font-roboto text-figma-text-dark text-[11px]">
+                              {totalFeesPercent.toFixed(2)}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Slippage Tolerance Section */}
