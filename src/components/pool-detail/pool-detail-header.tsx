@@ -4,6 +4,7 @@ import TokenTicker from '@/components/token-ticker';
 import { formatNumber } from '@/lib/format';
 import { useLocalStorage } from 'usehooks-ts';
 import { type PoolData } from '@/PoolDetail';
+import { BoostBadge } from '../pool/boost-badge';
 
 interface PoolDetailHeaderProps {
   poolData: PoolData;
@@ -16,6 +17,8 @@ interface PoolDetailHeaderProps {
 export function PoolDetailHeader({ poolData, tokenListData, yBaseCurrency, setYBaseCurrency, currentPrice }: PoolDetailHeaderProps) {
   const navigate = useNavigate();
   const [numberLocale] = useLocalStorage('number-locale', navigator.language);
+
+  const hasBoost = poolData.protocolSharePct === 10 || poolData.protocolSharePct === 20 || poolData.protocolSharePct === 40;
 
   return (
     <>
@@ -53,7 +56,7 @@ export function PoolDetailHeader({ poolData, tokenListData, yBaseCurrency, setYB
           </div>
 
           {/* Badges */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <span
               className="px-3 py-1.5 text-[12px] font-roboto text-[#030303] bg-figma-gray-table"
               style={{
@@ -72,6 +75,7 @@ export function PoolDetailHeader({ poolData, tokenListData, yBaseCurrency, setYB
             >
               Fee: {formatNumber(poolData.lbBaseFeePct, 4, 0, numberLocale)}%
             </span>
+            {hasBoost && <BoostBadge protocolSharePct={poolData.protocolSharePct} variant="full" />}
           </div>
         </div>
 

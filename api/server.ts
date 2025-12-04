@@ -65,22 +65,31 @@ Bun.serve({
           {
             success: true,
             message: 'DLMM AI Suggestion API (Bun local)',
-            version: '2.0.0',
+            version: '3.0.0',
             endpoint: '/api/dlmm-suggest',
             method: 'POST',
-            description: 'Analyzes market data and generates optimal LP strategy recommendations',
+            description: 'Analyzes market data, viral scores, and generates optimal LP strategy recommendations with detailed explanations',
             requiredFields: {
               riskProfile: 'aggressive | defensive | auto',
-              tokenX: '{ address, symbol, decimals }',
-              tokenY: '{ address, symbol, decimals }',
-              availablePools: 'Array of PoolInfo objects',
+              tokenX: '{ address, symbol, decimals, priceUSD? }',
+              tokenY: '{ address, symbol, decimals, priceUSD? }',
+              availablePools: 'Array of PoolInfo objects (with optional parameters)',
               currentActiveId: 'Current active bin ID',
             },
             optionalFields: {
-              tokenXPriceHistory: 'Array of TokenPriceData (7 days)',
-              tokenYPriceHistory: 'Array of TokenPriceData (7 days)',
+              tokenXPriceHistory: 'Array of TokenPriceData (7 days OHLC)',
+              tokenYPriceHistory: 'Array of TokenPriceData (7 days OHLC)',
               pairHistory: 'Array of PairHistoryData (7 days)',
+              recentHourlyData: 'Array of hourly data (24h for fine-grained volatility)',
               binDistribution: 'Array of BinData (±50 bins from activeId)',
+              tokenXViralData: 'ViralScoreData (pulseScore, viralRank, social metrics)',
+              tokenYViralData: 'ViralScoreData (pulseScore, viralRank, social metrics)',
+            },
+            features: {
+              viralBoost: 'Detects viral tokens and calculates yield boost (+20% to +80%)',
+              detailedExplanations: 'Provides why explanations for each strategy decision',
+              socialMomentum: 'Analyzes rising/declining social engagement',
+              poolParameterAnalysis: 'Considers protocolShare and fee volatility',
             },
           },
           { headers: corsHeaders }
@@ -110,6 +119,12 @@ Bun.serve({
           // 1. 메트릭 계산
           const calculatedMetrics = calculateMetrics(request);
 
+          // Log viral status
+          if (calculatedMetrics.viralMetrics.hasViralBoost) {
+            const boost = Math.round((calculatedMetrics.viralMetrics.viralBoostMultiplier - 1) * 100);
+            console.log(`🔥 VIRAL BOOST DETECTED: +${boost}% yield | X:${calculatedMetrics.viralMetrics.tokenXRank || 'N/A'} Y:${calculatedMetrics.viralMetrics.tokenYRank || 'N/A'}`);
+          }
+
           // 2. AI 전략 생성
           const recommendation = await generateAIStrategy(request, calculatedMetrics);
 
@@ -128,12 +143,14 @@ Bun.serve({
             },
           };
 
-          console.log(`DLMM Suggestion generated in ${Date.now() - startTime}ms`);
+          console.log(`✅ DLMM Suggestion generated in ${Date.now() - startTime}ms`);
+          console.log(`   Strategy: ${recommendation.strategy.binCount} bins | ${recommendation.strategy.distributionShape} | APR: ${recommendation.riskAssessment.expectedAPR}`);
 
           return Response.json(response, {
             headers: {
               ...corsHeaders,
-              'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+              // Optimized: Extended caching (120초) for better cost efficiency
+              'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
             },
           });
         } catch (error) {

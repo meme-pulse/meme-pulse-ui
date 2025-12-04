@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AutoFillSwitch from '../auto-fill-switch';
@@ -1253,26 +1252,26 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
               }}
               className="pl-20 pr-4 h-16 !text-lg font-semibold bg-white border-0 text-figma-text-dark placeholder:text-figma-text-gray text-right font-roboto focus-visible:ring-0 focus-visible:ring-offset-0"
             />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <TokenTicker
-                symbol={poolData.tokenX.symbol}
-                logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
-                className="w-6 h-6"
-              />
-              <span className="text-sm font-medium text-figma-text-dark font-roboto flex items-center">
-                {poolData.tokenX.symbol}
-                {originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
-                  <button
-                    type="button"
-                    className="ml-1 px-1.5 py-0.5 text-[10px] bg-figma-purple/10 text-figma-purple hover:bg-figma-purple/20 transition-colors rounded flex items-center gap-0.5"
-                    onClick={() => setIsNativeIn(!isNativeIn)}
-                    title={isNativeIn ? 'Switch to WNATIVE deposit' : 'Switch to Native deposit'}
-                  >
-                    <ArrowLeftRight className="w-3 h-3" />
-                    {isNativeIn ? 'Native' : 'WNATIVE'}
-                  </button>
-                )}
-              </span>
+            <div className="absolute left-3 top-3 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <TokenTicker
+                  symbol={poolData.tokenX.symbol}
+                  logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenX.address.toLowerCase())?.logoURI}
+                  className="w-6 h-6"
+                />
+                <span className="text-sm font-medium text-figma-text-dark font-roboto">{poolData.tokenX.symbol}</span>
+              </div>
+              {originalPoolData.tokenX.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
+                <button
+                  type="button"
+                  className="w-fit px-1.5 py-0.5 text-[10px] bg-figma-purple/10 text-figma-purple hover:bg-figma-purple/20 transition-colors rounded flex items-center gap-0.5"
+                  onClick={() => setIsNativeIn(!isNativeIn)}
+                  title={isNativeIn ? 'Switch to WNATIVE deposit' : 'Switch to Native deposit'}
+                >
+                  <ArrowLeftRight className="w-3 h-3" />
+                  {isNativeIn ? 'Native' : 'WNATIVE'}
+                </button>
+              )}
             </div>
             <div className="absolute right-4 top-1/2 translate-y-3 text-[10px] text-figma-text-gray font-roboto">
               {formatUSDWithLocale(
@@ -1290,10 +1289,13 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                 numberLocale
               )}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs px-2 text-muted-foreground hover:text-foreground"
+            <button
+              type="button"
+              className="text-xs px-3 py-1 font-roboto font-semibold text-[#030303] bg-[#facb25] hover:bg-[#ffd700] transition-colors"
+              style={{
+                boxShadow:
+                  'inset -1px -1px 0px 0px #d4a017, inset 1px 1px 0px 0px #ffd700, inset -2px -2px 0px 0px #b8860b, inset 2px 2px 0px 0px #ffed4e',
+              }}
               onClick={() => {
                 // if isNativeIn, reserve gas fee
                 if (isNativeIn && originalPoolData.tokenX.address === WNATIVE[DEFAULT_CHAINID].address) {
@@ -1332,7 +1334,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
               }}
             >
               MAX
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -1366,26 +1368,26 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
               }}
               className="pl-20 pr-4 h-16 !text-lg font-semibold bg-white border-0 text-figma-text-dark placeholder:text-figma-text-gray text-right font-roboto focus-visible:ring-0 focus-visible:ring-offset-0"
             />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <TokenTicker
-                symbol={poolData.tokenY.symbol}
-                logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
-                className="w-6 h-6"
-              />
-              <span className="text-sm font-medium text-figma-text-dark font-roboto flex items-center">
-                {poolData.tokenY.symbol}
-                {originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
-                  <button
-                    type="button"
-                    className="ml-1 px-1.5 py-0.5 text-[10px] bg-figma-purple/10 text-figma-purple hover:bg-figma-purple/20 transition-colors rounded flex items-center gap-0.5"
-                    onClick={() => setIsNativeIn(!isNativeIn)}
-                    title={isNativeIn ? 'Switch to WNATIVE deposit' : 'Switch to Native deposit'}
-                  >
-                    <ArrowLeftRight className="w-3 h-3" />
-                    {isNativeIn ? 'Native' : 'WNATIVE'}
-                  </button>
-                )}
-              </span>
+            <div className="absolute left-3 top-3 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <TokenTicker
+                  symbol={poolData.tokenY.symbol}
+                  logoURI={tokenListData?.find((token) => token.address.toLowerCase() === poolData.tokenY.address.toLowerCase())?.logoURI}
+                  className="w-6 h-6"
+                />
+                <span className="text-sm font-medium text-figma-text-dark font-roboto">{poolData.tokenY.symbol}</span>
+              </div>
+              {originalPoolData.tokenY.address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase() && (
+                <button
+                  type="button"
+                  className="w-fit px-1.5 py-0.5 text-[10px] bg-figma-purple/10 text-figma-purple hover:bg-figma-purple/20 transition-colors rounded flex items-center gap-0.5"
+                  onClick={() => setIsNativeIn(!isNativeIn)}
+                  title={isNativeIn ? 'Switch to WNATIVE deposit' : 'Switch to Native deposit'}
+                >
+                  <ArrowLeftRight className="w-3 h-3" />
+                  {isNativeIn ? 'Native' : 'WNATIVE'}
+                </button>
+              )}
             </div>
             <div className="absolute right-4 top-1/2 translate-y-3 text-[10px] text-figma-text-gray font-roboto">
               {formatUSDWithLocale(
@@ -1403,10 +1405,13 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                 numberLocale
               )}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs px-2 text-muted-foreground hover:text-foreground"
+            <button
+              type="button"
+              className="text-xs px-3 py-1 font-roboto font-semibold text-[#030303] bg-[#facb25] hover:bg-[#ffd700] transition-colors"
+              style={{
+                boxShadow:
+                  'inset -1px -1px 0px 0px #d4a017, inset 1px 1px 0px 0px #ffd700, inset -2px -2px 0px 0px #b8860b, inset 2px 2px 0px 0px #ffed4e',
+              }}
               onClick={() => {
                 if (isNativeIn && originalPoolData.tokenY.address === WNATIVE[DEFAULT_CHAINID].address) {
                   const availableBalance =
@@ -1443,7 +1448,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
               }}
             >
               MAX
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -1487,9 +1492,11 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
           <div className="flex items-center gap-2">
             <Label className="font-roboto font-semibold text-figma-text-dark text-[16px]">Set Price Range</Label>
             <button
-              className="flex items-center gap-1 text-[11px] text-figma-text-gray cursor-pointer px-2 py-1 hover:bg-figma-gray-table/80"
+              type="button"
+              className="flex items-center gap-1 text-[11px] font-roboto font-semibold text-white bg-[#ff6b6b] hover:bg-[#ff5252] transition-colors px-2 py-1"
               style={{
-                boxShadow: 'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa',
+                boxShadow:
+                  'inset -1px -1px 0px 0px #d32f2f, inset 1px 1px 0px 0px #ff8a80, inset -2px -2px 0px 0px #b71c1c, inset 2px 2px 0px 0px #ffb3b3',
               }}
               onClick={onResetPriceRange}
             >
@@ -1508,13 +1515,20 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                 <span className="w-2 h-2 rounded-full bg-[#8BD2C6]" /> {poolData.tokenY.symbol}
               </span>
             </div>
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                className={`rounded-md px-3 py-1 h-7 min-w-[60px] ${
-                  yBaseCurrency ? 'bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            <div
+              className="flex items-center gap-1 bg-[#e0e0e0] p-1"
+              style={{ boxShadow: 'inset 1px 1px 0px 0px #808088, inset -1px -1px 0px 0px #f9f9fa' }}
+            >
+              <button
+                type="button"
+                className={`flex items-center gap-1 px-3 py-1 h-7 min-w-[60px] font-roboto text-[12px] font-semibold transition-colors ${
+                  yBaseCurrency ? 'bg-[#c5c5c5] text-[#030303]' : 'bg-figma-purple text-white'
                 }`}
+                style={{
+                  boxShadow: yBaseCurrency
+                    ? 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088'
+                    : 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+                }}
                 onClick={() => setYBaseCurrency(false)}
               >
                 <TokenTicker
@@ -1523,13 +1537,17 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                   className="w-4 h-4"
                 />
                 {poolData.tokenX?.symbol}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className={`rounded-md px-3 py-1 h-7 min-w-[60px] ${
-                  yBaseCurrency ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground'
+              </button>
+              <button
+                type="button"
+                className={`flex items-center gap-1 px-3 py-1 h-7 min-w-[60px] font-roboto text-[12px] font-semibold transition-colors ${
+                  yBaseCurrency ? 'bg-figma-purple text-white' : 'bg-[#c5c5c5] text-[#030303]'
                 }`}
+                style={{
+                  boxShadow: yBaseCurrency
+                    ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa'
+                    : 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+                }}
                 onClick={() => setYBaseCurrency(true)}
               >
                 <TokenTicker
@@ -1538,7 +1556,7 @@ export function AddPositionCard({ poolData: originalPoolData, tokenListData, yBa
                   className="w-4 h-4"
                 />
                 {poolData.tokenY?.symbol}
-              </Button>
+              </button>
             </div>
           </div>
         </div>

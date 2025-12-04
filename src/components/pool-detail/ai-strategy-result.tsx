@@ -30,7 +30,7 @@ import ApproveButton from '../approve-button';
 import { useTokenPrices } from '@/hooks/use-token-price';
 import { useAllowance } from '@/hooks/use-allowance';
 import { LB_ROUTER_V22_ADDRESS } from '../../lib/sdk';
-import { ArrowLeftRight, TrendingUp, Shield, RefreshCw, Lightbulb, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ArrowLeftRight, TrendingUp, Shield, RefreshCw, Lightbulb, AlertTriangle, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import type { AIAnalysisDisplay } from '@/hooks/use-dlmm-suggestion';
 
 // Register Chart.js components
@@ -80,6 +80,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
   const [autoFill] = useLocalStorage('autoFill', false);
   const [liquidityTolerance] = useLocalStorage('liquidity-tolerance', 0.1);
   const [isNativeIn, setIsNativeIn] = useState(false);
+  const [isDetailedAnalysisExpanded, setIsDetailedAnalysisExpanded] = useState(false);
   const { data: tokenPrices } = useTokenPrices({ addresses: [originalPoolData.tokenX.address, originalPoolData.tokenY.address] });
 
   // Modify poolData based on isNativeIn to use native token address
@@ -594,7 +595,14 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                       <TrendingUp className="w-4 h-4 text-green-600" />
                       <span className="font-inter text-[12px] text-[#666666]">Expected APR</span>
                     </div>
-                    <span className="font-tahoma font-bold text-[18px] text-green-600">{aiAnalysis.expectedAPR}</span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="font-tahoma font-bold text-[18px] text-green-600">{aiAnalysis.expectedAPR}</span>
+                      {aiAnalysis.viralBoostActive && aiAnalysis.baseAPR && (
+                        <span className="font-inter text-[10px] text-green-500">
+                          <span className="text-[#666666]">Base: {aiAnalysis.baseAPR}</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* IL Risk */}
@@ -622,6 +630,26 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                 </div>
               </div>
 
+              {/* Viral Boost Indicator */}
+              {aiAnalysis.viralBoostActive && (
+                <div
+                  className="bg-gradient-to-r from-yellow-50 to-orange-50 p-3 border-l-4 border-yellow-500"
+                  style={{
+                    boxShadow: 'inset 1px 1px 0px 0px #808088, inset -1px -1px 0px 0px #f9f9fa',
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <TrendingUp className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="font-inter font-bold text-[12px] text-yellow-800 mb-1">🔥 Viral Boost Active</div>
+                      {aiAnalysis.viralAnalysis && (
+                        <p className="font-roboto text-[12px] text-yellow-700 leading-relaxed">{aiAnalysis.viralAnalysis}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Market Condition & Key Factors */}
               <div
                 className="bg-[#f8f8f8] p-4"
@@ -631,10 +659,10 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-inter font-bold text-[13px] text-[#1a1a1a]">Market:</span>
-                  <span className="font-roboto text-[13px] text-[#666666]">{aiAnalysis.marketCondition}</span>
+                  <span className="font-roboto text-[13px] text-[#666666] capitalize">{aiAnalysis.marketCondition.replace(/_/g, ' ')}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {aiAnalysis.keyFactors.map((factor, index) => (
+                  {aiAnalysis.keyFactors.slice(0, 4).map((factor, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-white text-[11px] font-inter text-[#666666]"
@@ -658,7 +686,107 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
               >
                 <div className="flex items-start gap-3">
                   <Lightbulb className="w-5 h-5 text-[#0f06aa] flex-shrink-0 mt-0.5" />
-                  <p className="font-roboto text-[14px] text-[#0f06aa] leading-[18.75px]">{aiAnalysis.reasoning}</p>
+                  <div className="flex-1 space-y-2">
+                    <p 
+                      className="font-roboto text-[13px] text-[#0f06aa] leading-[18px]"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        maxHeight: '54px', // 3 lines * 18px line-height
+                      }}
+                    >
+                      {aiAnalysis.reasoning}
+                    </p>
+                    {aiAnalysis.detailedExplanation && (
+                      <div className="mt-3">
+                        {/* Expandable Detailed Analysis Card */}
+                        <button
+                          onClick={() => setIsDetailedAnalysisExpanded(!isDetailedAnalysisExpanded)}
+                          className="w-full text-left"
+                        >
+                          <div
+                            className="flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer"
+                            style={{
+                              boxShadow: 'inset 1px 1px 0px 0px #a1a1aa, inset -1px -1px 0px 0px #f9f9fa',
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-roboto text-[13px] text-[#0f06aa] font-semibold">📋 Detailed Analysis</span>
+                              {aiAnalysis.detailedExplanation.warnings.length > 0 && (
+                                <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-semibold rounded">
+                                  {aiAnalysis.detailedExplanation.warnings.length} Warning{aiAnalysis.detailedExplanation.warnings.length > 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                            {isDetailedAnalysisExpanded ? (
+                              <ChevronUp className="w-4 h-4 text-[#0f06aa]" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-[#0f06aa]" />
+                            )}
+                          </div>
+                        </button>
+                        
+                        {/* Expanded Content */}
+                        {isDetailedAnalysisExpanded && (
+                          <div
+                            className="mt-2 p-3 bg-white space-y-2 text-[12px] text-[#0f06aa]"
+                            style={{
+                              boxShadow: 'inset 1px 1px 0px 0px #a1a1aa, inset -1px -1px 0px 0px #f9f9fa',
+                            }}
+                          >
+                            <div>
+                              <span className="font-semibold">Pool Selection: </span>
+                              <span>{aiAnalysis.detailedExplanation.poolSelectionReason}</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold">Bin Range: </span>
+                              <span>{aiAnalysis.detailedExplanation.binRangeReason}</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold">Distribution Shape: </span>
+                              <span>{aiAnalysis.detailedExplanation.shapeReason}</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold">Risk/Reward: </span>
+                              <span>{aiAnalysis.detailedExplanation.riskRewardTradeoff}</span>
+                            </div>
+                            {aiAnalysis.detailedExplanation.viralBoostImpact && (
+                              <div>
+                                <span className="font-semibold">Viral Boost Impact: </span>
+                                <span>{aiAnalysis.detailedExplanation.viralBoostImpact}</span>
+                              </div>
+                            )}
+                            {aiAnalysis.detailedExplanation.rebalanceScenarios.length > 0 && (
+                              <div className="pt-2">
+                                <span className="font-semibold">Rebalance Scenarios: </span>
+                                <ul className="list-disc list-inside mt-1 space-y-1 ml-2">
+                                  {aiAnalysis.detailedExplanation.rebalanceScenarios.map((scenario, idx) => (
+                                    <li key={idx}>{scenario}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {aiAnalysis.detailedExplanation.warnings.length > 0 && (
+                              <div className="pt-2">
+                                <span className="font-semibold text-red-600">⚠️ Warnings: </span>
+                                <ul className="list-disc list-inside mt-1 space-y-1">
+                                  {aiAnalysis.detailedExplanation.warnings.map((warning, idx) => (
+                                    <li key={idx} className="text-red-700">{warning}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            <div className="pt-2 border-t border-blue-200">
+                              <span className="font-semibold">TL;DR: </span>
+                              <span className="italic">{aiAnalysis.detailedExplanation.tldr}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

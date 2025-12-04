@@ -952,6 +952,7 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
   const chainTokenYId = toChainTokenId(tokenYAddress);
   const chainPairId = toChainPairId(bestPairAddress);
   const startTime = Math.floor(Date.now() / 1000 - 7 * 24 * 60 * 60); // 7일 전
+  const hourlyStartTime = Math.floor(Date.now() / 1000 - 24 * 60 * 60); // 24시간 전
   const fromBinId = bestPoolActiveId - 50;
   const toBinId = bestPoolActiveId + 50;
 
@@ -962,6 +963,7 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
       $tokenYId: String!,
       $pairId: String!,
       $startTime: Int!,
+      $hourlyStartTime: Int!,
       $fromBinId: Int!,
       $toBinId: Int!
     ) {
@@ -1006,6 +1008,18 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
         totalValueLockedUSD
       }
 
+      # 최근 24시간 Hourly 데이터 (세밀한 변동성 분석)
+      recentHourlyData: LBPairHourData(
+        where: { lbPair_id: { _eq: $pairId }, date: { _gte: $hourlyStartTime } }
+        order_by: { date: asc }
+        limit: 48
+      ) {
+        date
+        volumeUSD
+        feesUSD
+        txCount
+      }
+
       # 최고 TVL 풀의 Bin 분포 (activeId 기준 ±50)
       binDistribution: Bin(
         where: {
@@ -1020,6 +1034,31 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
         reserveX
         reserveY
         liquidityProviderCount
+      }
+
+      # Pool Parameter Set (동적 수수료 파라미터)
+      poolParameterSet: LBPairParameterSet(
+        where: { lbPair_id: { _eq: $pairId } }
+        limit: 1
+      ) {
+        baseFactor
+        filterPeriod
+        decayPeriod
+        reductionFactor
+        variableFeeControl
+        protocolShare
+        protocolSharePct
+        maxVolatilityAccumulator
+      }
+
+      # 토큰 현재 가격 정보
+      tokenXInfo: Token(where: { id: { _eq: $tokenXId } }) {
+        priceUSD
+        derivedNative
+      }
+      tokenYInfo: Token(where: { id: { _eq: $tokenYId } }) {
+        priceUSD
+        derivedNative
       }
     }
   `;
@@ -1048,6 +1087,12 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
       txCount: number;
       totalValueLockedUSD: string;
     }>;
+    recentHourlyData: Array<{
+      date: number;
+      volumeUSD: string;
+      feesUSD: string;
+      txCount: number;
+    }>;
     binDistribution: Array<{
       binId: number;
       priceX: string;
@@ -1056,16 +1101,31 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
       reserveY: string;
       liquidityProviderCount: string;
     }>;
+    poolParameterSet: Array<{
+      baseFactor: number;
+      filterPeriod: number;
+      decayPeriod: number;
+      reductionFactor: number;
+      variableFeeControl: number;
+      protocolShare: number;
+      protocolSharePct: number;
+      maxVolatilityAccumulator: number;
+    }>;
+    tokenXInfo: Array<{ priceUSD: string; derivedNative: string }>;
+    tokenYInfo: Array<{ priceUSD: string; derivedNative: string }>;
   }>(query, {
     tokenXId: chainTokenXId,
     tokenYId: chainTokenYId,
     pairId: chainPairId,
     startTime,
+    hourlyStartTime,
     fromBinId,
     toBinId,
   });
 
   // 데이터 변환
+  const poolParams = result.poolParameterSet[0];
+
   return {
     tokenXPriceHistory: result.tokenXPriceHistory.map((item) => ({
       date: item.date,
@@ -1090,6 +1150,12 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
       txCount: Number(item.txCount),
       tvlUSD: Number(item.totalValueLockedUSD),
     })),
+    recentHourlyData: result.recentHourlyData.map((item) => ({
+      date: item.date,
+      volumeUSD: Number(item.volumeUSD),
+      feesUSD: Number(item.feesUSD),
+      txCount: Number(item.txCount),
+    })),
     binDistribution: result.binDistribution.map((bin) => ({
       binId: bin.binId,
       priceX: Number(bin.priceX),
@@ -1098,5 +1164,19 @@ export async function getAISuggestionData(tokenXAddress: string, tokenYAddress: 
       reserveY: Number(bin.reserveY),
       lpCount: Number(bin.liquidityProviderCount),
     })),
+    poolParameters: poolParams
+      ? {
+          baseFactor: poolParams.baseFactor,
+          filterPeriod: poolParams.filterPeriod,
+          decayPeriod: poolParams.decayPeriod,
+          reductionFactor: poolParams.reductionFactor,
+          variableFeeControl: poolParams.variableFeeControl,
+          protocolShare: poolParams.protocolShare,
+          protocolSharePct: poolParams.protocolSharePct,
+          maxVolatilityAccumulator: poolParams.maxVolatilityAccumulator,
+        }
+      : undefined,
+    tokenXPriceUSD: result.tokenXInfo[0] ? Number(result.tokenXInfo[0].priceUSD) : undefined,
+    tokenYPriceUSD: result.tokenYInfo[0] ? Number(result.tokenYInfo[0].priceUSD) : undefined,
   };
 }

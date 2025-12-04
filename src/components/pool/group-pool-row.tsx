@@ -6,6 +6,7 @@ import TokenTicker from '../token-ticker';
 import { ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
 import { formatNumber, formatUSDWithLocale } from '@/lib/format';
 import type { GroupPoolRowProps } from '@/Pool';
+import { BoostBadge } from './boost-badge';
 
 interface GroupPoolRowComponentProps extends GroupPoolRowProps {
   aiMode?: boolean;
@@ -46,6 +47,18 @@ export function GroupPoolRow({
 
   const poolCount = groups.length;
 
+  // Get the highest boost rank from groups
+  const getHighestBoost = () => {
+    for (const group of groups) {
+      if (group.protocolSharePct === 10) return group.protocolSharePct;
+      if (group.protocolSharePct === 20) return group.protocolSharePct;
+      if (group.protocolSharePct === 40) return group.protocolSharePct;
+    }
+    return null;
+  };
+
+  const highestBoost = getHighestBoost();
+
   return (
     <>
       {/* Aggregated (parent) row */}
@@ -82,7 +95,12 @@ export function GroupPoolRow({
         <td className="text-left font-roboto text-black text-[16px] leading-[19px]" style={{ paddingLeft: '8px' }}>
           {formatUSDWithLocale(totalVolume24h, 0, 0, numberLocale)}
         </td>
-        <td className="text-center font-roboto text-black text-[16px] leading-[19px]">{formatNumber(apr, 2, 0, numberLocale)} %</td>
+        <td className="text-center font-roboto text-black text-[16px] leading-[19px] relative">
+          <div className="flex items-center justify-center gap-2">
+            <span>{formatNumber(apr, 2, 0, numberLocale)} %</span>
+            {highestBoost !== null && <BoostBadge protocolSharePct={highestBoost} variant="compact" />}
+          </div>
+        </td>
         <td className="text-center font-roboto text-black text-[16px] leading-[19px]">
           {formatUSDWithLocale(totalFees24h, 0, 0, numberLocale)}
         </td>
@@ -109,38 +127,41 @@ export function GroupPoolRow({
       {/* Expanded child rows (non-AI mode only) */}
       {!aiMode &&
         isExpanded &&
-        groups.map((group) => (
-          <tr
-            key={group.pairAddress}
-            className="bg-[#d8d8dc] h-[60px] cursor-pointer hover:bg-[#d0d0d4] transition-colors"
-            onClick={() => navigate(`/pool/v22/${tokenX.address}/${tokenY.address}/${group.lbBinStep}`)}
-          >
-            <td className="h-[60px]" style={{ paddingLeft: '12px' }}>
-              <div className="flex items-center h-full">
-                {/* Token icons - same position as parent */}
-                <div className="flex items-center -space-x-2 flex-shrink-0">
-                  <TokenTicker
-                    logoURI={tokenList?.find((token) => token.address.toLowerCase() === tokenX.address.toLowerCase())?.logoURI}
-                    symbol={tokenX.symbol}
-                    className="w-6 h-6 rounded-full bg-green-dark-600"
-                  />
-                  <TokenTicker
-                    logoURI={tokenList?.find((token) => token.address.toLowerCase() === tokenY.address.toLowerCase())?.logoURI}
-                    symbol={tokenY.symbol}
-                    className="w-6 h-6 rounded-full bg-green-dark-600"
-                  />
+        groups.map((group) => {
+          const hasGroupBoost = group.protocolSharePct === 10 || group.protocolSharePct === 20 || group.protocolSharePct === 40;
+          
+          return (
+            <tr
+              key={group.pairAddress}
+              className="bg-[#d8d8dc] h-[60px] cursor-pointer hover:bg-[#d0d0d4] transition-colors"
+              onClick={() => navigate(`/pool/v22/${tokenX.address}/${tokenY.address}/${group.lbBinStep}`)}
+            >
+              <td className="h-[60px]" style={{ paddingLeft: '12px' }}>
+                <div className="flex items-center h-full">
+                  {/* Token icons - same position as parent */}
+                  <div className="flex items-center -space-x-2 flex-shrink-0">
+                    <TokenTicker
+                      logoURI={tokenList?.find((token) => token.address.toLowerCase() === tokenX.address.toLowerCase())?.logoURI}
+                      symbol={tokenX.symbol}
+                      className="w-6 h-6 rounded-full bg-green-dark-600"
+                    />
+                    <TokenTicker
+                      logoURI={tokenList?.find((token) => token.address.toLowerCase() === tokenY.address.toLowerCase())?.logoURI}
+                      symbol={tokenY.symbol}
+                      className="w-6 h-6 rounded-full bg-green-dark-600"
+                    />
+                  </div>
+                  {/* Bin Step and Fee - 2 lines layout */}
+                  <div className="flex flex-col ml-3 gap-0.5">
+                    <span className="font-roboto text-black text-[14px] leading-[18px] whitespace-nowrap">
+                      Bin Step <span className="font-semibold">{group.lbBinStep}</span>
+                    </span>
+                    <span className="font-roboto text-black text-[14px] leading-[18px] whitespace-nowrap">
+                      Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 3, 0, numberLocale)}%</span>
+                    </span>
+                  </div>
                 </div>
-                {/* Bin Step and Fee - Meteora style - single line */}
-                <div className="flex items-center gap-6 ml-3 whitespace-nowrap">
-                  <span className="font-roboto text-black text-[16px] leading-[19px] whitespace-nowrap">
-                    Bin Step <span className="font-semibold">{group.lbBinStep}</span>
-                  </span>
-                  <span className="font-roboto text-black text-[16px] leading-[19px] whitespace-nowrap">
-                    Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 3, 0, numberLocale)}%</span>
-                  </span>
-                </div>
-              </div>
-            </td>
+              </td>
             <td className="text-left font-roboto text-black text-[16px] leading-[19px]" style={{ paddingLeft: '8px' }}>
               {formatUSDWithLocale(group.liquidityUsd, 0, 0, numberLocale)}
             </td>
@@ -148,7 +169,10 @@ export function GroupPoolRow({
               {formatUSDWithLocale(group.volume24h, 0, 0, numberLocale)}
             </td>
             <td className="text-center font-roboto text-black text-[16px] leading-[19px]">
-              {formatNumber(group.apr || 0, 2, 0, numberLocale)} %
+              <div className="flex items-center justify-center gap-2">
+                <span>{formatNumber(group.apr || 0, 2, 0, numberLocale)} %</span>
+                {hasGroupBoost && <BoostBadge protocolSharePct={group.protocolSharePct} variant="compact" />}
+              </div>
             </td>
             <td className="text-center font-roboto text-black text-[16px] leading-[19px]">
               {formatUSDWithLocale(group.fees24h, 2, 0, numberLocale)}
@@ -160,7 +184,8 @@ export function GroupPoolRow({
               </div>
             </td>
           </tr>
-        ))}
+          );
+        })}
     </>
   );
 }

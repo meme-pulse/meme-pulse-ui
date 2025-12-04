@@ -22,6 +22,7 @@ import { useAiMode } from './hooks/use-ai-mode';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { BoostBadge } from './components/pool/boost-badge';
 
 export interface PoolRowProps {
   pairAddress: string;
@@ -244,6 +245,18 @@ function GroupPoolMobileCard({ pool, tokenList, numberLocale, aiMode, navigate }
     navigate(`/pool/v22/${pool.tokenX.address}/${pool.tokenY.address}/${binStep}`);
   };
 
+  // Get highest boost from groups
+  const getHighestBoost = () => {
+    for (const group of pool.groups) {
+      if (group.protocolSharePct === 10) return group.protocolSharePct;
+      if (group.protocolSharePct === 20) return group.protocolSharePct;
+      if (group.protocolSharePct === 40) return group.protocolSharePct;
+    }
+    return null;
+  };
+
+  const highestBoost = getHighestBoost();
+
   return (
     <div
       className="bg-figma-gray-light"
@@ -263,7 +276,7 @@ function GroupPoolMobileCard({ pool, tokenList, numberLocale, aiMode, navigate }
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <span className="font-roboto font-medium text-figma-text-dark">{pool.name}</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {!aiMode && pool.groups.length > 1 && (
                   <span className="bg-figma-gray-table text-figma-text-gray text-[11px] font-roboto px-2 py-0.5 rounded">
                     {pool.groups.length} pools
@@ -293,7 +306,10 @@ function GroupPoolMobileCard({ pool, tokenList, numberLocale, aiMode, navigate }
           </div>
           <div>
             <div className="text-xs text-figma-text-gray">Max APR</div>
-            <div className="font-medium text-figma-purple">{formatNumber(pool.apr, 2, 0, numberLocale)}%</div>
+            <div className="font-medium text-figma-purple flex items-center gap-1 flex-wrap">
+              <span>{formatNumber(pool.apr, 2, 0, numberLocale)}%</span>
+              {highestBoost !== null && <BoostBadge protocolSharePct={highestBoost} variant="mini" />}
+            </div>
           </div>
           <div>
             <div className="text-xs text-figma-text-gray">Fees (24H)</div>
@@ -318,12 +334,15 @@ function GroupPoolMobileCard({ pool, tokenList, numberLocale, aiMode, navigate }
       {/* Expanded Sub-Pools (non-AI mode only) */}
       {!aiMode && isExpanded && (
         <div className="border-t border-figma-gray-table">
-          {pool.groups.map((group) => (
-            <div
-              key={group.pairAddress}
-              className="p-3 bg-figma-gray-light border-b border-figma-gray-table last:border-b-0 cursor-pointer hover:bg-figma-gray-table transition-colors flex items-center justify-between"
-              onClick={(e) => handleSubPoolClick(e, group.lbBinStep)}
-            >
+          {pool.groups.map((group) => {
+            const hasGroupBoost = group.protocolSharePct === 10 || group.protocolSharePct === 20 || group.protocolSharePct === 40;
+            
+            return (
+              <div
+                key={group.pairAddress}
+                className="p-3 bg-figma-gray-light border-b border-figma-gray-table last:border-b-0 cursor-pointer hover:bg-figma-gray-table transition-colors flex items-center justify-between"
+                onClick={(e) => handleSubPoolClick(e, group.lbBinStep)}
+              >
               <div className="flex items-center gap-4 font-roboto text-sm">
                 <span className="text-figma-text-dark">
                   Bin Step <span className="font-semibold">{group.lbBinStep}</span>
@@ -332,13 +351,17 @@ function GroupPoolMobileCard({ pool, tokenList, numberLocale, aiMode, navigate }
                   Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 2, 0, numberLocale)}%</span>
                 </span>
               </div>
-              <div className="flex items-center gap-3 font-roboto text-sm">
+              <div className="flex items-center gap-2 font-roboto text-sm flex-wrap">
                 <span className="text-figma-text-gray">{formatUSDWithLocale(group.liquidityUsd, 0, 0, numberLocale)}</span>
-                <span className="text-figma-purple font-medium">{formatNumber(group.apr || 0, 2, 0, numberLocale)}%</span>
-                <ChevronRight className="w-4 h-4 text-figma-text-gray" />
+                <div className="flex items-center gap-1">
+                  <span className="text-figma-purple font-medium">{formatNumber(group.apr || 0, 2, 0, numberLocale)}%</span>
+                  {hasGroupBoost && <BoostBadge protocolSharePct={group.protocolSharePct} variant="mini" />}
+                </div>
+                <ChevronRight className="w-4 h-4 text-figma-text-gray flex-shrink-0" />
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

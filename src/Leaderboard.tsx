@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CardWithHeader } from '@/components/ui/card-with-header';
 import { useLeaderboard } from './hooks/use-leaderboard';
+import { useEpochStatus, calculateTimeUntilNextUpdate } from './hooks/use-epoch-status';
 import { formatNumber } from './lib/format';
 import { useLocalStorage } from 'usehooks-ts';
 import { Tooltip, TooltipContent, TooltipTrigger } from './components/ui/tooltip';
-import { Info } from 'lucide-react';
+import { Info, Clock } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 
 type TimePeriod = '1h' | '1d' | '7d';
@@ -113,6 +114,70 @@ function TimePeriodSelector({ selected, onChange }: { selected: TimePeriod; onCh
   );
 }
 
+function EpochInfo() {
+  const { data: epochStatus, isLoading } = useEpochStatus();
+  const [timeUntilUpdate, setTimeUntilUpdate] = useState(calculateTimeUntilNextUpdate());
+
+  // Update countdown every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeUntilUpdate(calculateTimeUntilNextUpdate());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (isLoading || !epochStatus) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      {/* Current Epoch */}
+      <div
+        className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[4px]"
+        style={{
+          background: '#f0f0f0',
+          border: '1px solid #808088',
+          boxShadow: 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43',
+        }}
+      >
+        <span className="font-roboto text-[11px] text-figma-text-gray">Epoch:</span>
+        <span className="font-roboto text-[11px] text-figma-text-dark font-semibold">{epochStatus.currentEpoch}</span>
+      </div>
+
+      {/* Time Until Next Update */}
+      <div
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px]"
+        style={{
+          background: '#f0f0f0',
+          border: '1px solid #808088',
+          boxShadow: 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43',
+        }}
+      >
+        <Clock className="w-3 h-3 text-figma-text-gray" />
+        <span className="font-roboto text-[11px] text-figma-text-gray">Next update:</span>
+        <span className="text-[11px] text-figma-text-dark font-semibold font-mono">{timeUntilUpdate.formatted}</span>
+      </div>
+
+      {/* Last Submitted Epoch */}
+      {epochStatus.lastEpoch !== '0' && (
+        <div
+          className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[4px]"
+          style={{
+            background: '#f0f0f0',
+            border: '1px solid #808088',
+            boxShadow: 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43',
+          }}
+        >
+          <span className="font-roboto text-[11px] text-figma-text-gray">Last:</span>
+          <span className="font-roboto text-[11px] text-figma-text-dark font-semibold">{epochStatus.lastEpoch}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LeaderboardCard() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1d');
 
@@ -124,21 +189,8 @@ function LeaderboardCard() {
           <h2 className="font-roboto font-semibold text-figma-text-dark text-[24px] leading-[36px] tracking-[0.48px]">
             Virality Leaderboard
           </h2>
-          {/* Pulse Score Explanation Box */}
-          <div
-            className="hidden lg:block w-[260px] p-3 bg-figma-gray-bg"
-            style={{
-              boxShadow:
-                'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
-            }}
-          >
-            <p className="font-roboto text-[12px] leading-normal text-figma-text-dark">
-              Pulse Score combines recent <span className="font-bold">posts, views, likes, reposts, replies and unique users</span> with
-              stronger weight for fresh activity and a bonus for image posts, bonded tokens and active price moves.
-            </p>
-          </div>
         </div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <p className="font-roboto text-figma-text-gray text-[14px] leading-normal">
             Track the most viral meme pools from MemeX. Higher virality earns boosted rewards for LPs.
           </p>
@@ -147,6 +199,10 @@ function LeaderboardCard() {
             <span className="font-roboto text-[12px] text-figma-text-gray">Time:</span>
             <TimePeriodSelector selected={timePeriod} onChange={setTimePeriod} />
           </div>
+        </div>
+        {/* Epoch Info */}
+        <div className="mb-4">
+          <EpochInfo />
         </div>
       </div>
 

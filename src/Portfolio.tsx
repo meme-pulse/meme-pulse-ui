@@ -15,6 +15,7 @@ import { customReadClient } from './main';
 import { LIQUIDITY_HELPER_V2_ADDRESS, LiquidityHelperV2ABI } from './lib/sdk';
 import { PageHeader } from '@/components/ui/page-header';
 import { CardWithHeader } from './components/ui/card-with-header';
+import { motion } from 'motion/react';
 
 const Portfolio = () => {
   const { address } = useAccount();
@@ -577,15 +578,83 @@ const Portfolio = () => {
                         </td>
                         <td className="py-4 text-center">
                           {pool.isInRange ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              In Range
-                            </span>
+                            <motion.span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 border-2"
+                              style={{
+                                background: '#4ade80',
+                                borderColor: '#22c55e',
+                                color: '#030303',
+                                boxShadow: 'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0',
+                                fontFamily: '"Press Start 2P", cursive',
+                              }}
+                              animate={{
+                                boxShadow: [
+                                  'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0',
+                                  'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0, 0 0 8px #4ade8080',
+                                  'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0',
+                                ],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                              }}
+                            >
+                              <motion.div
+                                className="w-2 h-2 bg-[#030303]"
+                                style={{
+                                  boxShadow: 'inset -1px -1px 0px 0px #16a34a, inset 1px 1px 0px 0px #86efac',
+                                }}
+                                animate={{
+                                  scale: [1, 1.2, 1],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  ease: 'easeInOut',
+                                }}
+                              />
+                              <span className="text-[8px] font-bold leading-tight whitespace-nowrap">IN RANGE</span>
+                            </motion.span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded">
-                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                              Out of Range
-                            </span>
+                            <motion.span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 border-2"
+                              style={{
+                                background: '#f59e0b',
+                                borderColor: '#d97706',
+                                color: '#030303',
+                                boxShadow: 'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d',
+                                fontFamily: '"Press Start 2P", cursive',
+                              }}
+                              animate={{
+                                boxShadow: [
+                                  'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d',
+                                  'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d, 0 0 8px #f59e0b80',
+                                  'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d',
+                                ],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                              }}
+                            >
+                              <motion.div
+                                className="w-2 h-2 bg-[#030303]"
+                                style={{
+                                  boxShadow: 'inset -1px -1px 0px 0px #b45309, inset 1px 1px 0px 0px #fbbf24',
+                                }}
+                                animate={{
+                                  scale: [1, 1.2, 1],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  ease: 'easeInOut',
+                                }}
+                              />
+                              <span className="text-[8px] font-bold leading-tight whitespace-nowrap">OUT OF RANGE</span>
+                            </motion.span>
                           )}
                         </td>
                         <td className="py-4 px-2 font-medium text-figma-text-dark">
@@ -642,15 +711,83 @@ const Portfolio = () => {
                             {pool.name.split('-')[0] + '-' + pool.name.split('-')[1]}
                           </span>
                           {pool.isInRange ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              In Range
-                            </span>
+                            <motion.span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 border-2"
+                              style={{
+                                background: '#4ade80',
+                                borderColor: '#22c55e',
+                                color: '#030303',
+                                boxShadow: 'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0',
+                                fontFamily: '"Press Start 2P", cursive',
+                              }}
+                              animate={{
+                                boxShadow: [
+                                  'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0',
+                                  'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0, 0 0 8px #4ade8080',
+                                  'inset -1px -1px 0px 0px #22c55e, inset 1px 1px 0px 0px #86efac, inset -2px -2px 0px 0px #16a34a, inset 2px 2px 0px 0px #a7f3d0',
+                                ],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                              }}
+                            >
+                              <motion.div
+                                className="w-2 h-2 bg-[#030303]"
+                                style={{
+                                  boxShadow: 'inset -1px -1px 0px 0px #16a34a, inset 1px 1px 0px 0px #86efac',
+                                }}
+                                animate={{
+                                  scale: [1, 1.2, 1],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  ease: 'easeInOut',
+                                }}
+                              />
+                              <span className="text-[8px] font-bold leading-tight whitespace-nowrap">IN RANGE</span>
+                            </motion.span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded">
-                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                              Out of Range
-                            </span>
+                            <motion.span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 border-2"
+                              style={{
+                                background: '#f59e0b',
+                                borderColor: '#d97706',
+                                color: '#030303',
+                                boxShadow: 'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d',
+                                fontFamily: '"Press Start 2P", cursive',
+                              }}
+                              animate={{
+                                boxShadow: [
+                                  'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d',
+                                  'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d, 0 0 8px #f59e0b80',
+                                  'inset -1px -1px 0px 0px #d97706, inset 1px 1px 0px 0px #fbbf24, inset -2px -2px 0px 0px #b45309, inset 2px 2px 0px 0px #fcd34d',
+                                ],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                              }}
+                            >
+                              <motion.div
+                                className="w-2 h-2 bg-[#030303]"
+                                style={{
+                                  boxShadow: 'inset -1px -1px 0px 0px #b45309, inset 1px 1px 0px 0px #fbbf24',
+                                }}
+                                animate={{
+                                  scale: [1, 1.2, 1],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  ease: 'easeInOut',
+                                }}
+                              />
+                              <span className="text-[8px] font-bold leading-tight whitespace-nowrap">OUT OF RANGE</span>
+                            </motion.span>
                           )}
                         </div>
                         <div className="flex items-center space-x-2 text-xs text-figma-text-gray font-roboto">

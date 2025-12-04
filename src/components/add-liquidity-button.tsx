@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { retroToast } from '@/components/ui/retro-toast';
 import { useAccount, useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
-import { Button } from './ui/button';
 import { Info, Loader2 } from 'lucide-react';
 import { LB_ROUTER_V22_ADDRESS } from '../lib/sdk';
 import { DEFAULT_CHAINID } from '@/constants';
@@ -198,7 +197,12 @@ function AddLiquidityButton({
         ...(contractParamsObj as any),
       });
 
-      retroToast.success(`Add Liquidity transaction ${index + 1} of ${addLiquidityChunks.length} sent`, {
+      const toastMessage =
+        addLiquidityChunks.length > 1
+          ? `Add Liquidity transaction ${index + 1} of ${addLiquidityChunks.length} sent`
+          : `Add Liquidity transaction sent`;
+
+      retroToast.success(toastMessage, {
         action: {
           label: 'View on Explorer',
           onClick: () => window.open(`https://insectarium.blockscout.memecore.com/tx/${hash}`, '_blank'),
@@ -294,10 +298,17 @@ function AddLiquidityButton({
       {addLiquidityChunks.length > 1 && !addLiquidityButtonMemo.disabled && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" className="w-full">
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-2 py-2 font-roboto text-sm text-figma-text-gray bg-figma-gray-table hover:bg-[#d0d0d4] transition-colors"
+              style={{
+                boxShadow:
+                  'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+              }}
+            >
               <Info className="h-4 w-4" />
               Why Send Multiple Transactions?
-            </Button>
+            </button>
           </TooltipTrigger>
           <TooltipContent>
             <div className="text-center text-body-sm text-figma-text-dark">
@@ -306,19 +317,30 @@ function AddLiquidityButton({
           </TooltipContent>
         </Tooltip>
       )}
-      <Button
-        className="w-full h-12 text-lg bg-primary hover:bg-primary/80 text-secondary mb-4"
+      <button
+        type="button"
+        className={`w-full h-12 text-lg font-roboto font-semibold mb-4 transition-colors ${
+          !address || status === 'waitingForAddLiquidityConfirmation' || status === 'addLiquidity' || addLiquidityButtonMemo.disabled
+            ? 'bg-figma-gray-table text-figma-text-gray cursor-not-allowed'
+            : 'bg-figma-purple text-white hover:bg-figma-purple/90 cursor-pointer'
+        }`}
+        style={{
+          boxShadow:
+            !address || status === 'waitingForAddLiquidityConfirmation' || status === 'addLiquidity' || addLiquidityButtonMemo.disabled
+              ? 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088'
+              : 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+        }}
         disabled={
           !address || status === 'waitingForAddLiquidityConfirmation' || status === 'addLiquidity' || addLiquidityButtonMemo.disabled
         }
         onClick={handleAddLiquidity}
       >
         {status === 'addLiquidity' || status === 'waitingForAddLiquidityConfirmation' ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin mx-auto" />
         ) : (
           addLiquidityButtonMemo.text
         )}
-      </Button>
+      </button>
     </>
   );
 }

@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
@@ -705,14 +704,15 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
         <div className="flex items-center justify-between">
           <span className="font-roboto text-[13px] text-figma-text-gray">Receive as M (native)</span>
           <button
+            type="button"
             onClick={() => setIsNativeOut(!isNativeOut)}
-            className={`px-3 py-1 font-roboto text-[12px] ${
-              isNativeOut ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-[#030303]'
+            className={`px-3 py-1 font-roboto text-[12px] font-semibold transition-colors ${
+              isNativeOut ? 'bg-figma-purple text-white' : 'bg-figma-gray-table text-[#030303] hover:bg-[#d0d0d4]'
             }`}
             style={{
               boxShadow: isNativeOut
                 ? 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa'
-                : 'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa',
+                : 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
             }}
           >
             {isNativeOut ? 'ON' : 'OFF'}
@@ -769,23 +769,42 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
           <div className="space-y-2">
             {/* Approve Button */}
             {!binApproved && (
-              <Button
-                className="w-full h-12 bg-figma-purple hover:bg-figma-purple/90 text-white font-roboto text-[14px]"
+              <button
+                type="button"
+                className={`w-full h-12 font-roboto font-semibold text-[14px] transition-colors ${
+                  isApproveBinLoading
+                    ? 'bg-figma-gray-table text-figma-text-gray cursor-not-allowed'
+                    : 'bg-figma-purple text-white hover:bg-figma-purple/90 cursor-pointer'
+                }`}
                 style={{
-                  boxShadow: 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+                  boxShadow: isApproveBinLoading
+                    ? 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088'
+                    : 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
                 }}
                 onClick={handleApproveBinCall}
                 disabled={isApproveBinLoading}
               >
-                {isApproveBinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Approve to continue'}
-              </Button>
+                {isApproveBinLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Approve to continue'}
+              </button>
             )}
 
             {/* Exit All Button */}
-            <Button
-              className="w-full h-12 bg-figma-purple hover:bg-figma-purple/90 text-white font-roboto text-[14px]"
+            <button
+              type="button"
+              className={`w-full h-12 font-roboto font-semibold text-[14px] transition-colors ${
+                !binApproved ||
+                isRemoveLiquidityLoading === 'removeLiquidity' ||
+                isRemoveLiquidityLoading === 'waitingForRemoveLiquidityConfirmation'
+                  ? 'bg-figma-gray-table text-figma-text-gray cursor-not-allowed'
+                  : 'bg-[#ff6b6b] text-white hover:bg-[#ff5252] cursor-pointer'
+              }`}
               style={{
-                boxShadow: 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+                boxShadow:
+                  !binApproved ||
+                  isRemoveLiquidityLoading === 'removeLiquidity' ||
+                  isRemoveLiquidityLoading === 'waitingForRemoveLiquidityConfirmation'
+                    ? 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088'
+                    : 'inset -1px -1px 0px 0px #d32f2f, inset 1px 1px 0px 0px #ff8a80, inset -2px -2px 0px 0px #b71c1c, inset 2px 2px 0px 0px #ffb3b3',
               }}
               onClick={handleExitAll}
               disabled={
@@ -795,7 +814,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
               }
             >
               {isRemoveLiquidityLoading === 'removeLiquidity' || isRemoveLiquidityLoading === 'waitingForRemoveLiquidityConfirmation' ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   {totalRemoveLiquidityBatches > 1 && (
                     <span>
@@ -808,13 +827,14 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
               ) : (
                 'Exit All'
               )}
-            </Button>
+            </button>
           </div>
         </div>
       )}
 
       {/* Advanced Options Toggle */}
       <button
+        type="button"
         onClick={() => {
           setShowAdvanced(!showAdvanced);
           // Reset to "both" tab and full range when opening advanced
@@ -825,7 +845,10 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
             }
           }
         }}
-        className="w-full flex items-center justify-center gap-2 py-2 font-roboto text-[13px] text-figma-text-gray hover:text-[#030303] transition-colors"
+        className="w-full flex items-center justify-center gap-2 py-2 font-roboto font-semibold text-[13px] text-[#030303] bg-figma-gray-table hover:bg-[#d0d0d4] transition-colors"
+        style={{
+          boxShadow: 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
+        }}
       >
         {showAdvanced ? (
           <>
@@ -909,11 +932,11 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
                     <div className="flex items-center justify-between mb-4">
                       <span className="font-roboto font-semibold text-[#030303] text-[14px]">Select Range</span>
                       <button
+                        type="button"
                         onClick={handleRemoveAll}
-                        className="px-3 py-1 bg-figma-gray-table font-roboto text-[12px] text-[#030303] hover:bg-figma-gray-table/80"
+                        className="px-3 py-1 bg-[#22c55e] hover:bg-[#16a34a] font-roboto font-semibold text-[12px] text-white transition-colors"
                         style={{
-                          boxShadow:
-                            'inset -1px -1px 0px 0px #f9f9fa, inset 1px 1px 0px 0px #a1a1aa, inset -2px -2px 0px 0px #a1a1aa, inset 2px 2px 0px 0px #f9f9fa',
+                          boxShadow: 'inset -1px -1px 0px 0px #16a34a, inset 1px 1px 0px 0px #4ade80, inset -2px -2px 0px 0px #15803d, inset 2px 2px 0px 0px #86efac',
                         }}
                       >
                         Select All
@@ -1136,23 +1159,42 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
             <div className="space-y-2">
               {/* Approve Button */}
               {!binApproved && (
-                <Button
-                  className="w-full h-12 bg-figma-purple hover:bg-figma-purple/90 text-white font-roboto text-[14px]"
+                <button
+                  type="button"
+                  className={`w-full h-12 font-roboto font-semibold text-[14px] transition-colors ${
+                    isApproveBinLoading
+                      ? 'bg-figma-gray-table text-figma-text-gray cursor-not-allowed'
+                      : 'bg-figma-purple text-white hover:bg-figma-purple/90 cursor-pointer'
+                  }`}
                   style={{
-                    boxShadow: 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+                    boxShadow: isApproveBinLoading
+                      ? 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088'
+                      : 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
                   }}
                   onClick={handleApproveBinCall}
                   disabled={isApproveBinLoading}
                 >
-                  {isApproveBinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Approve to continue'}
-                </Button>
+                  {isApproveBinLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Approve to continue'}
+                </button>
               )}
 
               {/* Remove Liquidity Button */}
-              <Button
-                className="w-full h-12 bg-figma-purple hover:bg-figma-purple/90 text-white font-roboto text-[14px]"
+              <button
+                type="button"
+                className={`w-full h-12 font-roboto font-semibold text-[14px] transition-colors ${
+                  !binApproved ||
+                  isRemoveLiquidityLoading === 'removeLiquidity' ||
+                  isRemoveLiquidityLoading === 'waitingForRemoveLiquidityConfirmation'
+                    ? 'bg-figma-gray-table text-figma-text-gray cursor-not-allowed'
+                    : 'bg-[#ff6b6b] text-white hover:bg-[#ff5252] cursor-pointer'
+                }`}
                 style={{
-                  boxShadow: 'inset -1px -1px 0px 0px #6b46c1, inset 1px 1px 0px 0px #a78bfa',
+                  boxShadow:
+                    !binApproved ||
+                    isRemoveLiquidityLoading === 'removeLiquidity' ||
+                    isRemoveLiquidityLoading === 'waitingForRemoveLiquidityConfirmation'
+                      ? 'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088'
+                      : 'inset -1px -1px 0px 0px #d32f2f, inset 1px 1px 0px 0px #ff8a80, inset -2px -2px 0px 0px #b71c1c, inset 2px 2px 0px 0px #ffb3b3',
                 }}
                 onClick={handleRemoveLiquidityContractCall}
                 disabled={
@@ -1162,7 +1204,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
                 }
               >
                 {isRemoveLiquidityLoading === 'removeLiquidity' || isRemoveLiquidityLoading === 'waitingForRemoveLiquidityConfirmation' ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     {totalRemoveLiquidityBatches > 1 && (
                       <span>
@@ -1175,7 +1217,7 @@ export function RemovePositionCard({ poolData, yBaseCurrency }: RemovePositionCa
                 ) : (
                   'Remove Liquidity'
                 )}
-              </Button>
+              </button>
             </div>
           )}
         </>

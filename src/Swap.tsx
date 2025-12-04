@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowUpDown, ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, Info, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import TokenSelectionModal from '@/token-selection-modal';
 import { useTradeQuote } from './hooks/use-trade-quote';
@@ -249,7 +249,7 @@ export default function SwapComponent() {
   // Get route path tokens for display
   const routePathDisplay = useMemo(() => {
     if (!quote?.quote?.route || quote.quote.route.length === 0) return null;
-    
+
     const routeTokens = quote.quote.route.map((address) => {
       // Check if it's WNATIVE
       if (address.toLowerCase() === WNATIVE[DEFAULT_CHAINID].address.toLowerCase()) {
@@ -270,7 +270,7 @@ export default function SwapComponent() {
       // Fallback: show truncated address
       return { symbol: `${address.slice(0, 6)}...${address.slice(-4)}`, address };
     });
-    
+
     return routeTokens;
   }, [quote?.quote?.route, fromToken, toToken, tokenList]);
 
@@ -500,18 +500,17 @@ export default function SwapComponent() {
                     <Info className="w-3.5 h-3.5 text-figma-purple flex-shrink-0" />
                     <span className="font-roboto text-figma-purple text-[13px]">
                       {quote?.executionPrice
-                        ? `1 ${fromToken.symbol} = ${formatNumber(quote.executionPrice.toSignificant(6), 6, 0, numberLocale)} ${toToken?.symbol}`
+                        ? `1 ${fromToken.symbol} = ${formatNumber(quote.executionPrice.toSignificant(6), 6, 0, numberLocale)} ${
+                            toToken?.symbol
+                          }`
                         : `1 ${fromToken.symbol} = -- ${toToken?.symbol || 'Token'}`}
                     </span>
                   </div>
-                  <motion.div
-                    animate={{ rotate: isRouteDetailsOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
+                  <motion.div animate={{ rotate: isRouteDetailsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                     <ChevronDown className="w-4 h-4 text-figma-purple" />
                   </motion.div>
                 </button>
-                
+
                 {/* Expandable Route Details */}
                 <AnimatePresence>
                   {isRouteDetailsOpen && quote && (
@@ -533,7 +532,11 @@ export default function SwapComponent() {
                                   <span className="text-figma-purple">{token.symbol}</span>
                                   {idx < routePathDisplay.length - 1 && (
                                     <span className="text-figma-text-gray mx-0.5">
-                                      →<span className="text-[9px] text-figma-text-dark/60">({quote.quote.binSteps?.[idx]?.toString() || '?'})</span>→
+                                      →
+                                      <span className="text-[9px] text-figma-text-dark/60">
+                                        ({quote.quote.binSteps?.[idx]?.toString() || '?'})
+                                      </span>
+                                      →
                                     </span>
                                   )}
                                 </span>
@@ -545,13 +548,15 @@ export default function SwapComponent() {
                         {/* Price Impact */}
                         <div className="flex items-center justify-between">
                           <span className="font-roboto text-figma-text-gray text-[11px]">Price Impact</span>
-                          <span className={`font-roboto text-[11px] ${
-                            Number(quote.priceImpact.toSignificant(2)) > 5 
-                              ? 'text-red-500' 
-                              : Number(quote.priceImpact.toSignificant(2)) > 1 
-                                ? 'text-amber-500' 
+                          <span
+                            className={`font-roboto text-[11px] ${
+                              Number(quote.priceImpact.toSignificant(2)) > 5
+                                ? 'text-red-500'
+                                : Number(quote.priceImpact.toSignificant(2)) > 1
+                                ? 'text-amber-500'
                                 : 'text-green-500'
-                          }`}>
+                            }`}
+                          >
                             {quote.priceImpact.toSignificant(4)}%
                           </span>
                         </div>
@@ -570,9 +575,7 @@ export default function SwapComponent() {
                         {totalFeesPercent !== null && (
                           <div className="flex items-center justify-between">
                             <span className="font-roboto text-figma-text-gray text-[11px]">Fee</span>
-                            <span className="font-roboto text-figma-text-dark text-[11px]">
-                              {totalFeesPercent.toFixed(2)}%
-                            </span>
+                            <span className="font-roboto text-figma-text-dark text-[11px]">{totalFeesPercent.toFixed(2)}%</span>
                           </div>
                         )}
                       </div>
