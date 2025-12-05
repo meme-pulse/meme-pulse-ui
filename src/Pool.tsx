@@ -336,29 +336,29 @@ function GroupPoolMobileCard({ pool, tokenList, numberLocale, aiMode, navigate }
         <div className="border-t border-figma-gray-table">
           {pool.groups.map((group) => {
             const hasGroupBoost = group.protocolSharePct === 10 || group.protocolSharePct === 20 || group.protocolSharePct === 40;
-            
+
             return (
               <div
                 key={group.pairAddress}
                 className="p-3 bg-figma-gray-light border-b border-figma-gray-table last:border-b-0 cursor-pointer hover:bg-figma-gray-table transition-colors flex items-center justify-between"
                 onClick={(e) => handleSubPoolClick(e, group.lbBinStep)}
               >
-              <div className="flex items-center gap-4 font-roboto text-sm">
-                <span className="text-figma-text-dark">
-                  Bin Step <span className="font-semibold">{group.lbBinStep}</span>
-                </span>
-                <span className="text-figma-text-dark">
-                  Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 2, 0, numberLocale)}%</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2 font-roboto text-sm flex-wrap">
-                <span className="text-figma-text-gray">{formatUSDWithLocale(group.liquidityUsd, 0, 0, numberLocale)}</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-figma-purple font-medium">{formatNumber(group.apr || 0, 2, 0, numberLocale)}%</span>
-                  {hasGroupBoost && <BoostBadge protocolSharePct={group.protocolSharePct} variant="mini" />}
+                <div className="flex items-center gap-4 font-roboto text-sm">
+                  <span className="text-figma-text-dark">
+                    Bin Step <span className="font-semibold">{group.lbBinStep}</span>
+                  </span>
+                  <span className="text-figma-text-dark">
+                    Fee <span className="font-semibold">{formatNumber(group.lbBaseFeePct, 2, 0, numberLocale)}%</span>
+                  </span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-figma-text-gray flex-shrink-0" />
-              </div>
+                <div className="flex items-center gap-2 font-roboto text-sm flex-wrap">
+                  <span className="text-figma-text-gray">{formatUSDWithLocale(group.liquidityUsd, 0, 0, numberLocale)}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-figma-purple font-medium">{formatNumber(group.apr || 0, 2, 0, numberLocale)}%</span>
+                    {hasGroupBoost && <BoostBadge protocolSharePct={group.protocolSharePct} variant="mini" />}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-figma-text-gray flex-shrink-0" />
+                </div>
               </div>
             );
           })}
@@ -658,7 +658,6 @@ export default function Component() {
                         onClick={() => setSortOption(sortOption === 'liquidityDesc' ? 'liquidityAsc' : 'liquidityDesc')}
                       >
                         <span>Liquidity</span>
-                        <img src="/information.svg" alt="info" className="size-[14px]" style={{ marginLeft: '51px' }} />
                       </div>
                     </th>
                     <th
@@ -676,7 +675,6 @@ export default function Component() {
                         onClick={() => setSortOption(sortOption === 'volumeDesc' ? 'volumeAsc' : 'volumeDesc')}
                       >
                         <span>Volume</span>
-                        <img src="/information.svg" alt="info" className="size-[14px]" style={{ marginLeft: '51px' }} />
                       </div>
                     </th>
                     <th

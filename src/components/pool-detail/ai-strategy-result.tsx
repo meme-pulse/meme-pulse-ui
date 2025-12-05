@@ -532,17 +532,17 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
             boxShadow: 'inset 1px 1px 0px 0px #808088, inset -1px -1px 0px 0px #f9f9fa',
           }}
         >
-          <h2 className="font-tahoma text-[18px] font-bold text-[#1a1a1a] mb-4">Recommended DLMM Strategy</h2>
+          <h2 className="font-roboto text-[18px] font-bold text-[#1a1a1a] mb-4">Recommended DLMM Strategy</h2>
 
           {/* Bin Step */}
           <div className="pb-3 border-b border-[#bfbfbf] mb-4">
-            <label className="font-inter font-bold text-[14px] text-black">Bin Step</label>
+            <label className="font-roboto font-bold text-[14px] text-black">Bin Step</label>
             <p className="mt-1 font-roboto text-[16px] text-[#666666]">{poolData.lbBinStep} basis points</p>
           </div>
 
           {/* Price Range Distribution */}
           <div className="pb-3 border-b border-[#bfbfbf] mb-4">
-            <label className="font-inter font-bold text-[13.7px] text-[#1a1a1a] block mb-4">Price Range Distribution</label>
+            <label className="font-roboto font-bold text-[13.7px] text-[#1a1a1a] block mb-4">Price Range Distribution</label>
 
             <div
               className="bg-white p-3 border-2 border-neutral-700"
@@ -554,7 +554,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                 {hasChartData ? (
                   <Bar data={simulationChartData} options={chartOptions} />
                 ) : (
-                  <div className="h-full flex items-center justify-center text-[#666666] font-inter text-[14px]">
+                  <div className="h-full flex items-center justify-center text-[#666666] font-roboto text-[14px]">
                     Enter deposit amounts to see distribution preview
                   </div>
                 )}
@@ -562,7 +562,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
             </div>
 
             {/* Price Labels - 4 decimal places */}
-            <div className="grid grid-cols-3 gap-2 mt-4 font-inter text-[13.7px]">
+            <div className="grid grid-cols-3 gap-2 mt-4 font-roboto text-[13.7px]">
               <div>
                 <span className="font-bold text-[#1a1a1a]">Min Price:</span>{' '}
                 <span className="text-[#1a1a1a]">{formatNumber(minPriceWithDecimals, 4, 0, numberLocale)}</span>
@@ -593,12 +593,12 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <TrendingUp className="w-4 h-4 text-green-600" />
-                      <span className="font-inter text-[12px] text-[#666666]">Expected APR</span>
+                      <span className="font-roboto text-[12px] text-[#666666]">Expected APR</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className="font-tahoma font-bold text-[18px] text-green-600">{aiAnalysis.expectedAPR}</span>
+                      <span className="font-roboto font-bold text-[18px] text-green-600">{aiAnalysis.expectedAPR}</span>
                       {aiAnalysis.viralBoostActive && aiAnalysis.baseAPR && (
-                        <span className="font-inter text-[10px] text-green-500">
+                        <span className="font-roboto text-[10px] text-green-500">
                           <span className="text-[#666666]">Base: {aiAnalysis.baseAPR}</span>
                         </span>
                       )}
@@ -609,11 +609,11 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Shield className="w-4 h-4 text-[#666666]" />
-                      <span className="font-inter text-[12px] text-[#666666]">IL Risk</span>
+                      <span className="font-roboto text-[12px] text-[#666666]">IL Risk</span>
                     </div>
                     <div className="flex items-center justify-center gap-1">
                       <ILRiskIcon risk={aiAnalysis.impermanentLossRisk} />
-                      <span className={`font-tahoma font-bold text-[16px] capitalize ${getILRiskColor(aiAnalysis.impermanentLossRisk)}`}>
+                      <span className={`font-roboto font-bold text-[16px] capitalize ${getILRiskColor(aiAnalysis.impermanentLossRisk)}`}>
                         {aiAnalysis.impermanentLossRisk}
                       </span>
                     </div>
@@ -623,9 +623,9 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <RefreshCw className="w-4 h-4 text-[#666666]" />
-                      <span className="font-inter text-[12px] text-[#666666]">Rebalance</span>
+                      <span className="font-roboto text-[12px] text-[#666666]">Rebalance</span>
                     </div>
-                    <span className="font-tahoma font-bold text-[16px] text-[#1a1a1a] capitalize">{aiAnalysis.rebalanceFrequency}</span>
+                    <span className="font-roboto font-bold text-[16px] text-[#1a1a1a] capitalize">{aiAnalysis.rebalanceFrequency}</span>
                   </div>
                 </div>
               </div>
@@ -641,7 +641,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   <div className="flex items-start gap-2">
                     <TrendingUp className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <div className="font-inter font-bold text-[12px] text-yellow-800 mb-1">🔥 Viral Boost Active</div>
+                      <div className="font-roboto font-bold text-[12px] text-yellow-800 mb-1">🔥 Viral Boost Active</div>
                       {aiAnalysis.viralAnalysis && (
                         <p className="font-roboto text-[12px] text-yellow-700 leading-relaxed">{aiAnalysis.viralAnalysis}</p>
                       )}
@@ -658,14 +658,14 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                 }}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="font-inter font-bold text-[13px] text-[#1a1a1a]">Market:</span>
+                  <span className="font-roboto font-bold text-[13px] text-[#1a1a1a]">Market:</span>
                   <span className="font-roboto text-[13px] text-[#666666] capitalize">{aiAnalysis.marketCondition.replace(/_/g, ' ')}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {aiAnalysis.keyFactors.slice(0, 4).map((factor, index) => (
                     <span
                       key={index}
-                      className="px-2 py-1 bg-white text-[11px] font-inter text-[#666666]"
+                      className="px-2 py-1 bg-white text-[11px] font-roboto text-[#666666]"
                       style={{
                         boxShadow: 'inset 1px 1px 0px 0px #e0e0e0, inset -1px -1px 0px 0px #f9f9fa',
                       }}
@@ -687,7 +687,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                 <div className="flex items-start gap-3">
                   <Lightbulb className="w-5 h-5 text-[#0f06aa] flex-shrink-0 mt-0.5" />
                   <div className="flex-1 space-y-2">
-                    <p 
+                    <p
                       className="font-roboto text-[13px] text-[#0f06aa] leading-[18px]"
                       style={{
                         display: '-webkit-box',
@@ -702,10 +702,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                     {aiAnalysis.detailedExplanation && (
                       <div className="mt-3">
                         {/* Expandable Detailed Analysis Card */}
-                        <button
-                          onClick={() => setIsDetailedAnalysisExpanded(!isDetailedAnalysisExpanded)}
-                          className="w-full text-left"
-                        >
+                        <button onClick={() => setIsDetailedAnalysisExpanded(!isDetailedAnalysisExpanded)} className="w-full text-left">
                           <div
                             className="flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer"
                             style={{
@@ -716,7 +713,8 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                               <span className="font-roboto text-[13px] text-[#0f06aa] font-semibold">📋 Detailed Analysis</span>
                               {aiAnalysis.detailedExplanation.warnings.length > 0 && (
                                 <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-semibold rounded">
-                                  {aiAnalysis.detailedExplanation.warnings.length} Warning{aiAnalysis.detailedExplanation.warnings.length > 1 ? 's' : ''}
+                                  {aiAnalysis.detailedExplanation.warnings.length} Warning
+                                  {aiAnalysis.detailedExplanation.warnings.length > 1 ? 's' : ''}
                                 </span>
                               )}
                             </div>
@@ -727,7 +725,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                             )}
                           </div>
                         </button>
-                        
+
                         {/* Expanded Content */}
                         {isDetailedAnalysisExpanded && (
                           <div
@@ -773,7 +771,9 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                                 <span className="font-semibold text-red-600">⚠️ Warnings: </span>
                                 <ul className="list-disc list-inside mt-1 space-y-1">
                                   {aiAnalysis.detailedExplanation.warnings.map((warning, idx) => (
-                                    <li key={idx} className="text-red-700">{warning}</li>
+                                    <li key={idx} className="text-red-700">
+                                      {warning}
+                                    </li>
                                   ))}
                                 </ul>
                               </div>
@@ -819,7 +819,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
           }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-press-start text-[10px] text-[#22222a]">Enter Deposit Amount</h3>
+            <h3 className="font-press-start text-[12px] text-[#22222a]">Enter Deposit Amount</h3>
             <AutoFillSwitch />
           </div>
 
@@ -857,7 +857,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   className="font-press-start text-[24px] text-[#22222a] bg-transparent outline-none w-full disabled:cursor-not-allowed"
                 />
                 <div
-                  className="bg-figma-gray-table h-[38px] px-3 flex items-center gap-2"
+                  className="bg-figma-gray-table h-[38px] px-3 flex items-center gap-2 min-w-[140px]"
                   style={{
                     boxShadow:
                       'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
@@ -881,7 +881,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
               </div>
             </div>
             <div className="flex justify-between mt-2">
-              <span className="font-press-start text-[10px] text-[#22222a]">${formatNumber(tokenXUsdValue, 2, 0, numberLocale)}</span>
+              <span className="font-press-start text-[12px] text-[#22222a]">${formatNumber(tokenXUsdValue, 2, 0, numberLocale)}</span>
               <span className="font-press-start text-[10px] text-[rgba(34,34,42,0.7)]">
                 Balance: {formatNumber(tokenXBalance, 4, 0, numberLocale)} |{' '}
                 <button
@@ -970,7 +970,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
                   className="font-press-start text-[24px] text-[#22222a] bg-transparent outline-none w-full disabled:cursor-not-allowed"
                 />
                 <div
-                  className="bg-figma-gray-table h-[38px] px-3 flex items-center gap-2"
+                  className="bg-figma-gray-table h-[38px] px-3 flex items-center gap-2 min-w-[140px]"
                   style={{
                     boxShadow:
                       'inset 1px 1px 0px 0px #f9f9fa, inset -1px -1px 0px 0px #3d3d43, inset 2px 2px 0px 0px #e7e7eb, inset -2px -2px 0px 0px #808088',
@@ -994,7 +994,7 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
               </div>
             </div>
             <div className="flex justify-between mt-2">
-              <span className="font-press-start text-[10px] text-[#22222a]">${formatNumber(tokenYUsdValue, 2, 0, numberLocale)}</span>
+              <span className="font-press-start text-[12px] text-[#22222a]">${formatNumber(tokenYUsdValue, 2, 0, numberLocale)}</span>
               <span className="font-press-start text-[10px] text-[rgba(34,34,42,0.7)]">
                 Balance: {formatNumber(tokenYBalance, 4, 0, numberLocale)} |{' '}
                 <button

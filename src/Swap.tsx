@@ -364,9 +364,7 @@ export default function SwapComponent() {
       <main className="relative z-10 max-w-screen-2xl mx-auto px-2 sm:px-6 min-h-screen flex items-center justify-center">
         <div className="mx-auto relative w-full" style={{ maxWidth: '600px' }}>
           {/* Ant Animation - Top Right */}
-          <div className="absolute top-0 right-0 z-20 opacity-60 pointer-events-none">
-            <img src="/animations/ants/ant-animation-1.gif" alt="Ant animation" className="w-24 h-24 object-contain" />
-          </div>
+
           <CardWithHeader title="Swap">
             <div className="p-4">
               {/* From Section */}
@@ -391,7 +389,7 @@ export default function SwapComponent() {
                   {/* Token Selector */}
                   <button
                     onClick={() => openTokenModal('from')}
-                    className="bg-figma-gray-table h-[38px] px-3 flex items-center gap-2 min-w-[120px]"
+                    className="bg-figma-gray-table h-[38px] px-3 flex items-center justify-center gap-2 min-w-[120px]"
                     style={{ boxShadow: retroRaisedShadow }}
                   >
                     {fromTokenLogoURI && <img src={fromTokenLogoURI} alt={fromToken.symbol} className="w-7 h-7 rounded-full" />}
@@ -458,7 +456,7 @@ export default function SwapComponent() {
                   {/* Token Selector */}
                   <button
                     onClick={() => openTokenModal('to')}
-                    className="bg-figma-gray-table h-[38px] px-3 flex items-center gap-2 min-w-[120px]"
+                    className="bg-figma-gray-table h-[38px] px-3 flex items-center justify-center gap-2 min-w-[120px]"
                     style={{ boxShadow: retroRaisedShadow }}
                   >
                     {toToken ? (

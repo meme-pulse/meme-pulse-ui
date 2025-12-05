@@ -559,7 +559,7 @@ export default function Leaderboard() {
           description="Powered by MemeX. MemePulse tracks meme mentions, likes and interactions across the social feed to build a virality score and reward LPs in the most active communities."
           rightContent={
             <div className="hidden lg:block flex-shrink-0 ml-8">
-              <img src="/leaderboard/colosseum.png" alt="Colosseum" className="w-[240px] xl:w-[320px] h-auto object-contain" />
+              <img src="/leaderboard/colosseum.png" alt="Colosseum" className="w-[280px] xl:w-[360px] h-auto object-contain" />
             </div>
           }
         />

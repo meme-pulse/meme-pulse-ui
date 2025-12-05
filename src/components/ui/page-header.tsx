@@ -29,7 +29,7 @@ export function PageHeader({ title, description, icon, rightContent, badge, titl
             </TypingAnimation>
             {icon && <div className="flex-shrink-0 opacity-80">{icon}</div>}
           </div>
-          <div className="mt-6 sm:mt-[38px]">
+          <div className="mt-4 sm:mt-6">
             {typeof description === 'string' ? (
               <p className="font-roboto text-zinc-400 text-[14px] sm:text-[16px] leading-normal max-w-[854px]">{description}</p>
             ) : (

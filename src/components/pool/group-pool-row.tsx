@@ -129,7 +129,7 @@ export function GroupPoolRow({
         isExpanded &&
         groups.map((group) => {
           const hasGroupBoost = group.protocolSharePct === 10 || group.protocolSharePct === 20 || group.protocolSharePct === 40;
-          
+
           return (
             <tr
               key={group.pairAddress}
@@ -162,28 +162,28 @@ export function GroupPoolRow({
                   </div>
                 </div>
               </td>
-            <td className="text-left font-roboto text-black text-[16px] leading-[19px]" style={{ paddingLeft: '8px' }}>
-              {formatUSDWithLocale(group.liquidityUsd, 0, 0, numberLocale)}
-            </td>
-            <td className="text-left font-roboto text-black text-[16px] leading-[19px]" style={{ paddingLeft: '8px' }}>
-              {formatUSDWithLocale(group.volume24h, 0, 0, numberLocale)}
-            </td>
-            <td className="text-center font-roboto text-black text-[16px] leading-[19px]">
-              <div className="flex items-center justify-center gap-2">
-                <span>{formatNumber(group.apr || 0, 2, 0, numberLocale)} %</span>
-                {hasGroupBoost && <BoostBadge protocolSharePct={group.protocolSharePct} variant="compact" />}
-              </div>
-            </td>
-            <td className="text-center font-roboto text-black text-[16px] leading-[19px]">
-              {formatUSDWithLocale(group.fees24h, 2, 0, numberLocale)}
-            </td>
-            <td className="relative w-[120px]">
-              {/* Navigation chevron */}
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                <ChevronRight className="w-5 h-5 text-[#808088]" />
-              </div>
-            </td>
-          </tr>
+              <td className="text-left font-roboto text-black text-[16px] leading-[19px]" style={{ paddingLeft: '8px' }}>
+                {formatUSDWithLocale(group.liquidityUsd, 0, 0, numberLocale)}
+              </td>
+              <td className="text-left font-roboto text-black text-[16px] leading-[19px]" style={{ paddingLeft: '8px' }}>
+                {formatUSDWithLocale(group.volume24h, 0, 0, numberLocale)}
+              </td>
+              <td className="text-center font-roboto text-black text-[16px] leading-[19px]">
+                <div className="flex items-center justify-center gap-2">
+                  <span>{formatNumber(group.apr || 0, 2, 0, numberLocale)} %</span>
+                  {hasGroupBoost && <BoostBadge protocolSharePct={group.protocolSharePct} variant="compact" />}
+                </div>
+              </td>
+              <td className="text-center font-roboto text-black text-[16px] leading-[19px]">
+                {formatUSDWithLocale(group.fees24h, 2, 0, numberLocale)}
+              </td>
+              <td className="relative w-[120px]">
+                {/* Navigation chevron */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <ChevronRight className="w-5 h-5 text-[#808088]" />
+                </div>
+              </td>
+            </tr>
           );
         })}
     </>
