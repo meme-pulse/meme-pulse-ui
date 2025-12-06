@@ -1,4 +1,4 @@
-import { getUserBinLiquidity, getUserPoolIds, getPoolData, getTokenPrices, getUserFeesEarned } from '@/lib/hasura-client';
+import { getUserBinLiquidity, getUserPoolIds, getPoolData, getTokenPrices, getUserFeesEarned, getUserFeesAnalytics } from '@/lib/hasura-client';
 
 // Helper function to extract address from chainId-prefixed ID
 // e.g., "43522:0x1234..." -> "0x1234..."
@@ -125,4 +125,33 @@ export async function mockUserFeeEarned(poolAddress: string, userAddress: string
     priceXY: Number(item.priceY),
     priceYX: Number(item.priceX),
   }));
+}
+
+// User Fees Analytics (Time-based)
+export async function mockUserFeesAnalytics(poolAddress: string, userAddress: string) {
+  const result = await getUserFeesAnalytics(poolAddress, userAddress);
+  
+  // Transform hour data (24 hours)
+  const hourData = result.UserFeesHourData.map((item) => ({
+    date: new Date(item.date * 1000).toISOString(),
+    timestamp: item.date,
+    accruedFeesX: Number(item.accruedFeesX),
+    accruedFeesY: Number(item.accruedFeesY),
+    accruedFeesL: Number(item.accruedFeesX) + Number(item.accruedFeesY),
+  }));
+
+  // Transform day data (30 days)
+  const dayData = result.UserFeesDayData.map((item) => ({
+    date: new Date(item.date * 1000).toISOString(),
+    timestamp: item.date,
+    accruedFeesX: Number(item.accruedFeesX),
+    accruedFeesY: Number(item.accruedFeesY),
+    accruedFeesL: Number(item.accruedFeesX) + Number(item.accruedFeesY),
+  }));
+
+  return {
+    '24h': hourData.reverse(), // Reverse to show chronological order
+    '7d': dayData.slice(-7).reverse(), // Last 7 days
+    '30d': dayData.reverse(), // Last 30 days
+  };
 }
