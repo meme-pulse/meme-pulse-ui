@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { usePublicClient } from 'wagmi';
 
 import { LB_FACTORY_V22_ADDRESS, LBFactoryV21ABI, LiquidityDistribution } from './lib/sdk';
@@ -103,6 +103,8 @@ export default function AIPoolDetail() {
   const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
   // Store the AI-recommended pool address
   const [recommendedPoolAddress, setRecommendedPoolAddress] = useState<string | undefined>(undefined);
+  // 중복 호출 방지를 위한 ref (Strict Mode에서도 안전)
+  const isGeneratingRef = useRef(false);
 
   const { data: tokenListData } = useTokenList();
 
@@ -250,6 +252,12 @@ export default function AIPoolDetail() {
   // AI Flow handlers
   const handleGenerateStrategy = useCallback(
     async (preference: RiskPreference) => {
+      // 중복 호출 방지: 이미 실행 중이면 즉시 반환
+      if (isGeneratingRef.current) {
+        return;
+      }
+
+      isGeneratingRef.current = true;
       setIsGeneratingStrategy(true);
       setAiFlowStep('analysis');
 
@@ -262,6 +270,8 @@ export default function AIPoolDetail() {
           console.warn('Missing required data, using default strategy');
           setStrategyData(defaultStrategy);
           setAiAnalysis(undefined);
+          isGeneratingRef.current = false;
+          setIsGeneratingStrategy(false);
           return;
         }
 
@@ -308,10 +318,11 @@ export default function AIPoolDetail() {
         setStrategyData(defaultStrategy);
         setAiAnalysis(undefined);
       } finally {
+        isGeneratingRef.current = false;
         setIsGeneratingStrategy(false);
       }
     },
-    [poolData, matchingGroup, bestPoolInfo, availablePools, activeId, getDefaultStrategy, generateAISuggestion]
+    [poolData, matchingGroup, bestPoolInfo, availablePools, getDefaultStrategy, generateAISuggestion]
   );
 
   const handleAnalysisComplete = useCallback(() => {

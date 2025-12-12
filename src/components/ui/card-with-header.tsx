@@ -24,9 +24,7 @@ export function CardWithHeader({ title, children, className = '', contentClassNa
         <div className="absolute left-[6px] top-[2px] w-4 h-[19px] flex items-center justify-center">
           <img src="/pixel_pulse_white.png" alt="logo" className="w-4 h-[19px] object-contain" />
         </div>
-        <span className="absolute left-[24px] top-1/2 -translate-y-1/2 font-roboto text-white text-[12px] leading-[14px]">
-          {title}
-        </span>
+        <span className="absolute left-[24px] top-1/2 -translate-y-1/2 font-roboto text-white text-[12px] leading-[14px]">{title}</span>
       </div>
 
       {/* Content */}
@@ -34,8 +32,3 @@ export function CardWithHeader({ title, children, className = '', contentClassNa
     </div>
   );
 }
-
-
-
-
-

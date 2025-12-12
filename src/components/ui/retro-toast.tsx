@@ -70,9 +70,7 @@ function RetroToast({ title, description, type = 'default', onClose, action }: R
       <div className="bg-gradient-to-r from-figma-purple-dark to-figma-purple-light h-[28px] flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
           <span className="text-sm">{icon}</span>
-          <span className="text-white text-sm font-bold font-['Tahoma',sans-serif] truncate">
-            {displayTitle}
-          </span>
+          <span className="text-white text-sm font-bold font-['Tahoma',sans-serif] truncate">{displayTitle}</span>
         </div>
         <div className="flex items-center gap-[2px]">
           <Win95Button>
@@ -89,19 +87,9 @@ function RetroToast({ title, description, type = 'default', onClose, action }: R
 
       {/* Content area */}
       <div className="p-2">
-        <div
-          className="bg-white p-4 shadow-[inset_1px_1px_0px_0px_#808088,inset_-1px_-1px_0px_0px_#f9f9fa]"
-        >
-          {title && (
-            <p className="text-figma-text-dark text-base font-normal font-['Roboto',sans-serif] mb-1">
-              {title}
-            </p>
-          )}
-          {description && (
-            <p className="text-figma-text-dark text-sm font-normal font-['Roboto',sans-serif] opacity-80">
-              {description}
-            </p>
-          )}
+        <div className="bg-white p-4 shadow-[inset_1px_1px_0px_0px_#808088,inset_-1px_-1px_0px_0px_#f9f9fa]">
+          {title && <p className="text-figma-text-dark text-base font-normal font-['Roboto',sans-serif] mb-1">{title}</p>}
+          {description && <p className="text-figma-text-dark text-sm font-normal font-['Roboto',sans-serif] opacity-80">{description}</p>}
           {action && (
             <button
               onClick={action.onClick}
@@ -193,9 +181,5 @@ const retroToast = {
   },
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { retroToast, RetroToast };
-
-
-
-
-
