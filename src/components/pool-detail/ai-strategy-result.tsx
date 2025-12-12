@@ -509,13 +509,13 @@ export function AIStrategyResult({ poolData: originalPoolData, strategyData, aiA
 
   // USD values - use originalPoolData addresses since tokenPrices is fetched with original addresses
   const tokenXUsdValue = useMemo(() => {
-    const price = tokenPrices?.find((t) => t.id.toLowerCase() === originalPoolData.tokenX.address.toLowerCase())?.priceUsd ?? 0;
+    const price = tokenPrices?.find((t) => t.tokenAddress.toLowerCase() === originalPoolData.tokenX.address.toLowerCase())?.priceUsd ?? 0;
     const amount = Number(getNumberStringValue(tokenXAmount, numberLocale)) || 0;
     return amount * Number(price);
   }, [tokenPrices, tokenXAmount, originalPoolData.tokenX.address, numberLocale]);
 
   const tokenYUsdValue = useMemo(() => {
-    const price = tokenPrices?.find((t) => t.id.toLowerCase() === originalPoolData.tokenY.address.toLowerCase())?.priceUsd ?? 0;
+    const price = tokenPrices?.find((t) => t.tokenAddress.toLowerCase() === originalPoolData.tokenY.address.toLowerCase())?.priceUsd ?? 0;
     const amount = Number(getNumberStringValue(tokenYAmount, numberLocale)) || 0;
     return amount * Number(price);
   }, [tokenPrices, tokenYAmount, originalPoolData.tokenY.address, numberLocale]);
